@@ -262,12 +262,86 @@ function resetAIResult() {
     </div>`;
 }
 
+function buildDemoAnalysis(txs) {
+  const exp      = txs.filter(t => t.type === 'despesa');
+  const inc      = txs.filter(t => t.type === 'receita');
+  const totalExp = exp.reduce((s, t) => s + t.amount, 0);
+  const totalInc = inc.reduce((s, t) => s + t.amount, 0);
+  const balance  = totalInc - totalExp;
+  const savRate  = totalInc > 0 ? (balance / totalInc) * 100 : 0;
+
+  const catTotals = {};
+  exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+  const topCats  = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+  const topCat   = topCats[0];
+  const topLabel = topCat ? (CATEGORIES[topCat[0]]?.label || 'Outros') : '';
+  const topPct   = topCat && totalExp > 0 ? ((topCat[1] / totalExp) * 100).toFixed(0) : 0;
+
+  const subs = exp.filter(t =>
+    ['netflix', 'spotify', 'amazon', 'disney', 'deezer', 'youtube'].some(s =>
+      t.description.toLowerCase().includes(s)
+    )
+  );
+
+  let score, score_label;
+  if      (savRate >= 30) { score = 85; score_label = 'Excelente'; }
+  else if (savRate >= 20) { score = 72; score_label = 'Bom'; }
+  else if (savRate >= 10) { score = 55; score_label = 'Regular'; }
+  else if (savRate >= 0)  { score = 38; score_label = 'Preocupante'; }
+  else                    { score = 20; score_label = 'Crítico'; }
+
+  const waste = [];
+  const alerts = [];
+  const tips = [];
+  const positive = [];
+
+  if (subs.length > 1)
+    waste.push(`${subs.length} assinaturas de streaming somando R$ ${subs.reduce((s,t) => s+t.amount, 0).toFixed(2)} — avalie se usa todas.`);
+  if (catTotals['lazer'] && (catTotals['lazer'] / totalExp) > 0.15)
+    waste.push(`Lazer acima de 15% das despesas — considere revisar.`);
+
+  if (topPct > 50)
+    alerts.push(`${topLabel} representa ${topPct}% das despesas — concentração acima do ideal.`);
+  if (savRate < 20)
+    alerts.push(`Taxa de poupança de ${savRate.toFixed(0)}% está abaixo dos 20% recomendados.`);
+
+  tips.push(`Reserve pelo menos 20% da receita (R$ ${(totalInc * 0.2).toFixed(2)}) em investimentos ou poupança.`);
+  if (catTotals['alimentacao'])
+    tips.push('Planejar refeições semanalmente pode reduzir gastos com alimentação em até 30%.');
+  if (catTotals['transporte'])
+    tips.push('Combinar viagens ou usar transporte público em alguns dias reduz custos com combustível.');
+
+  if (balance > 0)
+    positive.push(`Saldo positivo de R$ ${balance.toFixed(2)} (${savRate.toFixed(0)}% da receita).`);
+  if (inc.length > 1)
+    positive.push(`${inc.length} fontes de receita — diversificação financeira é um ponto forte.`);
+  if (topPct <= 45)
+    positive.push('Gastos bem distribuídos entre categorias, sem concentração excessiva.');
+
+  const expPct = totalInc > 0 ? ((totalExp / totalInc) * 100).toFixed(0) : '—';
+  const summary = `Suas despesas de R$ ${totalExp.toFixed(2)} representam ${expPct}% da receita de R$ ${totalInc.toFixed(2)}. ` +
+    (savRate >= 20
+      ? `A taxa de poupança de ${savRate.toFixed(0)}% está dentro do recomendado.`
+      : `A taxa de poupança de ${savRate.toFixed(0)}% está abaixo dos 20% recomendados.`) +
+    (topLabel ? ` Maior gasto: ${topLabel}.` : '');
+
+  return { score, score_label, summary, waste, alerts, tips, positive };
+}
+
 async function runAI() {
   const txs = txOfMonth();
   const exp = txs.filter(t => t.type === 'despesa');
   if (!exp.length) { toast('Adicione despesas para analisar.', 'err'); return; }
 
   setBtnLoading(true);
+
+  if (Demo.active) {
+    await new Promise(r => setTimeout(r, 900)); // simula latência
+    renderAIResult(buildDemoAnalysis(txs));
+    toast('Análise concluída!');
+    setBtnLoading(false);
+    return;
+  }
 
   const catTotals = {};
   exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
@@ -342,6 +416,50 @@ CONTEXTO — ${monthLabel(currentDate)}:
 - Total de transações: ${txs.length}`;
 }
 
+function demoChatReply(msg) {
+  const m    = msg.toLowerCase();
+  const txs  = txOfMonth();
+  const exp  = txs.filter(t => t.type === 'despesa');
+  const inc  = txs.filter(t => t.type === 'receita');
+  const totE = exp.reduce((s, t) => s + t.amount, 0);
+  const totI = inc.reduce((s, t) => s + t.amount, 0);
+  const bal  = totI - totE;
+
+  const catTotals = {};
+  exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+  const top = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+  const topLabel = top ? (CATEGORIES[top[0]]?.label || 'Outros') : '—';
+
+  if (/saldo|sobr|restou|disponível/.test(m))
+    return `Seu saldo em ${monthLabel(currentDate)} é **${fmt(bal)}**. Você recebeu **${fmt(totI)}** e gastou **${fmt(totE)}**.`;
+
+  if (/maior gasto|mais car|mais gastou|top gasto/.test(m)) {
+    const biggest = exp.sort((a, b) => b.amount - a.amount)[0];
+    return biggest
+      ? `Seu maior gasto foi **${biggest.description}** em ${fmtDate(biggest.date)}: **${fmt(biggest.amount)}** (${CATEGORIES[biggest.category]?.label || 'Outros'}).`
+      : 'Nenhuma despesa registrada neste mês.';
+  }
+
+  if (/categoria|onde gast|mais gast/.test(m))
+    return top
+      ? `A categoria que mais pesou foi **${topLabel}**: **${fmt(top[1])}** (${((top[1] / totE) * 100).toFixed(0)}% das despesas).`
+      : 'Nenhuma despesa registrada ainda.';
+
+  if (/economiz|poupar|guardar|investir|dica/.test(m))
+    return `Com um saldo de **${fmt(bal)}** você poderia poupar pelo menos **${fmt(bal * 0.5)}** este mês. Uma regra prática: 50% necessidades, 30% lazer e 20% poupança.`;
+
+  if (/despesa|gasto|gastei|gastando/.test(m))
+    return `Em ${monthLabel(currentDate)} suas despesas somam **${fmt(totE)}**, distribuídas em ${Object.keys(catTotals).length} categorias. ${topLabel ? `O maior peso é **${topLabel}**.` : ''}`;
+
+  if (/receita|salário|renda|ganho|ganhei/.test(m))
+    return `Suas receitas em ${monthLabel(currentDate)}: **${fmt(totI)}** em ${inc.length} entrada(s). ${inc.length > 1 ? 'Ter múltiplas fontes de renda é ótimo!' : 'Diversificar as fontes de renda pode aumentar sua segurança financeira.'}`;
+
+  if (/oi|olá|ola|hey|tudo/.test(m))
+    return `Olá! 👋 Sou o assistente financeiro do Atlas. Você está no **modo demo** — posso responder perguntas sobre seus dados deste mês. Tente perguntar sobre saldo, categorias ou dicas de economia!`;
+
+  return `No modo demo respondo com base nos dados carregados. Tente perguntar: *"Qual meu saldo?"*, *"Onde mais gastei?"*, *"Como economizar?"* ou *"Maior gasto do mês"*.`;
+}
+
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const msg   = input.value.trim();
@@ -353,6 +471,16 @@ async function sendChatMessage() {
   if (chatHistory.length > 10) chatHistory = chatHistory.slice(-10);
 
   showTyping();
+
+  if (Demo.active) {
+    await new Promise(r => setTimeout(r, 600));
+    removeTyping();
+    const reply = demoChatReply(msg);
+    chatHistory.push({ role: 'assistant', content: reply });
+    appendChatMsg('assistant', reply);
+    return;
+  }
+
   try {
     const reply = await GroqAPI.complete(
       [{ role: 'system', content: buildChatContext() }, ...chatHistory],
