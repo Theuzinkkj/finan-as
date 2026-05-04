@@ -1,0 +1,107 @@
+/* =============================================
+   DESIGN TOKENS & THEMES
+   ============================================= */
+:root {
+  --bg:        #080812;
+  --bg-card:   rgba(255,255,255,0.042);
+  --bg-card-h: rgba(255,255,255,0.07);
+  --border:    rgba(255,255,255,0.08);
+  --border-h:  rgba(255,255,255,0.16);
+
+  --purple:    #7c3aed;
+  --purple-l:  #a78bfa;
+  --purple-d:  #5b21b6;
+  --green:     #10b981;
+  --green-l:   #34d399;
+  --red:       #ef4444;
+  --yellow:    #f59e0b;
+  --blue:      #3b82f6;
+
+  --text:      #f1f5f9;
+  --text-2:    #94a3b8;
+  --text-3:    #8896aa;
+
+  --r:         16px;
+  --r-sm:      10px;
+  --font:      'Inter', sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg:        #eef2f7;
+  --bg-card:   rgba(255,255,255,0.75);
+  --bg-card-h: rgba(255,255,255,0.95);
+  --border:    rgba(0,0,0,0.09);
+  --border-h:  rgba(0,0,0,0.18);
+  --text:      #1e1b4b;
+  --text-2:    #4b5563;
+  --text-3:    #6b7280;
+}
+
+/* =============================================
+   LIGHT THEME — ELEMENT OVERRIDES
+   ============================================= */
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(124,58,237,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 90%, rgba(16,185,129,.04) 0%, transparent 70%);
+}
+[data-theme="light"] .header,
+[data-theme="light"] .header-row,
+[data-theme="light"] .header-month-row { background: rgba(238,242,247,0.92); }
+[data-theme="light"] .modal            { background: #ffffff; }
+[data-theme="light"] .dropdown-menu   { background: #ffffff; box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+[data-theme="light"] .mobile-nav      { background: rgba(238,242,247,0.96); }
+[data-theme="light"] .tx-item         { background: rgba(255,255,255,.85); border-color: var(--border); }
+[data-theme="light"] .tx-item:hover   { background: #ffffff; border-color: var(--border-h); }
+[data-theme="light"] .tx-icon         { background: rgba(0,0,0,.05); }
+[data-theme="light"] .filter-select option { background: #ffffff; color: #1e1b4b; }
+[data-theme="light"] .filter-select   { background: rgba(255,255,255,.8); }
+[data-theme="light"] .cat-btn         { background: rgba(0,0,0,.03); }
+[data-theme="light"] .cat-btn:hover   { background: rgba(0,0,0,.07); }
+[data-theme="light"] .theme-opt       { background: rgba(0,0,0,.04); }
+[data-theme="light"] .btn-export-opt  { background: rgba(0,0,0,.04); }
+[data-theme="light"] .ai-section      { background: rgba(0,0,0,.025); }
+[data-theme="light"] .setup-instructions { background: rgba(0,0,0,.03); }
+[data-theme="light"] .setup-steps code  { background: rgba(0,0,0,.07); }
+[data-theme="light"] .toast           { background: rgba(255,255,255,.96); color: var(--text); }
+[data-theme="light"] .auth-card       { background: rgba(255,255,255,.9); }
+[data-theme="light"] .form-group input,
+[data-theme="light"] .form-group textarea,
+[data-theme="light"] .chat-input-area input { background: rgba(0,0,0,.04); }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb       { background: rgba(0,0,0,.12); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }
+
+/* =============================================
+   SMOOTH TRANSITIONS
+   ============================================= */
+body, .header, .card, .modal, .dropdown-menu,
+.chat-panel, .mobile-nav, .tx-item, .btn-icon,
+.filter-select, .toast {
+  transition: background-color .3s, border-color .3s, color .3s;
+}
+
+/* =============================================
+   RESET
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html  { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background:  var(--bg);
+  color:       var(--text);
+  min-height:  100vh;
+  overflow-x:  hidden;
+}
+
+body::before {
+  content:  '';
+  position: fixed;
+  inset:    0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(124,58,237,.09) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 90%, rgba(16,185,129,.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index:  0;
+}

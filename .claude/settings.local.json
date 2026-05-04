@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(Get-ChildItem \"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\" -Recurse -Force | Where-Object { $_.Name -match \"env|package\" } | Select-Object FullName)",
+      "PowerShell(cmd /c \"dir /s /b \"\"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\"\"\")"
+    ]
+  }
+}
