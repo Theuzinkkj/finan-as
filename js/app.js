@@ -909,9 +909,40 @@ function bindEvents() {
 // =============================================
 //  INIT
 // =============================================
+
+// Quando o usuário clica no link de confirmação de email, o Supabase redireciona
+// de volta ao site com o token na URL (#access_token=...&type=signup).
+// Esta função detecta e processa esse redirect automaticamente.
+function handleAuthRedirect() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return false;
+
+  const params      = new URLSearchParams(hash);
+  const accessToken = params.get('access_token');
+  if (!accessToken) return false;
+
+  try {
+    const b64     = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(atob(b64));
+
+    Auth._save({
+      access_token:  accessToken,
+      refresh_token: params.get('refresh_token') || '',
+      expires_in:    parseInt(params.get('expires_in') || '3600', 10),
+      user: { id: payload.sub || '', email: payload.email || '' },
+    });
+
+    history.replaceState(null, '', window.location.pathname);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 async function init() {
   initTheme();
   bindEvents();
+  handleAuthRedirect();
 
   if (!Auth.isLoggedIn) {
     showAuthScreen();
