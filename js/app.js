@@ -584,6 +584,13 @@ async function handleFormSubmit(e) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
   resetAIResult();
 
+  if (Demo.active) {
+    transactions.push(tx);
+    renderAll();
+    toast('Transação adicionada! (modo demo — não salva)');
+    return;
+  }
+
   try {
     await DB.put(tx);
     transactions.push(tx);
@@ -599,6 +606,13 @@ async function handleFormSubmit(e) {
 }
 
 async function deleteTx(id) {
+  if (Demo.active) {
+    transactions = transactions.filter(t => t.id !== id);
+    resetAIResult();
+    renderAll();
+    toast('Transação removida. (modo demo — não salva)');
+    return;
+  }
   try {
     await DB.remove(id);
     transactions = transactions.filter(t => t.id !== id);
@@ -688,6 +702,11 @@ function hideAuthScreen() {
 function bindAuthEvents() {
   document.getElementById('tab-signin').addEventListener('click', () => setAuthMode('signin'));
   document.getElementById('tab-signup').addEventListener('click', () => setAuthMode('signup'));
+
+  document.getElementById('btn-demo').addEventListener('click', () => {
+    Demo.enter();
+    startApp();
+  });
 
   document.getElementById('auth-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -870,7 +889,7 @@ function bindEvents() {
   document.getElementById('btn-settings').addEventListener('click', () => {
     const userBar = document.getElementById('auth-user-bar');
     const authDiv = document.getElementById('auth-divider');
-    document.getElementById('auth-user-email').textContent = Auth.email;
+    document.getElementById('auth-user-email').textContent = Demo.active ? 'Modo Demo' : Auth.email;
     userBar.classList.remove('hidden');
     authDiv.classList.remove('hidden');
     openModal('modal-settings');
@@ -878,6 +897,11 @@ function bindEvents() {
 
   // Logout
   document.getElementById('btn-logout').addEventListener('click', () => {
+    if (Demo.active) {
+      closeModal('modal-settings');
+      exitDemoMode();
+      return;
+    }
     Auth.signOut();
     appInitialized = false;
     transactions   = [];
@@ -958,11 +982,35 @@ async function init() {
   bindEvents();
   handleAuthRedirect();
 
+  if (Demo.active) { await startApp(); return; }
+
   if (!Auth.isLoggedIn) {
     showAuthScreen();
     return;
   }
   await startApp();
+}
+
+function showDemoBanner() {
+  document.getElementById('demo-banner').classList.remove('hidden');
+  document.body.classList.add('demo-mode');
+
+  document.getElementById('btn-demo-signup').addEventListener('click', () => {
+    exitDemoMode();
+    showAuthScreen();
+    setAuthMode('signup');
+  });
+
+  document.getElementById('btn-demo-exit').addEventListener('click', exitDemoMode);
+}
+
+function exitDemoMode() {
+  Demo.exit();
+  appInitialized = false;
+  transactions   = [];
+  document.getElementById('demo-banner').classList.add('hidden');
+  document.body.classList.remove('demo-mode');
+  showAuthScreen();
 }
 
 async function startApp() {
@@ -974,6 +1022,15 @@ async function startApp() {
   buildCategoryGrid();
   buildCategoryFilter();
   setTodayDate();
+
+  if (Demo.active) {
+    transactions = Demo.transactions();
+    renderAll();
+    showDemoBanner();
+    setCloudStatus('connected', 'Modo demo');
+    return;
+  }
+
   setDbStatus('loading');
 
   try {

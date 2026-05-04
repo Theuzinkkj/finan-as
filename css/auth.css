@@ -131,6 +131,98 @@
   line-height: 1.6;
 }
 
+/* Demo divider */
+.auth-demo-divider {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  margin:      20px 0 14px;
+  color:       var(--text-3);
+  font-size:   .78rem;
+}
+.auth-demo-divider::before,
+.auth-demo-divider::after {
+  content:     '';
+  flex:        1;
+  height:      1px;
+  background:  var(--border);
+}
+
+/* Demo button */
+.btn-demo {
+  width:         100%;
+  padding:       11px 16px;
+  border:        1px solid var(--border-h);
+  border-radius: var(--r-sm);
+  background:    transparent;
+  color:         var(--text-2);
+  font-family:   var(--font);
+  font-size:     .88rem;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    all .2s;
+  text-align:    center;
+}
+.btn-demo:hover {
+  border-color: var(--purple);
+  color:        var(--text);
+  background:   rgba(124,58,237,.07);
+}
+
+/* Demo banner */
+#demo-banner {
+  position:        fixed;
+  top:             0;
+  left:            0;
+  right:           0;
+  z-index:         400;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  gap:             12px;
+  padding:         9px 16px;
+  background:      linear-gradient(90deg, rgba(124,58,237,.18), rgba(16,185,129,.12));
+  border-bottom:   1px solid rgba(124,58,237,.25);
+  backdrop-filter: blur(8px);
+  font-size:       .82rem;
+  flex-wrap:       wrap;
+}
+#demo-banner.hidden { display: none !important; }
+
+.demo-banner-text { color: var(--text-2); }
+.demo-banner-text strong { color: var(--text); }
+
+.demo-banner-cta {
+  padding:       5px 14px;
+  border-radius: 20px;
+  border:        none;
+  background:    var(--purple);
+  color:         #fff;
+  font-family:   var(--font);
+  font-size:     .8rem;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    opacity .15s;
+}
+.demo-banner-cta:hover { opacity: .85; }
+
+.demo-banner-exit {
+  position:    absolute;
+  right:       12px;
+  background:  none;
+  border:      none;
+  color:       var(--text-3);
+  font-size:   .85rem;
+  cursor:      pointer;
+  padding:     4px 6px;
+  line-height: 1;
+  transition:  color .15s;
+}
+.demo-banner-exit:hover { color: var(--text); }
+
+/* Push content below banner when active */
+body.demo-mode { padding-top: 40px; }
+
 /* =============================================
    LIGHT THEME OVERRIDES
    ============================================= */
