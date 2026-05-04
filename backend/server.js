@@ -1,7 +1,6 @@
 'use strict';
 
 const express = require('express');
-const cors    = require('cors');
 const path    = require('path');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
@@ -26,33 +25,47 @@ if (MISSING.length) {
 app.use(express.json());
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
-// Em produção (Railway), frontend e backend compartilham o mesmo domínio —
-// requisições são same-origin e o browser não envia Origin, portanto CORS
-// não é acionado. O bloco abaixo cobre apenas dev local e origens extras.
+// Middleware próprio — o pacote cors não expõe req no callback de origin,
+// impedindo a comparação com o Host header para detectar same-origin.
 
 const extraOrigins = new Set(
   (process.env.ALLOWED_ORIGINS || '')
     .split(',').map(o => o.trim().replace(/\/+$/, '')).filter(Boolean)
 );
 
-function isOriginAllowed(origin) {
-  if (!origin) return true;                                          // same-origin / curl
-  const o = origin.replace(/\/+$/, '');
-  if (extraOrigins.has(o)) return true;                             // lista explícita
-  if (/^https?:\/\/localhost(:\d+)?$/.test(o)) return true;        // dev local
-  if (/^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(o)) return true;    // dev local (IP)
-  return false;
-}
+app.use((req, res, next) => {
+  const origin = (req.headers.origin || '').replace(/\/+$/, '');
 
-app.use(cors({
-  origin(origin, cb) {
-    if (isOriginAllowed(origin)) return cb(null, origin || true);
-    cb(Object.assign(new Error('Origem não permitida.'), { status: 403 }));
-  },
-  credentials: true,   // necessário para cookies httpOnly cross-origin (dev)
-  methods:     ['GET', 'POST', 'DELETE'],
-  allowedHeaders: ['Content-Type'],
-}));
+  // Sem Origin = same-origin (GET sem fetch, curl, Postman)
+  if (!origin) return next();
+
+  // Same-origin: browser envia Origin mesmo em fetch() POST same-origin.
+  // Comparar com o Host header resolve sem precisar configurar ALLOWED_ORIGINS.
+  const host = req.headers.host || '';
+  const isSameOrigin = origin === `https://${host}` || origin === `http://${host}`;
+
+  const isAllowed =
+    isSameOrigin ||
+    extraOrigins.has(origin) ||
+    /^https?:\/\/localhost(:\d+)?$/.test(origin) ||
+    /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
+
+  if (!isAllowed) {
+    return res.status(403).json({ message: 'Origem não permitida.' });
+  }
+
+  // Cabeçalhos CORS para origens permitidas
+  res.setHeader('Access-Control-Allow-Origin',      origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods',     'GET, POST, DELETE');
+  res.setHeader('Access-Control-Allow-Headers',     'Content-Type');
+  res.setHeader('Vary', 'Origin');
+
+  // Responde preflight diretamente
+  if (req.method === 'OPTIONS') return res.status(204).end();
+
+  next();
+});
 
 // ── Arquivos estáticos ────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..')));
