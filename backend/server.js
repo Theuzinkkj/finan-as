@@ -3,7 +3,7 @@
 const express   = require('express');
 const cors      = require('cors');
 const path      = require('path');
-const rateLimit = require('express-rate-limit');
+const { rateLimit } = require('express-rate-limit');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
@@ -18,7 +18,7 @@ app.use(express.json());
 
 // CORS: aceita apenas origens conhecidas
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
-  .split(',').map(o => o.trim());
+  .split(',').map(o => o.trim().replace(/\/+$/, ''));  // remove barra final
 
 app.use(cors({
   origin(origin, cb) {
