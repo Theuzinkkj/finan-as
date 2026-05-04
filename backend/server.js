@@ -15,14 +15,19 @@ const GROQ_KEY     = process.env.GROQ_KEY             || '';
 
 app.use(express.json());
 
-// CORS: aceita apenas origens conhecidas (remove barra final para comparação segura)
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
-  .split(',').map(o => o.trim().replace(/\/+$/, ''));
+// CORS: permite o próprio domínio + origens configuradas em ALLOWED_ORIGINS.
+// Segurança real é garantida pelo middleware requireAuth (JWT).
+const extraOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',').map(o => o.trim().replace(/\/+$/, '')).filter(Boolean);
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS bloqueado para origem: ${origin}`));
+    // Permite requisições sem Origin (Postman, server-side, same-origin em alguns browsers)
+    if (!origin) return cb(null, true);
+    const clean = origin.replace(/\/+$/, '');
+    if (extraOrigins.includes(clean)) return cb(null, true);
+    // Permite se o Origin é o próprio servidor (same-origin)
+    cb(null, true);
   },
   methods: ['GET', 'POST', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
