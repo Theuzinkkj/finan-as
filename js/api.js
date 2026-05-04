@@ -65,17 +65,12 @@ const DB = {
 //  BACKEND HTTP CLIENT
 // =============================================
 const API = {
-  _token: () => localStorage.getItem('financeai_auth_token') || '',
-
-  _headers() {
-    const h     = { 'Content-Type': 'application/json' };
-    const token = this._token();
-    if (token) h['Authorization'] = `Bearer ${token}`;
-    return h;
-  },
-
   async req(method, path, body) {
-    const opts = { method, headers: this._headers() };
+    const opts = {
+      method,
+      headers:     { 'Content-Type': 'application/json' },
+      credentials: 'include', // envia/recebe cookies httpOnly
+    };
     if (body !== undefined) opts.body = JSON.stringify(body);
 
     const res  = await fetch(path, opts);
@@ -83,7 +78,7 @@ const API = {
     const data = text ? JSON.parse(text) : null;
 
     if (!res.ok) {
-      const raw = (data && (data.error_description || data.msg || data.message || data.error)) ||
+      const raw = (data && (data.error_description || data.message || data.error)) ||
         `HTTP ${res.status}`;
       throw new Error(raw);
     }
@@ -102,7 +97,9 @@ const CloudDB = {
   },
 
   async add(tx) {
-    return API.req('POST', '/api/transactions', tx);
+    // user_id é injetado pelo backend a partir do JWT — não enviamos do cliente
+    const { user_id: _dropped, ...payload } = tx;
+    return API.req('POST', '/api/transactions', payload);
   },
 
   async remove(id) {
@@ -111,36 +108,50 @@ const CloudDB = {
 };
 
 // =============================================
-//  AUTH (via backend proxy)
+//  AUTH (via backend proxy — cookie httpOnly)
 // =============================================
+// O JWT fica num cookie httpOnly: o JS nunca lê o token.
+// Apenas email/id de display são guardados (não são segredos).
 const Auth = {
-  get token()      { return localStorage.getItem('financeai_auth_token')  || ''; },
-  get email()      { return localStorage.getItem('financeai_auth_email')  || ''; },
-  get userId()     { return localStorage.getItem('financeai_auth_uid')    || ''; },
-  get expiry()     { return parseInt(localStorage.getItem('financeai_auth_expiry') || '0', 10); },
-  get isLoggedIn() { return !!(this.token && Date.now() < this.expiry); },
+  get email()  { return localStorage.getItem('financeai_display_email') || ''; },
+  get userId() { return localStorage.getItem('financeai_display_uid')   || ''; },
 
-  _save(data) {
-    localStorage.setItem('financeai_auth_token',  data.access_token);
-    localStorage.setItem('financeai_auth_email',  data.user?.email || '');
-    localStorage.setItem('financeai_auth_uid',    data.user?.id    || '');
-    localStorage.setItem('financeai_auth_expiry',
-      String(Date.now() + (data.expires_in || 3600) * 1000));
+  _saveDisplay(email, id) {
+    localStorage.setItem('financeai_display_email', email || '');
+    localStorage.setItem('financeai_display_uid',   id    || '');
+  },
+
+  _clearDisplay() {
+    ['financeai_display_email', 'financeai_display_uid',
+     'financeai_auth_token',    'financeai_auth_email',
+     'financeai_auth_uid',      'financeai_auth_expiry']
+      .forEach(k => localStorage.removeItem(k));
+  },
+
+  // Verifica sessão no backend — retorna true se autenticado.
+  async check() {
+    try {
+      const data = await API.req('GET', '/api/auth/me');
+      this._saveDisplay(data.email, data.id);
+      return true;
+    } catch {
+      this._clearDisplay();
+      return false;
+    }
   },
 
   async signIn(email, password) {
-    const data = await API.req('POST', '/api/auth/signin', { email, password });
-    this._save(data);
+    await API.req('POST', '/api/auth/signin', { email, password });
+    await this.check();
   },
 
   async signUp(email, password) {
     return API.req('POST', '/api/auth/signup', { email, password });
   },
 
-  signOut() {
-    ['financeai_auth_token', 'financeai_auth_email',
-     'financeai_auth_uid',   'financeai_auth_expiry']
-      .forEach(k => localStorage.removeItem(k));
+  async signOut() {
+    await API.req('POST', '/api/auth/signout', {}).catch(() => {});
+    this._clearDisplay();
   },
 };
 

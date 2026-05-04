@@ -597,7 +597,7 @@ async function handleFormSubmit(e) {
     renderAll();
     toast('Transação adicionada!');
 
-    CloudDB.add({ ...tx, user_id: Auth.userId })
+    CloudDB.add(tx)
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));
   } catch (err) {
@@ -725,14 +725,11 @@ function bindAuthEvents() {
     try {
       if (isSignup) {
         const result = await Auth.signUp(email, password);
-        if (result.user && !result.access_token && !result.session) {
+        if (result.confirmEmail) {
           showAuthSuccess('Cadastro realizado! Verifique seu email para confirmar, depois faça login.');
           setAuthMode('signin');
-          setAuthLoading(false);
           return;
         }
-        if (result.session)           Auth._save(result.session);
-        else if (result.access_token) Auth._save(result);
       } else {
         await Auth.signIn(email, password);
       }
@@ -896,13 +893,13 @@ function bindEvents() {
   });
 
   // Logout
-  document.getElementById('btn-logout').addEventListener('click', () => {
+  document.getElementById('btn-logout').addEventListener('click', async () => {
     if (Demo.active) {
       closeModal('modal-settings');
       exitDemoMode();
       return;
     }
-    Auth.signOut();
+    await Auth.signOut();
     appInitialized = false;
     transactions   = [];
     closeModal('modal-settings');
@@ -948,10 +945,10 @@ function bindEvents() {
 //  INIT
 // =============================================
 
-// Quando o usuário clica no link de confirmação de email, o Supabase redireciona
-// de volta ao site com o token na URL (#access_token=...&type=signup).
-// Esta função detecta e processa esse redirect automaticamente.
-function handleAuthRedirect() {
+// Quando o usuário confirma o email, o Supabase redireciona com o token na URL.
+// Enviamos o token ao backend para que ele defina o cookie httpOnly e
+// limpamos o hash imediatamente — o token nunca fica exposto no JS.
+async function handleAuthRedirect() {
   const hash = window.location.hash.slice(1);
   if (!hash) return false;
 
@@ -959,18 +956,10 @@ function handleAuthRedirect() {
   const accessToken = params.get('access_token');
   if (!accessToken) return false;
 
+  history.replaceState(null, '', window.location.pathname);
+
   try {
-    const b64     = accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const payload = JSON.parse(atob(b64));
-
-    Auth._save({
-      access_token:  accessToken,
-      refresh_token: params.get('refresh_token') || '',
-      expires_in:    parseInt(params.get('expires_in') || '3600', 10),
-      user: { id: payload.sub || '', email: payload.email || '' },
-    });
-
-    history.replaceState(null, '', window.location.pathname);
+    await API.req('POST', '/api/auth/confirm', { access_token: accessToken });
     return true;
   } catch {
     return false;
@@ -980,14 +969,13 @@ function handleAuthRedirect() {
 async function init() {
   initTheme();
   bindEvents();
-  handleAuthRedirect();
 
   if (Demo.active) { await startApp(); return; }
 
-  if (!Auth.isLoggedIn) {
-    showAuthScreen();
-    return;
-  }
+  const redirected = await handleAuthRedirect();
+  const loggedIn   = redirected || await Auth.check();
+
+  if (!loggedIn) { showAuthScreen(); return; }
   await startApp();
 }
 
