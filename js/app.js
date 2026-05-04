@@ -782,6 +782,18 @@ function setAuthLoading(on) {
 
 // =============================================
 //  EVENT BINDING
+function updateNotesFieldForType(type) {
+  const label = document.querySelector('label[for="input-notes"] .optional');
+  const textarea = document.getElementById('input-notes');
+  if (type === 'receita') {
+    if (label) label.textContent = '(de onde veio?)';
+    textarea.placeholder = 'Ex: Salário, hora extra, freelance, rendimento de investimento...';
+  } else {
+    if (label) label.textContent = '(por que gastou isso?)';
+    textarea.placeholder = 'Ex: Comemoração de aniversário, compra por impulso, mensalidade obrigatória...';
+  }
+}
+
 // =============================================
 function bindEvents() {
   // FAB — nova transação
@@ -796,6 +808,7 @@ function bindEvents() {
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('cat-error').classList.add('hidden');
     document.getElementById('transaction-form').reset();
+    updateNotesFieldForType('despesa');
     openModal('modal-transaction');
   });
 
@@ -823,6 +836,7 @@ function bindEvents() {
       selectedType = btn.dataset.type;
       document.getElementById('category-group').style.display =
         selectedType === 'despesa' ? '' : 'none';
+      updateNotesFieldForType(selectedType);
     });
   });
 
