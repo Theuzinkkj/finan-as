@@ -116,6 +116,29 @@ function requireAuth(req, res, next) {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
+// Retorna apenas os campos que o cliente precisa — nunca o objeto bruto do Supabase.
+function pickSession(data) {
+  const session = data.session || data; // signup retorna { session: {...} }, signin retorna o token direto
+  return {
+    access_token:  session.access_token  || null,
+    refresh_token: session.refresh_token || null,
+    expires_in:    session.expires_in    || 3600,
+    user: {
+      id:    data.user?.id    || session.user?.id    || null,
+      email: data.user?.email || session.user?.email || null,
+    },
+  };
+}
+
+function pickError(data) {
+  // Repassa apenas o código de erro e a mensagem — sem stack, sem metadados internos.
+  return {
+    error:             data.error             || null,
+    error_code:        data.error_code        || null,
+    error_description: data.error_description || data.msg || data.message || 'Erro desconhecido.',
+  };
+}
+
 app.post('/api/auth/signup', authLimiter, async (req, res) => {
   try {
     const r    = await fetch(`${SUPA_URL}/auth/v1/signup`, {
@@ -124,7 +147,15 @@ app.post('/api/auth/signup', authLimiter, async (req, res) => {
       body:    JSON.stringify(req.body),
     });
     const data = await r.json().catch(() => ({}));
-    res.status(r.status).json(data);
+
+    if (!r.ok) return res.status(r.status).json(pickError(data));
+
+    // Cadastro pendente de confirmação de email: sem session, mas tem user
+    if (data.user && !data.session && !data.access_token) {
+      return res.status(200).json({ user: { id: data.user.id, email: data.user.email } });
+    }
+
+    res.status(200).json(pickSession(data));
   } catch (e) {
     res.status(500).json({ message: 'Erro interno.' });
   }
@@ -138,7 +169,10 @@ app.post('/api/auth/signin', authLimiter, async (req, res) => {
       body:    JSON.stringify(req.body),
     });
     const data = await r.json().catch(() => ({}));
-    res.status(r.status).json(data);
+
+    if (!r.ok) return res.status(r.status).json(pickError(data));
+
+    res.status(200).json(pickSession(data));
   } catch (e) {
     res.status(500).json({ message: 'Erro interno.' });
   }
