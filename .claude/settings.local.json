@@ -5,7 +5,19 @@
       "PowerShell(node --version)",
       "PowerShell(npm --version)",
       "PowerShell(Get-ChildItem \"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\" -Recurse -Force | Where-Object { $_.Name -match \"env|package\" } | Select-Object FullName)",
-      "PowerShell(cmd /c \"dir /s /b \"\"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\"\"\")"
+      "PowerShell(cmd /c \"dir /s /b \"\"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\"\"\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\" -Recurse -Force)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "PowerShell(Get-Command node, npm -ErrorAction SilentlyContinue)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\" --version 2>$null)",
+      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\nodejs\\\\npm.cmd\" --version 2>$null)",
+      "PowerShell(& \"C:\\\\Program Files\\\\nodejs\\\\npm.cmd\" install express-rate-limit --prefix \"c:\\\\Users\\\\mitao\\\\Downloads\\\\novo projeto\\\\backend\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(Format-Table -AutoSize)"
     ]
   }
 }
