@@ -1024,17 +1024,9 @@ function bindEvents() {
 
   // Logout
   document.getElementById('btn-logout').addEventListener('click', async () => {
-    if (Demo.active) {
-      closeModal('modal-settings');
-      exitDemoMode();
-      return;
-    }
-    await Auth.signOut();
-    appInitialized = false;
-    transactions   = [];
-    closeModal('modal-settings');
-    showAuthScreen();
-    toast('Sessão encerrada.');
+    if (!Demo.active) await Auth.signOut();
+    else Demo.exit();
+    window.location.reload();
   });
 
   // Tema
@@ -1124,11 +1116,7 @@ function showDemoBanner() {
 
 function exitDemoMode() {
   Demo.exit();
-  appInitialized = false;
-  transactions   = [];
-  document.getElementById('demo-banner').classList.add('hidden');
-  document.body.classList.remove('demo-mode');
-  showAuthScreen();
+  window.location.reload();
 }
 
 async function startApp() {
