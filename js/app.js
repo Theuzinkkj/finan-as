@@ -748,6 +748,8 @@ function setAuthMode(mode) {
   document.getElementById('tab-signup').classList.toggle('active', isSignup);
   document.getElementById('auth-confirm-group').classList.toggle('hidden', !isSignup);
   document.getElementById('auth-submit-text').textContent = isSignup ? 'Cadastrar' : 'Entrar';
+  document.getElementById('btn-demo').classList.toggle('hidden', isSignup);
+  document.querySelector('.auth-demo-divider').classList.toggle('hidden', isSignup);
   clearAuthFeedback();
 }
 
