@@ -1111,7 +1111,10 @@ function showDemoBanner() {
     setAuthMode('signup');
   });
 
-  document.getElementById('btn-demo-exit').addEventListener('click', exitDemoMode);
+  document.getElementById('btn-demo-exit').addEventListener('click', () => {
+    document.getElementById('demo-banner').classList.add('hidden');
+    document.body.classList.remove('demo-mode');
+  });
 }
 
 function exitDemoMode() {
