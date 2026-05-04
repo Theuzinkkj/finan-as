@@ -1,28 +1,26 @@
 'use strict';
 
-const express   = require('express');
-const cors      = require('cors');
-const path      = require('path');
-const { rateLimit } = require('express-rate-limit');
+const express = require('express');
+const cors    = require('cors');
+const path    = require('path');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
 const SUPA_URL     = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
-const SUPA_ANON    = process.env.SUPABASE_KEY  || '';   // chave anon (pública)
-const SUPA_SERVICE = process.env.SUPABASE_SERVICE_KEY || SUPA_ANON; // chave service role
-const GROQ_KEY     = process.env.GROQ_KEY      || '';
+const SUPA_ANON    = process.env.SUPABASE_KEY         || '';
+const SUPA_SERVICE = process.env.SUPABASE_SERVICE_KEY || SUPA_ANON;
+const GROQ_KEY     = process.env.GROQ_KEY             || '';
 
 // ── Middleware global ─────────────────────────────────────────────────────────
 
 app.use(express.json());
 
-// CORS: aceita apenas origens conhecidas
+// CORS: aceita apenas origens conhecidas (remove barra final para comparação segura)
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000')
-  .split(',').map(o => o.trim().replace(/\/+$/, ''));  // remove barra final
+  .split(',').map(o => o.trim().replace(/\/+$/, ''));
 
 app.use(cors({
   origin(origin, cb) {
-    // permite requests sem origin (ex: Postman em dev, server-side)
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error(`CORS bloqueado para origem: ${origin}`));
   },
@@ -32,29 +30,53 @@ app.use(cors({
 
 app.use(express.static(path.join(__dirname, '..')));
 
+// ── Rate limiting (sem dependência externa) ───────────────────────────────────
+
+function makeRateLimiter(windowMs, max, message) {
+  const hits = new Map();
+
+  // Limpa entradas expiradas a cada janela para não acumular memória
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of hits) {
+      if (now > entry.resetAt) hits.delete(key);
+    }
+  }, windowMs);
+
+  return function rateLimiter(req, res, next) {
+    const ip  = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    let entry = hits.get(ip);
+
+    if (!entry || now > entry.resetAt) {
+      entry = { count: 0, resetAt: now + windowMs };
+    }
+
+    entry.count++;
+    hits.set(ip, entry);
+
+    if (entry.count > max) {
+      return res.status(429).json({ message });
+    }
+    next();
+  };
+}
+
+const aiLimiter   = makeRateLimiter(60 * 1000,       20, 'Muitas requisições. Tente novamente em 1 minuto.');
+const authLimiter = makeRateLimiter(15 * 60 * 1000,  10, 'Muitas tentativas. Tente novamente em 15 minutos.');
+
 // ── Utilitários ───────────────────────────────────────────────────────────────
 
-// Decodifica o payload do JWT sem verificar assinatura.
-// A verificação criptográfica é delegada ao Supabase (RLS usa auth.uid()).
 function decodeJwtPayload(token) {
   try {
-    const part = token.split('.')[1];
-    return JSON.parse(Buffer.from(part, 'base64url').toString('utf8'));
+    const part   = token.split('.')[1];
+    const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
   } catch {
     return null;
   }
 }
 
-// Cabeçalhos para chamadas ao Supabase usando a chave service role (backend).
-function serviceHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'apikey':       SUPA_SERVICE,
-    'Authorization': `Bearer ${SUPA_SERVICE}`,
-  };
-}
-
-// Cabeçalhos que incluem o JWT do usuário — necessário para o RLS funcionar.
 function userHeaders(authHeader) {
   return {
     'Content-Type': 'application/json',
@@ -78,33 +100,14 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ message: 'Token inválido.' });
   }
 
-  // Verifica expiração do token
   if (payload.exp && Date.now() / 1000 > payload.exp) {
     return res.status(401).json({ message: 'Token expirado.' });
   }
 
-  req.userId    = payload.sub;   // UUID do usuário autenticado
-  req.authToken = auth;          // header completo para repassar ao Supabase
+  req.userId    = payload.sub;
+  req.authToken = auth;
   next();
 }
-
-// ── Rate limiting ─────────────────────────────────────────────────────────────
-
-const aiLimiter = rateLimit({
-  windowMs:         60 * 1000,  // janela de 1 minuto
-  max:              20,          // máximo 20 requisições por IP por minuto
-  standardHeaders:  true,
-  legacyHeaders:    false,
-  message:          { message: 'Muitas requisições. Tente novamente em 1 minuto.' },
-});
-
-const authLimiter = rateLimit({
-  windowMs:         15 * 60 * 1000,  // janela de 15 minutos
-  max:              10,               // máximo 10 tentativas de login por IP
-  standardHeaders:  true,
-  legacyHeaders:    false,
-  message:          { message: 'Muitas tentativas. Tente novamente em 15 minutos.' },
-});
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -138,7 +141,6 @@ app.post('/api/auth/signin', authLimiter, async (req, res) => {
 
 // ── Transactions ──────────────────────────────────────────────────────────────
 
-// GET — retorna APENAS as transações do usuário autenticado
 app.get('/api/transactions', requireAuth, async (req, res) => {
   try {
     const url = `${SUPA_URL}/rest/v1/transactions`
@@ -153,10 +155,9 @@ app.get('/api/transactions', requireAuth, async (req, res) => {
   }
 });
 
-// POST — força user_id a partir do token, ignora o que o cliente enviou
 app.post('/api/transactions', requireAuth, async (req, res) => {
   try {
-    const body = { ...req.body, user_id: req.userId };  // sobrescreve user_id
+    const body = { ...req.body, user_id: req.userId };
 
     const r = await fetch(`${SUPA_URL}/rest/v1/transactions`, {
       method:  'POST',
@@ -169,7 +170,6 @@ app.post('/api/transactions', requireAuth, async (req, res) => {
   }
 });
 
-// DELETE — o filtro user_id garante que só o dono pode excluir
 app.delete('/api/transactions/:id', requireAuth, async (req, res) => {
   try {
     const url = `${SUPA_URL}/rest/v1/transactions`
