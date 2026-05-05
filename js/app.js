@@ -747,6 +747,10 @@ function switchTab(tabName) {
 //  AUTH SCREEN
 function showAuthScreen() {
   document.getElementById('auth-screen').classList.remove('hidden');
+  document.getElementById('auth-email').value    = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-confirm').value  = '';
+  clearAuthFeedback();
   bindAuthEvents();
 }
 

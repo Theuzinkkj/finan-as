@@ -50,9 +50,11 @@
   font-size:       1.55rem;
   font-weight:     800;
   margin-bottom:   6px;
+  text-align:      center;
+  width:           100%;
 }
-.auth-logo .logo-icon { font-size: 1.7rem; }
-.auth-logo .logo-text { letter-spacing: -.01em; }
+.auth-logo .logo-icon { font-size: 1.7rem; line-height: 1; display: flex; align-items: center; }
+.auth-logo .logo-text { letter-spacing: -.01em; line-height: 1; }
 
 .auth-tagline {
   text-align:    center;
