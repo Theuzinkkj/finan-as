@@ -30,8 +30,8 @@
   --bg:        #f5f0e8;
   --bg-card:   rgba(255,252,245,0.88);
   --bg-card-h: rgba(255,253,248,0.96);
-  --border:    rgba(120,90,50,0.1);
-  --border-h:  rgba(120,90,50,0.2);
+  --border:    rgba(120,90,50,0.18);
+  --border-h:  rgba(120,90,50,0.35);
   --text:      #292118;
   --text-2:    #57534e;
   --text-3:    #78716c;
@@ -51,6 +51,7 @@
 [data-theme="light"] .modal            { background: #fdf8f0; }
 [data-theme="light"] .dropdown-menu   { background: #fdf8f0; box-shadow: 0 8px 32px rgba(0,0,0,.10); }
 [data-theme="light"] .mobile-nav      { background: rgba(245,240,232,0.96); }
+[data-theme="light"] .card            { box-shadow: 0 1px 4px rgba(120,90,50,.08), 0 0 0 1px rgba(120,90,50,.06); }
 [data-theme="light"] .tx-item         { background: rgba(255,252,245,.85); border-color: var(--border); }
 [data-theme="light"] .tx-item:hover   { background: rgba(255,252,245,1); border-color: var(--border-h); }
 [data-theme="light"] .tx-icon         { background: rgba(120,90,50,.06); }
