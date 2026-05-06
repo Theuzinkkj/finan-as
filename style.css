@@ -506,7 +506,7 @@ body::before {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
 }
 .stat-box {
   background: var(--bg-card);
@@ -521,7 +521,7 @@ body::before {
 .stat-value { font-size: 1.15rem; font-weight: 700; }
 
 /* ---- AI card ---- */
-.ai-card { margin-top: 20px; }
+.ai-card { margin-top: 24px; }
 .ai-header {
   display: flex;
   justify-content: space-between;
