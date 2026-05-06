@@ -464,26 +464,31 @@
 .form-group textarea {
   width:         100%;
   background:    rgba(255,255,255,.05);
-  border:        1px solid var(--border);
+  border:        1px solid rgba(255,255,255,0.08);
   border-radius: var(--r-sm);
   color:         var(--text);
   padding:       10px 13px;
   font-family:   var(--font);
   font-size:     .88rem;
   outline:       none;
-  transition:    border-color .2s;
+  transition:    border-color .2s, box-shadow .2s;
   resize:        vertical;
+  box-shadow:    none;
 }
 .form-group input:focus,
-.form-group textarea:focus    { border-color: var(--purple); }
+.form-group textarea:focus {
+  border-color: transparent;
+  box-shadow:   0 0 0 2px var(--purple);
+}
 .form-group input::placeholder,
 .form-group textarea::placeholder { color: var(--text-3); }
 
 .form-group input:-webkit-autofill,
 .form-group input:-webkit-autofill:hover,
 .form-group input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px rgba(30,30,50,0.95) inset;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(20,22,35,1) inset;
   -webkit-text-fill-color: var(--text);
+  border-color: rgba(255,255,255,0.08);
   caret-color: var(--text);
 }
 
