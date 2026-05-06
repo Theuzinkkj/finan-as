@@ -464,20 +464,21 @@
 .form-group textarea {
   width:         100%;
   background:    rgba(255,255,255,.05);
-  border:        none;
+  border:        1px solid rgba(0,0,0,0.45);
   box-shadow:    none;
-  border-radius: var(--r-sm);
+  border-radius: 0;
   color:         var(--text);
   padding:       10px 13px;
   font-family:   var(--font);
   font-size:     .88rem;
   outline:       none;
-  transition:    box-shadow .2s;
+  transition:    border-color .2s, box-shadow .2s;
   resize:        vertical;
 }
 .form-group input:focus,
 .form-group textarea:focus {
-  box-shadow: 0 0 0 2px var(--purple);
+  border-color: var(--purple);
+  box-shadow:   0 0 0 1px var(--purple);
 }
 .form-group input::placeholder,
 .form-group textarea::placeholder { color: var(--text-3); }
