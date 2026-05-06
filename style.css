@@ -521,7 +521,7 @@ body::before {
 .stat-value { font-size: 1.15rem; font-weight: 700; }
 
 /* ---- AI card ---- */
-.ai-card { margin-top: 16px; }
+.ai-card { margin-top: 20px; }
 .ai-header {
   display: flex;
   justify-content: space-between;
