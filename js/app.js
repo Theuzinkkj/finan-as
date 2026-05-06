@@ -801,20 +801,23 @@ function openRenameModal() {
   if (!activeTxId) return;
   const tx = transactions.find(t => t.id === activeTxId);
   if (!tx) return;
+  const modal = document.getElementById('modal-rename-tx');
+  modal.dataset.txId = activeTxId;
   hideTxMenu();
+  activeTxId = null;
   document.getElementById('rename-input').value = tx.description;
   openModal('modal-rename-tx');
 }
 
 async function saveRenameTx() {
-  if (!activeTxId) return;
+  const txId = document.getElementById('modal-rename-tx').dataset.txId;
+  if (!txId) return;
   const newDesc = document.getElementById('rename-input').value.trim();
   if (!newDesc) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = transactions.find(t => t.id === txId);
   if (!tx) return;
   tx.description = newDesc;
   closeModal('modal-rename-tx');
-  activeTxId = null;
 
   if (Demo.active) { renderAll(); toast('Descrição atualizada. (modo demo — não salva)'); return; }
   try {
@@ -831,7 +834,10 @@ function openChangeCatModal() {
   if (!activeTxId) return;
   const tx = transactions.find(t => t.id === activeTxId);
   if (!tx) return;
+  const modal = document.getElementById('modal-change-cat');
+  modal.dataset.txId = activeTxId;
   hideTxMenu();
+  activeTxId      = null;
   activeChangeCat = tx.category;
 
   const grid = document.getElementById('change-cat-grid');
@@ -853,13 +859,13 @@ function openChangeCatModal() {
 }
 
 async function saveChangeCat() {
-  if (!activeTxId || !activeChangeCat) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const txId = document.getElementById('modal-change-cat').dataset.txId;
+  if (!txId || !activeChangeCat) return;
+  const tx = transactions.find(t => t.id === txId);
   if (!tx) return;
-  tx.category = activeChangeCat;
-  closeModal('modal-change-cat');
-  activeTxId      = null;
+  tx.category     = activeChangeCat;
   activeChangeCat = null;
+  closeModal('modal-change-cat');
 
   if (Demo.active) { renderAll(); toast('Categoria atualizada. (modo demo — não salva)'); return; }
   try {
