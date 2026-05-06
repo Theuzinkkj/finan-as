@@ -793,11 +793,15 @@ function closeTxMenu() {
   activeTxId = null;
 }
 
+function hideTxMenu() {
+  document.getElementById('tx-context-menu').classList.add('hidden');
+}
+
 function openRenameModal() {
   if (!activeTxId) return;
   const tx = transactions.find(t => t.id === activeTxId);
   if (!tx) return;
-  closeTxMenu();
+  hideTxMenu();
   document.getElementById('rename-input').value = tx.description;
   openModal('modal-rename-tx');
 }
@@ -827,7 +831,7 @@ function openChangeCatModal() {
   if (!activeTxId) return;
   const tx = transactions.find(t => t.id === activeTxId);
   if (!tx) return;
-  closeTxMenu();
+  hideTxMenu();
   activeChangeCat = tx.category;
 
   const grid = document.getElementById('change-cat-grid');
