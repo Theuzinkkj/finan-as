@@ -479,6 +479,22 @@
 .form-group input::placeholder,
 .form-group textarea::placeholder { color: var(--text-3); }
 
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(30,30,50,0.95) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
+
+[data-theme="light"] .form-group input:-webkit-autofill,
+[data-theme="light"] .form-group input:-webkit-autofill:hover,
+[data-theme="light"] .form-group input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255,252,245,0.98) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+}
+
 .form-group textarea { font-family: var(--font); font-size: .88rem; }
 
 .input-hint  { font-size: .73rem; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
