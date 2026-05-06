@@ -112,6 +112,25 @@
   color:      #6ee7b7;
 }
 
+/* Input overrides inside auth card — consistent border across all browsers */
+.auth-card .form-group input {
+  background:    rgba(255,255,255,0.07);
+  border:        1px solid rgba(255,255,255,0.15);
+  border-radius: 10px;
+}
+.auth-card .form-group input:focus {
+  border-color: var(--purple);
+  box-shadow:   0 0 0 1px var(--purple);
+}
+[data-theme="light"] .auth-card .form-group input {
+  background:  rgba(120,90,50,0.05);
+  border:      1px solid rgba(120,90,50,0.22);
+}
+[data-theme="light"] .auth-card .form-group input:focus {
+  border-color: var(--purple);
+  box-shadow:   0 0 0 1px var(--purple);
+}
+
 /* Submit button — full width */
 .auth-submit {
   width:           100%;
@@ -143,9 +162,15 @@
 .auth-demo-divider::before,
 .auth-demo-divider::after {
   content:     '';
+  display:     block;
   flex:        1;
   height:      1px;
-  background:  var(--border);
+  background:  rgba(255,255,255,0.15);
+}
+
+[data-theme="light"] .auth-demo-divider::before,
+[data-theme="light"] .auth-demo-divider::after {
+  background: rgba(120,90,50,0.2);
 }
 
 /* Demo button */
