@@ -464,10 +464,10 @@
 .form-group textarea {
   width:         100%;
   background:    rgba(255,255,255,.09);
-  border:        none;
+  border:        1px solid #333;
   box-shadow:    none;
-  border-radius: var(--r-sm);
   color:         var(--text);
+  border-radius: 10px;
   padding:       10px 13px;
   font-family:   var(--font);
   font-size:     .88rem;
