@@ -776,11 +776,13 @@ function openTxMenu(id, event) {
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
   const mw   = 180;
-  let left   = rect.right - mw + window.scrollX;
-  let top    = rect.bottom + 4 + window.scrollY;
+  const mh   = 120;
+  let left   = rect.right - mw;
+  let top    = rect.bottom + 4;
 
   if (left < 8) left = 8;
   if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+  if (top + mh > window.innerHeight - 8) top = rect.top - mh - 4;
 
   menu.style.left = left + 'px';
   menu.style.top  = top  + 'px';
