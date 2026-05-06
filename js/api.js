@@ -105,6 +105,11 @@ const CloudDB = {
   async remove(id) {
     return API.req('DELETE', `/api/transactions/${id}`);
   },
+
+  async update(tx) {
+    const { id, user_id: _dropped, ...payload } = tx;
+    return API.req('PATCH', `/api/transactions/${id}`, payload);
+  },
 };
 
 // =============================================

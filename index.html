@@ -255,6 +255,49 @@
     </button>
   </nav>
 
+  <!-- Context menu: Transaction options -->
+  <div id="tx-context-menu" class="tx-context-menu hidden">
+    <button onclick="openRenameModal()">✏️ Renomear</button>
+    <button onclick="openChangeCatModal()">🔁 Trocar categoria</button>
+    <button class="tx-menu-danger" onclick="txMenuDelete()">🗑️ Excluir</button>
+  </div>
+
+  <!-- Modal: Rename Transaction -->
+  <div class="modal-overlay hidden" id="modal-rename-tx">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Renomear transação</h2>
+        <button class="modal-close" data-close="modal-rename-tx">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="rename-input">Nova descrição</label>
+        <input type="text" id="rename-input" placeholder="Ex: Almoço no restaurante">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-rename-tx">Cancelar</button>
+        <button class="btn-primary" onclick="saveRenameTx()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Change Category -->
+  <div class="modal-overlay hidden" id="modal-change-cat">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Trocar categoria</h2>
+        <button class="modal-close" data-close="modal-change-cat">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Selecione a nova categoria</label>
+        <div class="category-grid" id="change-cat-grid"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-change-cat">Cancelar</button>
+        <button class="btn-primary" onclick="saveChangeCat()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Add Transaction -->
   <div class="modal-overlay hidden" id="modal-transaction">
     <div class="modal">

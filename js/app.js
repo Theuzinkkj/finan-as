@@ -9,6 +9,8 @@ let selectedCat    = '';
 let transactions   = [];
 let chatHistory    = [];
 let appInitialized = false;
+let activeTxId     = null;
+let activeChangeCat = null;
 
 // =============================================
 //  THEME
@@ -153,7 +155,7 @@ function txHTML(t) {
       <div class="tx-amount ${isIncome ? 'income' : 'expense'}">
         ${isIncome ? '+' : '−'}${fmt(t.amount)}
       </div>
-      <button class="tx-del" onclick="deleteTx('${t.id}')" title="Remover">✕</button>
+      <button class="tx-menu-btn" onclick="openTxMenu('${t.id}', event)" title="Opções">⋮</button>
     </div>`;
 }
 
@@ -757,6 +759,120 @@ async function deleteTx(id) {
 }
 
 // =============================================
+//  TRANSACTION CONTEXT MENU
+// =============================================
+function openTxMenu(id, event) {
+  event.stopPropagation();
+  const menu = document.getElementById('tx-context-menu');
+
+  if (activeTxId === id && !menu.classList.contains('hidden')) {
+    closeTxMenu();
+    return;
+  }
+
+  activeTxId = id;
+  menu.classList.remove('hidden');
+
+  const btn  = event.currentTarget;
+  const rect = btn.getBoundingClientRect();
+  const mw   = 180;
+  let left   = rect.right - mw + window.scrollX;
+  let top    = rect.bottom + 4 + window.scrollY;
+
+  if (left < 8) left = 8;
+  if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+}
+
+function closeTxMenu() {
+  document.getElementById('tx-context-menu').classList.add('hidden');
+  activeTxId = null;
+}
+
+function openRenameModal() {
+  if (!activeTxId) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  closeTxMenu();
+  document.getElementById('rename-input').value = tx.description;
+  openModal('modal-rename-tx');
+}
+
+async function saveRenameTx() {
+  if (!activeTxId) return;
+  const newDesc = document.getElementById('rename-input').value.trim();
+  if (!newDesc) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  tx.description = newDesc;
+  closeModal('modal-rename-tx');
+  activeTxId = null;
+
+  if (Demo.active) { renderAll(); toast('Descrição atualizada. (modo demo — não salva)'); return; }
+  try {
+    await DB.put(tx);
+    renderAll();
+    toast('Descrição atualizada.');
+    CloudDB.update(tx)
+      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+  } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
+}
+
+function openChangeCatModal() {
+  if (!activeTxId) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  closeTxMenu();
+  activeChangeCat = tx.category;
+
+  const grid = document.getElementById('change-cat-grid');
+  grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+    <button type="button" class="cat-btn${tx.category === key ? ' selected' : ''}" data-cat="${key}">
+      <span class="cat-icon">${cat.icon}</span>
+      <span>${cat.label}</span>
+    </button>`).join('');
+
+  grid.onclick = e => {
+    const btn = e.target.closest('.cat-btn');
+    if (!btn) return;
+    grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    activeChangeCat = btn.dataset.cat;
+  };
+
+  openModal('modal-change-cat');
+}
+
+async function saveChangeCat() {
+  if (!activeTxId || !activeChangeCat) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  tx.category = activeChangeCat;
+  closeModal('modal-change-cat');
+  activeTxId      = null;
+  activeChangeCat = null;
+
+  if (Demo.active) { renderAll(); toast('Categoria atualizada. (modo demo — não salva)'); return; }
+  try {
+    await DB.put(tx);
+    renderAll();
+    toast('Categoria atualizada.');
+    CloudDB.update(tx)
+      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+  } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
+}
+
+function txMenuDelete() {
+  const id = activeTxId;
+  closeTxMenu();
+  deleteTx(id);
+}
+
+// =============================================
 //  UI BUILDERS
 // =============================================
 function buildCategoryGrid() {
@@ -966,6 +1082,9 @@ function bindEvents() {
   document.addEventListener('click', e => {
     const t = e.target.closest('[data-close]');
     if (t) closeModal(t.dataset.close);
+    if (!e.target.closest('#tx-context-menu') && !e.target.closest('.tx-menu-btn')) {
+      closeTxMenu();
+    }
   });
 
   // Clique fora do modal

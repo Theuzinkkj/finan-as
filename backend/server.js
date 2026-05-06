@@ -298,6 +298,23 @@ app.delete('/api/transactions/:id', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
+  try {
+    const url = `${SUPA_URL}/rest/v1/transactions`
+              + `?id=eq.${encodeURIComponent(req.params.id)}`
+              + `&user_id=eq.${encodeURIComponent(req.userId)}`;
+
+    const { ok, status, data } = await proxyFetch(url, {
+      method:  'PATCH',
+      headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=minimal' },
+      body:    JSON.stringify(req.body),
+    });
+
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).end();
+  } catch (err) { next(err); }
+});
+
 // ── AI ────────────────────────────────────────────────────────────────────────
 
 app.post('/api/ai/chat', requireAuth, aiLimiter, async (req, res, next) => {
