@@ -809,10 +809,14 @@ function openTxMenu(id, event) {
   activeTxId = id;
   menu.classList.remove('hidden');
 
+  const tx = transactions.find(t => t.id === id);
+  const fixedBtn = document.getElementById('btn-menu-fixed');
+  if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
+
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
-  const mw   = 180;
-  const mh   = 160;
+  const mw   = 190;
+  const mh   = 200;
   let left   = rect.right - mw;
   let top    = rect.bottom + 4;
 
@@ -941,6 +945,24 @@ async function saveChangeCat() {
     await DB.put(tx);
     renderAll();
     toast('Categoria atualizada.');
+    CloudDB.update(tx)
+      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+  } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
+}
+
+async function toggleFixedTx() {
+  if (!activeTxId) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  tx.fixed = !tx.fixed;
+  closeTxMenu();
+
+  if (Demo.active) { renderAll(); toast(tx.fixed ? 'Marcado como fixo. (modo demo)' : 'Removido recorrência. (modo demo)'); return; }
+  try {
+    await DB.put(tx);
+    renderAll();
+    toast(tx.fixed ? '🔄 Transação marcada como fixa.' : 'Recorrência removida.');
     CloudDB.update(tx)
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));
