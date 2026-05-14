@@ -757,6 +757,7 @@ async function handleFormSubmit(e) {
   document.getElementById('invoice-group').classList.add('hidden');
   document.getElementById('invoice-items-list').innerHTML = '';
   document.getElementById('invoice-total').classList.add('hidden');
+  document.getElementById('amount-group').style.display   = '';
   document.getElementById('category-group').style.display = '';
   document.getElementById('desc-group').style.display     = '';
   resetAIResult();
@@ -1275,6 +1276,7 @@ function bindEvents() {
     document.getElementById('invoice-group').classList.add('hidden');
     document.getElementById('invoice-items-list').innerHTML = '';
     document.getElementById('invoice-total').classList.add('hidden');
+    document.getElementById('amount-group').style.display   = '';
     document.getElementById('category-group').style.display = '';
     document.getElementById('desc-group').style.display     = '';
     document.getElementById('btn-fixed').setAttribute('aria-pressed', 'false');
@@ -1319,6 +1321,7 @@ function bindEvents() {
         document.getElementById('invoice-items-list').innerHTML = '';
         document.getElementById('invoice-total').classList.add('hidden');
       }
+      document.getElementById('amount-group').style.display   = '';
       document.getElementById('category-group').style.display = isDespesa ? '' : 'none';
       document.getElementById('desc-group').style.display     = '';
       updateNotesFieldForType(selectedType);
@@ -1345,6 +1348,7 @@ function bindEvents() {
     }
     const isCredito = selectedPayment === 'credito';
     document.getElementById('invoice-group').classList.toggle('hidden', !isCredito);
+    document.getElementById('amount-group').style.display   = isCredito ? 'none' : '';
     document.getElementById('category-group').style.display = isCredito ? 'none' : '';
     document.getElementById('desc-group').style.display     = isCredito ? 'none' : '';
     if (!isCredito) {
