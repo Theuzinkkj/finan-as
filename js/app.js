@@ -4,8 +4,10 @@
 //  STATE
 // =============================================
 let currentDate    = new Date();
-let selectedType   = 'despesa';
-let selectedCat    = '';
+let selectedType    = 'despesa';
+let selectedCat     = '';
+let selectedPayment = '';
+let invoiceItems    = [];
 let transactions   = [];
 let chatHistory    = [];
 let appInitialized = false;
@@ -690,7 +692,9 @@ async function handleFormSubmit(e) {
   const notes  = document.getElementById('input-notes').value.trim();
   const date   = document.getElementById('input-date').value;
 
-  if (!amount || amount <= 0 || !desc || !date) return;
+  const hasInvoiceItems = selectedPayment === 'credito' && invoiceItems.length > 0;
+  if ((!amount || amount <= 0) && !hasInvoiceItems) return;
+  if (!desc || !date) return;
 
   const catErr = document.getElementById('cat-error');
   if (selectedType === 'despesa' && !selectedCat) {
@@ -698,20 +702,34 @@ async function handleFormSubmit(e) {
   }
   catErr.classList.add('hidden');
 
+  const finalAmount = (selectedPayment === 'credito' && invoiceItems.length > 0)
+    ? invoiceItems.reduce((s, it) => s + it.value, 0)
+    : amount;
+
+  if (!finalAmount || finalAmount <= 0) return;
+
   const tx = {
-    id:          genId(),
-    type:        selectedType,
-    amount,
-    category:    selectedType === 'receita' ? 'outros' : selectedCat,
-    description: desc,
+    id:            genId(),
+    type:          selectedType,
+    amount:        finalAmount,
+    category:      selectedType === 'receita' ? 'outros' : selectedCat,
+    description:   desc,
     notes,
     date,
+    paymentMethod: selectedPayment || null,
+    invoiceItems:  selectedPayment === 'credito' && invoiceItems.length > 0 ? [...invoiceItems] : null,
   };
 
   closeModal('modal-transaction');
   e.target.reset();
-  selectedCat = '';
+  selectedCat     = '';
+  selectedPayment = '';
+  invoiceItems    = [];
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('invoice-group').classList.add('hidden');
+  document.getElementById('invoice-items-list').innerHTML = '';
+  document.getElementById('invoice-total').classList.add('hidden');
   resetAIResult();
 
   if (Demo.active) {
@@ -905,6 +923,28 @@ function buildCategoryGrid() {
   });
 }
 
+function renderInvoiceItems() {
+  const list  = document.getElementById('invoice-items-list');
+  const total = invoiceItems.reduce((s, it) => s + it.value, 0);
+
+  list.innerHTML = invoiceItems.map((it, i) => `
+    <div class="invoice-item" data-index="${i}">
+      <span class="invoice-item-desc">${it.desc}</span>
+      <span class="invoice-item-value">${fmt(it.value)}</span>
+      <button type="button" class="invoice-item-remove" data-index="${i}">✕</button>
+    </div>`).join('');
+
+  const totalEl = document.getElementById('invoice-total');
+  if (invoiceItems.length > 0) {
+    totalEl.classList.remove('hidden');
+    document.getElementById('invoice-total-value').textContent = fmt(total);
+    document.getElementById('input-amount').value = total.toFixed(2);
+  } else {
+    totalEl.classList.add('hidden');
+    document.getElementById('input-amount').value = '';
+  }
+}
+
 function buildCategoryFilter() {
   const sel = document.getElementById('filter-category');
   Object.entries(CATEGORIES).forEach(([key, cat]) => {
@@ -1077,14 +1117,21 @@ function bindEvents() {
   // FAB — nova transação
   document.getElementById('btn-add').addEventListener('click', () => {
     setTodayDate();
-    selectedCat  = '';
-    selectedType = 'despesa';
+    selectedCat     = '';
+    selectedType    = 'despesa';
+    selectedPayment = '';
+    invoiceItems    = [];
     document.querySelectorAll('.type-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.type === 'despesa');
     });
     document.getElementById('category-group').style.display = '';
+    document.getElementById('payment-group').style.display  = '';
     document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById('cat-error').classList.add('hidden');
+    document.getElementById('invoice-group').classList.add('hidden');
+    document.getElementById('invoice-items-list').innerHTML = '';
+    document.getElementById('invoice-total').classList.add('hidden');
     document.getElementById('transaction-form').reset();
     updateNotesFieldForType('despesa');
     openModal('modal-transaction');
@@ -1115,10 +1162,74 @@ function bindEvents() {
       document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedType = btn.dataset.type;
-      document.getElementById('category-group').style.display =
-        selectedType === 'despesa' ? '' : 'none';
+      const isDespesa = selectedType === 'despesa';
+      document.getElementById('category-group').style.display = isDespesa ? '' : 'none';
+      document.getElementById('payment-group').style.display  = isDespesa ? '' : 'none';
+      if (!isDespesa) {
+        document.getElementById('invoice-group').classList.add('hidden');
+        invoiceItems    = [];
+        selectedPayment = '';
+        document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+        document.getElementById('invoice-items-list').innerHTML = '';
+        document.getElementById('invoice-total').classList.add('hidden');
+      }
       updateNotesFieldForType(selectedType);
     });
+  });
+
+  // Forma de pagamento
+  document.getElementById('payment-grid').addEventListener('click', e => {
+    const btn = e.target.closest('.payment-btn');
+    if (!btn) return;
+    const wasSelected = btn.classList.contains('selected');
+    document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
+    if (!wasSelected) {
+      btn.classList.add('selected');
+      selectedPayment = btn.dataset.payment;
+    } else {
+      selectedPayment = '';
+    }
+    const invoiceGroup = document.getElementById('invoice-group');
+    if (selectedPayment === 'credito') {
+      invoiceGroup.classList.remove('hidden');
+    } else {
+      invoiceGroup.classList.add('hidden');
+      invoiceItems = [];
+      document.getElementById('invoice-items-list').innerHTML = '';
+      document.getElementById('invoice-total').classList.add('hidden');
+    }
+  });
+
+  // Adicionar item de fatura
+  document.getElementById('btn-add-invoice-item').addEventListener('click', () => {
+    const descEl  = document.getElementById('invoice-item-desc');
+    const valueEl = document.getElementById('invoice-item-value');
+    const desc    = descEl.value.trim();
+    const value   = parseFloat(valueEl.value);
+    if (!desc || !value || value <= 0) return;
+    invoiceItems.push({ desc, value });
+    descEl.value  = '';
+    valueEl.value = '';
+    descEl.focus();
+    renderInvoiceItems();
+  });
+
+  // Pressionar Enter no campo de descrição de item move foco para valor
+  document.getElementById('invoice-item-desc').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('invoice-item-value').focus(); }
+  });
+
+  // Pressionar Enter no campo de valor adiciona o item
+  document.getElementById('invoice-item-value').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn-add-invoice-item').click(); }
+  });
+
+  // Remover item de fatura (delegado)
+  document.getElementById('invoice-items-list').addEventListener('click', e => {
+    const btn = e.target.closest('.invoice-item-remove');
+    if (!btn) return;
+    invoiceItems.splice(parseInt(btn.dataset.index), 1);
+    renderInvoiceItems();
   });
 
   // Navegação de mês

@@ -212,13 +212,13 @@ const Demo = {
       { id: 'demo_13', type: 'receita', amount: 4500.00, description: 'Salário',           category: 'outros',      notes: 'Salário mensal', date: this._date(p, 5)  },
       { id: 'demo_14', type: 'despesa', amount: 1200.00, description: 'Aluguel',           category: 'moradia',     notes: '',               date: this._date(p, 5)  },
       { id: 'demo_15', type: 'despesa', amount: 235.60,  description: 'Supermercado',      category: 'alimentacao', notes: '',               date: this._date(p, 8)  },
-      { id: 'demo_16', type: 'despesa', amount: 320.00,  description: 'Roupas',            category: 'vestuario',   notes: 'Compras',        date: this._date(p, 12) },
+      { id: 'demo_16', type: 'despesa', amount: 320.00,  description: 'Roupas',            category: 'compras',   notes: 'Compras',        date: this._date(p, 12) },
       { id: 'demo_17', type: 'despesa', amount: 150.00,  description: 'Consulta médica',   category: 'saude',       notes: '',               date: this._date(p, 15) },
       { id: 'demo_18', type: 'receita', amount: 500.00,  description: 'Venda de itens',    category: 'outros',      notes: 'Itens usados',   date: this._date(p, 18) },
       { id: 'demo_19', type: 'despesa', amount: 89.90,   description: 'Academia',          category: 'saude',       notes: 'Mensalidade',    date: this._date(p, 5)  },
       { id: 'demo_20', type: 'despesa', amount: 180.00,  description: 'Combustível',       category: 'transporte',  notes: '',               date: this._date(p, 20) },
       { id: 'demo_21', type: 'despesa', amount: 45.00,   description: 'Livros / cursos',   category: 'educacao',    notes: '',               date: this._date(p, 22) },
-      { id: 'demo_22', type: 'despesa', amount: 220.00,  description: 'Tênis novo',        category: 'vestuario',   notes: 'Desconto 20%',   date: this._date(p, 25) },
+      { id: 'demo_22', type: 'despesa', amount: 220.00,  description: 'Tênis novo',        category: 'compras',   notes: 'Desconto 20%',   date: this._date(p, 25) },
     ];
   },
 };

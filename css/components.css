@@ -568,6 +568,108 @@
 .cat-btn:hover     { border-color: var(--border-h); background: rgba(255,255,255,.08); }
 .cat-btn.selected  { border-color: var(--purple); background: rgba(124,58,237,.2); color: var(--purple-l); }
 
+/* =============================================
+   PAYMENT METHOD
+   ============================================= */
+.payment-grid {
+  display:               grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:                   6px;
+}
+.payment-btn {
+  background:     rgba(255,255,255,.04);
+  border:         1.5px solid var(--border);
+  border-radius:  10px;
+  color:          var(--text-2);
+  padding:        8px 4px;
+  cursor:         pointer;
+  font-family:    var(--font);
+  font-size:      .7rem;
+  font-weight:    600;
+  text-align:     center;
+  transition:     all .18s;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            3px;
+}
+.payment-btn .payment-icon { font-size: 1.15rem; }
+.payment-btn:hover    { border-color: var(--border-h); background: rgba(255,255,255,.08); }
+.payment-btn.selected { border-color: var(--purple); background: rgba(124,58,237,.2); color: var(--purple-l); }
+
+/* =============================================
+   INVOICE ITEMS
+   ============================================= */
+.invoice-add-row {
+  display: flex;
+  gap:     6px;
+  margin-bottom: 8px;
+}
+.invoice-add-row input {
+  flex:          1;
+  background:    rgba(255,255,255,.05);
+  border:        1px solid var(--border);
+  border-radius: 10px;
+  padding:       9px 12px;
+  color:         var(--text);
+  font-size:     .86rem;
+  font-family:   var(--font);
+  transition:    border-color .2s;
+  outline:       none;
+}
+.invoice-add-row input:focus   { border-color: var(--purple); }
+.invoice-add-row input::placeholder { color: var(--text-3); }
+.invoice-add-row input[type="number"] { max-width: 100px; }
+.btn-add-item {
+  background:    var(--purple);
+  border:        none;
+  border-radius: 10px;
+  color:         #fff;
+  padding:       0 14px;
+  font-size:     1.4rem;
+  font-weight:   300;
+  cursor:        pointer;
+  transition:    opacity .18s;
+  flex-shrink:   0;
+}
+.btn-add-item:hover { opacity: .82; }
+.invoice-item {
+  display:         flex;
+  align-items:     center;
+  background:      rgba(255,255,255,.04);
+  border:          1px solid var(--border);
+  border-radius:   8px;
+  padding:         7px 10px;
+  margin-bottom:   5px;
+  gap:             8px;
+}
+.invoice-item-desc  { flex: 1; font-size: .84rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.invoice-item-value { font-size: .84rem; font-weight: 600; color: var(--red); flex-shrink: 0; }
+.invoice-item-remove {
+  background:    none;
+  border:        none;
+  color:         var(--text-3);
+  cursor:        pointer;
+  font-size:     .75rem;
+  padding:       2px 5px;
+  border-radius: 4px;
+  transition:    color .15s;
+  flex-shrink:   0;
+}
+.invoice-item-remove:hover { color: var(--red); }
+.invoice-total {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  padding:         8px 10px;
+  border-top:      1px solid var(--border);
+  margin-top:      4px;
+  font-size:       .84rem;
+  font-weight:     600;
+  color:           var(--text-2);
+}
+.invoice-total span:last-child { color: var(--red); }
+
 .btn-primary {
   background:    linear-gradient(135deg, var(--purple), #2563eb);
   color:         #fff;
