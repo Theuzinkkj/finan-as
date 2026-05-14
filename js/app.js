@@ -812,7 +812,7 @@ function openTxMenu(id, event) {
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
   const mw   = 180;
-  const mh   = 120;
+  const mh   = 160;
   let left   = rect.right - mw;
   let top    = rect.bottom + 4;
 
@@ -860,6 +860,39 @@ async function saveRenameTx() {
     await DB.put(tx);
     renderAll();
     toast('Descrição atualizada.');
+    CloudDB.update(tx)
+      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+  } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
+}
+
+function openEditAmountModal() {
+  if (!activeTxId) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  const modal = document.getElementById('modal-edit-amount');
+  modal.dataset.txId = activeTxId;
+  hideTxMenu();
+  activeTxId = null;
+  document.getElementById('edit-amount-input').value = tx.amount.toFixed(2);
+  openModal('modal-edit-amount');
+}
+
+async function saveEditAmount() {
+  const txId = document.getElementById('modal-edit-amount').dataset.txId;
+  if (!txId) return;
+  const newAmount = parseFloat(document.getElementById('edit-amount-input').value);
+  if (!newAmount || newAmount <= 0) return;
+  const tx = transactions.find(t => t.id === txId);
+  if (!tx) return;
+  tx.amount = newAmount;
+  closeModal('modal-edit-amount');
+
+  if (Demo.active) { renderAll(); toast('Valor atualizado. (modo demo — não salva)'); return; }
+  try {
+    await DB.put(tx);
+    renderAll();
+    toast('Valor atualizado.');
     CloudDB.update(tx)
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));

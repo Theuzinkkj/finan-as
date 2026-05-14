@@ -258,6 +258,7 @@
   <!-- Context menu: Transaction options -->
   <div id="tx-context-menu" class="tx-context-menu hidden">
     <button onclick="openRenameModal()">✏️ Renomear</button>
+    <button onclick="openEditAmountModal()">💲 Editar valor</button>
     <button onclick="openChangeCatModal()">🔁 Trocar categoria</button>
     <button class="tx-menu-danger" onclick="txMenuDelete()">🗑️ Excluir</button>
   </div>
@@ -276,6 +277,24 @@
       <div class="form-actions">
         <button class="btn-secondary" data-close="modal-rename-tx">Cancelar</button>
         <button class="btn-primary" onclick="saveRenameTx()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Amount -->
+  <div class="modal-overlay hidden" id="modal-edit-amount">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Editar valor</h2>
+        <button class="modal-close" data-close="modal-edit-amount">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="edit-amount-input">Novo valor (R$)</label>
+        <input type="number" id="edit-amount-input" step="0.01" min="0.01" placeholder="0,00">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-edit-amount">Cancelar</button>
+        <button class="btn-primary" onclick="saveEditAmount()">Salvar</button>
       </div>
     </div>
   </div>
