@@ -825,7 +825,7 @@ function openTxMenu(id, event) {
   const fixedBtn = document.getElementById('btn-menu-fixed');
   if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
   const addFaturaBtn = document.getElementById('btn-menu-add-fatura');
-  if (addFaturaBtn) addFaturaBtn.classList.toggle('hidden', !(tx?.invoiceItems?.length > 0));
+  if (addFaturaBtn) addFaturaBtn.classList.toggle('hidden', tx?.paymentMethod !== 'credito');
 
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
@@ -1016,7 +1016,7 @@ function renderFaturaEditItems() {
 
 async function saveAddToFatura() {
   const txId = document.getElementById('modal-add-fatura').dataset.txId;
-  if (!txId || faturaEditItems.length === 0) return;
+  if (!txId || faturaEditItems.length === 0) { toast('Adicione pelo menos um item.', 'err'); return; }
   const tx = transactions.find(t => t.id === txId);
   if (!tx) return;
 
