@@ -670,6 +670,68 @@
 }
 .invoice-total span:last-child { color: var(--red); }
 
+/* =============================================
+   FIXED TOGGLE
+   ============================================= */
+.fixed-row {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             12px;
+}
+.fixed-row-text   { flex: 1; }
+.fixed-row-label  { display: block; font-size: .84rem; font-weight: 600; color: var(--text); }
+.fixed-row-sub    { display: block; font-size: .72rem; color: var(--text-3); margin-top: 2px; }
+
+.toggle-switch {
+  position:      relative;
+  width:         44px;
+  height:        24px;
+  background:    rgba(255,255,255,.10);
+  border:        1.5px solid var(--border);
+  border-radius: 12px;
+  cursor:        pointer;
+  transition:    background .2s, border-color .2s;
+  flex-shrink:   0;
+  padding:       0;
+}
+.toggle-switch::after {
+  content:    '';
+  position:   absolute;
+  left:       3px;
+  top:        50%;
+  transform:  translateY(-50%);
+  width:      16px;
+  height:     16px;
+  background: var(--text-3);
+  border-radius: 50%;
+  transition: left .2s, background .2s;
+}
+.toggle-switch[aria-pressed="true"] {
+  background:   rgba(99,102,241,.35);
+  border-color: var(--purple);
+}
+.toggle-switch[aria-pressed="true"]::after {
+  left:       calc(100% - 19px);
+  background: var(--purple-l);
+}
+
+.badge-fixed {
+  display:          inline-flex;
+  align-items:      center;
+  gap:              3px;
+  font-size:        .64rem;
+  font-weight:      600;
+  color:            var(--purple-l);
+  background:       rgba(99,102,241,.15);
+  border:           1px solid rgba(99,102,241,.3);
+  border-radius:    5px;
+  padding:          1px 5px;
+  margin-left:      5px;
+  vertical-align:   middle;
+  letter-spacing:   .01em;
+}
+
 .btn-primary {
   background:    linear-gradient(135deg, var(--purple), #2563eb);
   color:         #fff;

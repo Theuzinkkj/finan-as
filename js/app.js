@@ -7,6 +7,7 @@ let currentDate    = new Date();
 let selectedType    = 'despesa';
 let selectedCat     = '';
 let selectedPayment = '';
+let selectedFixed   = false;
 let invoiceItems    = [];
 let transactions   = [];
 let chatHistory    = [];
@@ -54,7 +55,19 @@ function monthLabel(d) {
 
 function txOfMonth(d = currentDate) {
   const key = mkKey(d);
-  return transactions.filter(t => t.date.startsWith(key));
+  const [ty, tm] = key.split('-').map(Number);
+  const daysInMonth = new Date(ty, tm, 0).getDate();
+
+  const regular = transactions.filter(t => !t.fixed && t.date.startsWith(key));
+
+  const fixed = transactions
+    .filter(t => t.fixed && t.date.slice(0, 7) <= key)
+    .map(t => {
+      const day = Math.min(parseInt(t.date.slice(8, 10), 10), daysInMonth);
+      return { ...t, date: `${key}-${pad2(day)}` };
+    });
+
+  return [...regular, ...fixed];
 }
 
 function escHtml(str) {
@@ -143,14 +156,15 @@ function renderCards(txs) {
 //  RENDER — TRANSACTION ITEM
 // =============================================
 function txHTML(t) {
-  const isIncome = t.type === 'receita';
-  const cat      = CATEGORIES[t.category] || CATEGORIES.outros;
-  const note     = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
+  const isIncome   = t.type === 'receita';
+  const cat        = CATEGORIES[t.category] || CATEGORIES.outros;
+  const note       = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
+  const fixedBadge = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
   return `
     <div class="tx-item" data-id="${t.id}">
       <div class="tx-icon">${isIncome ? '💰' : cat.icon}</div>
       <div class="tx-info">
-        <div class="tx-desc">${escHtml(t.description)}</div>
+        <div class="tx-desc">${escHtml(t.description)}${fixedBadge}</div>
         <div class="tx-meta">${isIncome ? 'Receita' : cat.label} &bull; ${fmtDate(t.date)}</div>
         ${note}
       </div>
@@ -716,6 +730,7 @@ async function handleFormSubmit(e) {
     description:   desc,
     notes,
     date,
+    fixed:         selectedFixed,
     paymentMethod: selectedPayment || null,
     invoiceItems:  selectedPayment === 'credito' && invoiceItems.length > 0 ? [...invoiceItems] : null,
   };
@@ -724,7 +739,10 @@ async function handleFormSubmit(e) {
   e.target.reset();
   selectedCat     = '';
   selectedPayment = '';
+  selectedFixed   = false;
   invoiceItems    = [];
+  const fixedBtn = document.getElementById('btn-fixed');
+  if (fixedBtn) { fixedBtn.setAttribute('aria-pressed', 'false'); }
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('invoice-group').classList.add('hidden');
@@ -1120,6 +1138,7 @@ function bindEvents() {
     selectedCat     = '';
     selectedType    = 'despesa';
     selectedPayment = '';
+    selectedFixed   = false;
     invoiceItems    = [];
     document.querySelectorAll('.type-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.type === 'despesa');
@@ -1132,6 +1151,7 @@ function bindEvents() {
     document.getElementById('invoice-group').classList.add('hidden');
     document.getElementById('invoice-items-list').innerHTML = '';
     document.getElementById('invoice-total').classList.add('hidden');
+    document.getElementById('btn-fixed').setAttribute('aria-pressed', 'false');
     document.getElementById('transaction-form').reset();
     updateNotesFieldForType('despesa');
     openModal('modal-transaction');
@@ -1175,6 +1195,12 @@ function bindEvents() {
       }
       updateNotesFieldForType(selectedType);
     });
+  });
+
+  // Toggle Fixo
+  document.getElementById('btn-fixed').addEventListener('click', () => {
+    selectedFixed = !selectedFixed;
+    document.getElementById('btn-fixed').setAttribute('aria-pressed', selectedFixed);
   });
 
   // Forma de pagamento
