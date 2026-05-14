@@ -259,6 +259,7 @@
   <div id="tx-context-menu" class="tx-context-menu hidden">
     <button onclick="openRenameModal()">✏️ Renomear</button>
     <button onclick="openEditAmountModal()">💲 Editar valor</button>
+    <button id="btn-menu-add-fatura" class="hidden" onclick="openAddToFaturaModal()">➕ Adicionar à fatura</button>
     <button onclick="openChangeCatModal()">🔁 Trocar categoria</button>
     <button id="btn-menu-fixed" onclick="toggleFixedTx()">🔄 Repetir todo mês</button>
     <button class="tx-menu-danger" onclick="txMenuDelete()">🗑️ Excluir</button>
@@ -296,6 +297,36 @@
       <div class="form-actions">
         <button class="btn-secondary" data-close="modal-edit-amount">Cancelar</button>
         <button class="btn-primary" onclick="saveEditAmount()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add to Fatura -->
+  <div class="modal-overlay hidden" id="modal-add-fatura">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Adicionar à fatura</h2>
+        <button class="modal-close" data-close="modal-add-fatura">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Novo item</label>
+        <div class="invoice-add-row">
+          <input type="text" id="fatura-edit-desc" placeholder="Ex: Tênis, jantar...">
+          <input type="number" id="fatura-edit-value" step="0.01" min="0.01" placeholder="0,00">
+          <button type="button" class="btn-add-item" id="btn-fatura-edit-add">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Itens na fatura</label>
+        <div id="fatura-edit-list"></div>
+        <div class="invoice-total" id="fatura-edit-total">
+          <span>Total:</span>
+          <span id="fatura-edit-total-value">R$ 0,00</span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-add-fatura">Cancelar</button>
+        <button class="btn-primary" onclick="saveAddToFatura()">Salvar</button>
       </div>
     </div>
   </div>

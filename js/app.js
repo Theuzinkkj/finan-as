@@ -823,6 +823,8 @@ function openTxMenu(id, event) {
   const tx = transactions.find(t => t.id === id);
   const fixedBtn = document.getElementById('btn-menu-fixed');
   if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
+  const addFaturaBtn = document.getElementById('btn-menu-add-fatura');
+  if (addFaturaBtn) addFaturaBtn.classList.toggle('hidden', !(tx?.invoiceItems?.length > 0));
 
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
@@ -978,6 +980,62 @@ async function toggleFixedTx() {
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
+}
+
+let faturaEditItems = [];
+
+function openAddToFaturaModal() {
+  if (!activeTxId) return;
+  const tx = transactions.find(t => t.id === activeTxId);
+  if (!tx) return;
+  const modal = document.getElementById('modal-add-fatura');
+  modal.dataset.txId = activeTxId;
+  faturaEditItems = tx.invoiceItems ? [...tx.invoiceItems] : [];
+  hideTxMenu();
+  activeTxId = null;
+  document.getElementById('fatura-edit-desc').value  = '';
+  document.getElementById('fatura-edit-value').value = '';
+  renderFaturaEditItems();
+  openModal('modal-add-fatura');
+}
+
+function renderFaturaEditItems() {
+  const list  = document.getElementById('fatura-edit-list');
+  const total = faturaEditItems.reduce((s, it) => s + it.value, 0);
+
+  list.innerHTML = faturaEditItems.map((it, i) => `
+    <div class="invoice-item" data-index="${i}">
+      <span class="invoice-item-desc">${escHtml(it.desc)}</span>
+      <span class="invoice-item-value">${fmt(it.value)}</span>
+      <button type="button" class="invoice-item-remove" data-fatura-index="${i}">✕</button>
+    </div>`).join('') || '<p style="font-size:.8rem;color:var(--text-3);text-align:center;padding:8px 0">Nenhum item ainda</p>';
+
+  document.getElementById('fatura-edit-total-value').textContent = fmt(total);
+}
+
+async function saveAddToFatura() {
+  const txId = document.getElementById('modal-add-fatura').dataset.txId;
+  if (!txId || faturaEditItems.length === 0) return;
+  const tx = transactions.find(t => t.id === txId);
+  if (!tx) return;
+
+  tx.invoiceItems = [...faturaEditItems];
+  tx.amount       = faturaEditItems.reduce((s, it) => s + it.value, 0);
+  tx.description  = (() => {
+    const names = faturaEditItems.slice(0, 3).map(it => it.desc).join(', ');
+    return faturaEditItems.length > 3 ? `${names}…` : names;
+  })();
+  closeModal('modal-add-fatura');
+
+  if (Demo.active) { renderAll(); toast('Fatura atualizada. (modo demo — não salva)'); return; }
+  try {
+    await DB.put(tx);
+    renderAll();
+    toast('Fatura atualizada!');
+    CloudDB.update(tx)
+      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+  } catch (err) { toast('Erro ao atualizar fatura.', 'err'); }
 }
 
 function txMenuDelete() {
@@ -1326,6 +1384,35 @@ function bindEvents() {
     if (!btn) return;
     invoiceItems.splice(parseInt(btn.dataset.index), 1);
     renderInvoiceItems();
+  });
+
+  // Modal editar fatura — adicionar item
+  document.getElementById('btn-fatura-edit-add').addEventListener('click', () => {
+    const descEl  = document.getElementById('fatura-edit-desc');
+    const valueEl = document.getElementById('fatura-edit-value');
+    const desc    = descEl.value.trim();
+    const value   = parseFloat(valueEl.value);
+    if (!desc || !value || value <= 0) return;
+    faturaEditItems.push({ desc, value });
+    descEl.value  = '';
+    valueEl.value = '';
+    descEl.focus();
+    renderFaturaEditItems();
+  });
+
+  document.getElementById('fatura-edit-desc').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('fatura-edit-value').focus(); }
+  });
+  document.getElementById('fatura-edit-value').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn-fatura-edit-add').click(); }
+  });
+
+  // Modal editar fatura — remover item (delegado)
+  document.getElementById('fatura-edit-list').addEventListener('click', e => {
+    const btn = e.target.closest('.invoice-item-remove');
+    if (!btn) return;
+    faturaEditItems.splice(parseInt(btn.dataset.faturaIndex), 1);
+    renderFaturaEditItems();
   });
 
   // Navegação de mês
