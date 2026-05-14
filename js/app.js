@@ -702,7 +702,7 @@ async function handleFormSubmit(e) {
   e.preventDefault();
 
   const amount = parseFloat(document.getElementById('input-amount').value);
-  const desc   = document.getElementById('input-description').value.trim();
+  let   desc   = document.getElementById('input-description').value.trim();
   const notes  = document.getElementById('input-notes').value.trim();
   const date   = document.getElementById('input-date').value;
 
