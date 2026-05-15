@@ -130,6 +130,7 @@
         <div class="card chart-card">
           <h3 class="chart-title">Evolução Diária de Gastos <span class="chart-title-hint">passe o mouse para detalhes</span></h3>
           <canvas id="line-chart"></canvas>
+          <div id="line-click-info" class="line-click-panel"></div>
         </div>
       </div>
 
@@ -328,6 +329,29 @@
       <div class="form-actions">
         <button class="btn-secondary" data-close="modal-add-fatura">Cancelar</button>
         <button class="btn-primary" onclick="saveAddToFatura()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: View Fatura -->
+  <div class="modal-overlay hidden" id="modal-view-fatura">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="view-fatura-title">Fatura</h2>
+          <span class="view-fatura-date-label" id="view-fatura-date"></span>
+        </div>
+        <button class="modal-close" data-close="modal-view-fatura">✕</button>
+      </div>
+      <div class="form-group">
+        <div id="view-fatura-list"></div>
+        <div class="invoice-total" style="margin-top:10px">
+          <span>Total:</span>
+          <span id="view-fatura-total" style="color:#f87171;font-weight:700"></span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" data-close="modal-view-fatura">Fechar</button>
       </div>
     </div>
   </div>

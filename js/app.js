@@ -174,11 +174,14 @@ function renderCards(txs) {
 //  RENDER — TRANSACTION ITEM
 // =============================================
 function txHTML(t) {
-  const isIncome   = t.type === 'receita';
-  const cat        = CATEGORIES[t.category] || CATEGORIES.outros;
-  const note       = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
-  const fixedBadge = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
-  const isSel      = selectedTxIds.has(t.id);
+  const isIncome    = t.type === 'receita';
+  const cat         = CATEGORIES[t.category] || CATEGORIES.outros;
+  const note        = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
+  const fixedBadge  = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
+  const isSel       = selectedTxIds.has(t.id);
+  const faturaBtn   = (t.invoiceItems && t.invoiceItems.length > 0)
+    ? `<button class="tx-fatura-btn" onclick="openViewFaturaModal('${t.id}', event)" title="Ver itens da fatura">📄 Fatura</button>`
+    : '';
   return `
     <div class="tx-item${isSel ? ' tx-selected' : ''}" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
       <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
@@ -191,6 +194,7 @@ function txHTML(t) {
       <div class="tx-amount ${isIncome ? 'income' : 'expense'}">
         ${isIncome ? '+' : '−'}${fmt(t.amount)}
       </div>
+      ${faturaBtn}
       <button class="tx-menu-btn" onclick="openTxMenu('${t.id}', event)" title="Opções">⋮</button>
     </div>`;
 }
@@ -649,6 +653,27 @@ async function saveAddToFatura() {
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));
   } catch (err) { toast('Erro ao atualizar fatura.', 'err'); }
+}
+
+function openViewFaturaModal(id, event) {
+  event.stopPropagation();
+  const tx = transactions.find(t => t.id === id);
+  if (!tx || !tx.invoiceItems || tx.invoiceItems.length === 0) return;
+
+  document.getElementById('view-fatura-title').textContent = tx.description || 'Fatura';
+  document.getElementById('view-fatura-date').textContent  = fmtDate(tx.date);
+
+  const list = document.getElementById('view-fatura-list');
+  list.innerHTML = tx.invoiceItems.map(it => `
+    <div class="view-fatura-item">
+      <span class="view-fatura-desc">${escHtml(it.desc)}</span>
+      <span class="view-fatura-value">${fmt(it.value)}</span>
+    </div>`).join('');
+
+  document.getElementById('view-fatura-total').textContent =
+    fmt(tx.invoiceItems.reduce((s, it) => s + it.value, 0));
+
+  openModal('modal-view-fatura');
 }
 
 function txMenuDelete() {
