@@ -678,9 +678,11 @@ function buildCategoryGrid() {
   const grid = document.getElementById('category-grid');
   grid.addEventListener('click', e => {
     if (e.target.closest('#btn-add-cat')) {
-      document.getElementById('input-cat-icon').value  = '';
+      document.getElementById('btn-cat-icon').textContent = '🏷️';
+      document.getElementById('btn-cat-icon').dataset.emoji = '';
       document.getElementById('input-cat-label').value = '';
       document.getElementById('cat-label-error').classList.add('hidden');
+      document.getElementById('emoji-picker-panel').classList.add('hidden');
       openModal('modal-custom-cat');
       return;
     }
@@ -949,7 +951,7 @@ function bindEvents() {
       document.getElementById('cat-label-error').classList.remove('hidden');
       return;
     }
-    const icon   = document.getElementById('input-cat-icon').value.trim() || '🏷️';
+    const icon   = document.getElementById('btn-cat-icon').dataset.emoji || '🏷️';
     const colors = ['#f59e0b','#3b82f6','#8b5cf6','#10b981','#ec4899','#84cc16','#f97316','#6366f1','#94a3b8'];
     const color  = colors[Object.keys(CATEGORIES).length % colors.length];
     const key    = 'custom_' + Date.now();
@@ -964,6 +966,40 @@ function bindEvents() {
     closeModal('modal-custom-cat');
     toast(`Categoria "${label}" criada!`);
   });
+
+  // Emoji picker
+  (function setupEmojiPicker() {
+    const EMOJIS = [
+      '🏷️','🍕','🍔','🍣','🍺','☕','🛒','🚗','🚌','✈️','🏠','🏥','🎓',
+      '📚','💊','💡','🔧','💻','📱','🎮','🎵','🎬','🏋️','⚽','🏊','🐶',
+      '🐱','🌱','🌍','♻️','💰','💳','💸','🏦','🎁','🎉','❤️','👔','👗',
+      '💄','🧴','🛁','🧹','⚡','💧','🔑','📦','🚀','🌟','🔔','📅',
+    ];
+    const btn   = document.getElementById('btn-cat-icon');
+    const panel = document.getElementById('emoji-picker-panel');
+
+    EMOJIS.forEach(em => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ep-emoji'; b.textContent = em;
+      b.addEventListener('click', () => {
+        btn.textContent  = em;
+        btn.dataset.emoji = em;
+        panel.classList.add('hidden');
+      });
+      panel.appendChild(b);
+    });
+
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      panel.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', e => {
+      if (!panel.contains(e.target) && e.target !== btn) {
+        panel.classList.add('hidden');
+      }
+    });
+  })();
 
   // Tipo de transação
   document.querySelectorAll('.type-btn').forEach(btn => {

@@ -484,14 +484,15 @@
       </div>
       <form id="form-custom-cat" novalidate>
         <div class="form-group custom-cat-emoji-row">
-          <div class="custom-cat-emoji-wrap">
-            <label for="input-cat-icon">Emoji</label>
-            <input type="text" id="input-cat-icon" placeholder="🏷️" maxlength="2" class="input-emoji">
-          </div>
           <div class="custom-cat-name-wrap">
             <label for="input-cat-label">Nome</label>
             <input type="text" id="input-cat-label" placeholder="Ex: Academia" maxlength="20" required>
             <span class="field-error hidden" id="cat-label-error">Digite um nome</span>
+          </div>
+          <div class="custom-cat-emoji-wrap">
+            <label>Emoji</label>
+            <button type="button" id="btn-cat-icon" class="btn-emoji-pick" aria-label="Escolher emoji">🏷️</button>
+            <div id="emoji-picker-panel" class="emoji-picker-panel hidden"></div>
           </div>
         </div>
         <div class="form-actions">

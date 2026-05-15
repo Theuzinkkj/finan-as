@@ -109,9 +109,18 @@
   border-radius: var(--r-sm);
   background:    rgba(255,255,255,.06);
   border:        1px solid var(--border);
-  transition:    all .2s;
+  transition:    background .2s, border-color .2s, box-shadow .2s, transform .15s;
 }
-.tx-item:hover { background: rgba(255,255,255,.1); border-color: var(--border-h); }
+.tx-item:hover {
+  background:    rgba(255,255,255,.11);
+  border-color:  var(--border-h);
+  box-shadow:    0 4px 16px rgba(0,0,0,.28), 0 0 0 1px rgba(255,255,255,.07);
+  transform:     translateY(-1px);
+}
+.tx-item:active {
+  transform:  translateY(0);
+  box-shadow: none;
+}
 
 .tx-icon {
   font-size:       1.25rem;
@@ -607,9 +616,33 @@
 .cat-btn-add:hover { border-color: var(--purple); color: var(--purple-l); }
 
 .custom-cat-emoji-row { display: flex; gap: 10px; align-items: flex-start; }
-.custom-cat-emoji-wrap { flex: 0 0 auto; }
+.custom-cat-emoji-wrap { flex: 0 0 auto; position: relative; }
 .custom-cat-name-wrap  { flex: 1; }
-.input-emoji { width: 62px; text-align: center; font-size: 1.4rem; padding: 6px 4px; }
+
+.btn-emoji-pick {
+  width: 62px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; line-height: 1;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer; transition: border-color .15s;
+}
+.btn-emoji-pick:hover { border-color: var(--purple); }
+
+.emoji-picker-panel {
+  position: absolute; right: 0; top: calc(100% + 6px);
+  width: 220px; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px; z-index: 9999;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+}
+.emoji-picker-panel .ep-emoji {
+  width: 32px; height: 32px; font-size: 1.2rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; cursor: pointer; transition: background .12s;
+  border: none; background: transparent;
+}
+.emoji-picker-panel .ep-emoji:hover { background: var(--surface-3, rgba(255,255,255,.08)); }
 
 /* =============================================
    PAYMENT METHOD
