@@ -32,6 +32,21 @@ function applyTheme(theme) {
 }
 
 // =============================================
+//  CUSTOM CATEGORIES
+// =============================================
+function loadCustomCategories() {
+  const saved = JSON.parse(localStorage.getItem('atlas_custom_cats') || '{}');
+  Object.assign(CATEGORIES, saved);
+}
+
+function saveCustomCategory(key, cat) {
+  CATEGORIES[key] = cat;
+  const saved = JSON.parse(localStorage.getItem('atlas_custom_cats') || '{}');
+  saved[key] = cat;
+  localStorage.setItem('atlas_custom_cats', JSON.stringify(saved));
+}
+
+// =============================================
 //  UTILITIES
 // =============================================
 const fmt   = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -645,17 +660,32 @@ function txMenuDelete() {
 // =============================================
 //  UI BUILDERS
 // =============================================
-function buildCategoryGrid() {
+function renderCategoryGrid() {
   const grid = document.getElementById('category-grid');
   grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
     <button type="button" class="cat-btn" data-cat="${key}">
       <span class="cat-icon">${cat.icon}</span>
       <span>${cat.label}</span>
-    </button>`).join('');
+    </button>`).join('') + `
+    <button type="button" class="cat-btn cat-btn-add" id="btn-add-cat">
+      <span class="cat-icon">+</span>
+      <span>Nova</span>
+    </button>`;
+}
 
+function buildCategoryGrid() {
+  renderCategoryGrid();
+  const grid = document.getElementById('category-grid');
   grid.addEventListener('click', e => {
+    if (e.target.closest('#btn-add-cat')) {
+      document.getElementById('input-cat-icon').value  = '';
+      document.getElementById('input-cat-label').value = '';
+      document.getElementById('cat-label-error').classList.add('hidden');
+      openModal('modal-custom-cat');
+      return;
+    }
     const btn = e.target.closest('.cat-btn');
-    if (!btn) return;
+    if (!btn || !btn.dataset.cat) return;
     grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     selectedCat = btn.dataset.cat;
@@ -693,11 +723,14 @@ function renderInvoiceItems() {
 }
 
 function buildCategoryFilter() {
-  const sel = document.getElementById('filter-category');
+  const sel  = document.getElementById('filter-category');
+  const prev = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
   Object.entries(CATEGORIES).forEach(([key, cat]) => {
     sel.insertAdjacentHTML('beforeend',
       `<option value="${key}">${cat.icon} ${cat.label}</option>`);
   });
+  if (prev) sel.value = prev;
 }
 
 function setTodayDate() {
@@ -907,6 +940,30 @@ function bindEvents() {
 
   // Formulário de transação
   document.getElementById('transaction-form').addEventListener('submit', handleFormSubmit);
+
+  // Formulário de categoria customizada
+  document.getElementById('form-custom-cat').addEventListener('submit', e => {
+    e.preventDefault();
+    const label = document.getElementById('input-cat-label').value.trim();
+    if (!label) {
+      document.getElementById('cat-label-error').classList.remove('hidden');
+      return;
+    }
+    const icon   = document.getElementById('input-cat-icon').value.trim() || '🏷️';
+    const colors = ['#f59e0b','#3b82f6','#8b5cf6','#10b981','#ec4899','#84cc16','#f97316','#6366f1','#94a3b8'];
+    const color  = colors[Object.keys(CATEGORIES).length % colors.length];
+    const key    = 'custom_' + Date.now();
+    saveCustomCategory(key, { label, icon, color });
+    renderCategoryGrid();
+    const grid = document.getElementById('category-grid');
+    grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+    const newBtn = grid.querySelector(`[data-cat="${key}"]`);
+    if (newBtn) { newBtn.classList.add('selected'); selectedCat = key; }
+    document.getElementById('cat-error').classList.add('hidden');
+    buildCategoryFilter();
+    closeModal('modal-custom-cat');
+    toast(`Categoria "${label}" criada!`);
+  });
 
   // Tipo de transação
   document.querySelectorAll('.type-btn').forEach(btn => {
@@ -1165,6 +1222,7 @@ async function startApp() {
 
   hideAuthScreen();
   renderMonthLabel();
+  loadCustomCategories();
   buildCategoryGrid();
   buildCategoryFilter();
   setTodayDate();

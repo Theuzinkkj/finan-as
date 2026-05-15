@@ -7,9 +7,10 @@
   border-radius:   var(--r);
   padding:         22px;
   backdrop-filter: blur(12px);
-  transition:      border-color .25s, opacity .2s, transform .2s;
+  transition:      border-color .25s, box-shadow .25s, opacity .2s, transform .2s;
 }
 .card:hover { border-color: var(--border-h); }
+.card-income:hover, .card-expense:hover { border-color: unset; }
 
 .card-header {
   display:         flex;
@@ -23,11 +24,12 @@
   background:   linear-gradient(135deg, rgba(124,58,237,.22), rgba(37,99,235,.10));
   border-color: rgba(124,58,237,.28);
 }
-.card-income  { border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
-.card-expense { border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
+.card-income  { border: 1px solid var(--green); display: flex; gap: 14px; align-items: center; }
+.card-expense { border: 1px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable:hover { opacity: .85; transform: translateY(-2px); }
-.card-clickable:active { opacity: .7; transform: translateY(0); }
+.card-clickable.card-income:hover  { border-color: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,.35); transform: translateY(-2px); }
+.card-clickable.card-expense:hover { border-color: var(--red);   box-shadow: 0 0 0 2px rgba(239,68,68,.35);   transform: translateY(-2px); }
+.card-clickable:active { transform: translateY(0); box-shadow: none; }
 
 .card-label {
   font-size:      .75rem;
