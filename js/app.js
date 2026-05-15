@@ -730,6 +730,12 @@ function switchTab(tabName) {
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
 
+function goToTransactions(type) {
+  switchTab('transactions');
+  const sel = document.getElementById('filter-type');
+  if (sel) { sel.value = type; renderAllTxs(); }
+}
+
 // =============================================
 //  AUTH SCREEN
 // =============================================

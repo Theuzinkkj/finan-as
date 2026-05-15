@@ -238,8 +238,10 @@ function drawDonut(txs) {
 // =============================================
 //  LINE CHART
 // =============================================
-let _lineChartPts    = [];
+let _lineChartPts     = [];
 let _lineChartTooltip = null;
+let _lineHoveredIdx   = -1;
+let _lineBaseImage    = null;
 
 function getOrCreateLineTooltip() {
   if (_lineChartTooltip) return _lineChartTooltip;
@@ -379,17 +381,6 @@ function drawLine(txs) {
   ctx.lineWidth   = 2.5;
   ctx.stroke();
 
-  pts.forEach(p => {
-    if (p.v === 0) return;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fillStyle   = '#a78bfa';
-    ctx.fill();
-    ctx.strokeStyle = chartBg();
-    ctx.lineWidth   = 2;
-    ctx.stroke();
-  });
-
   ctx.fillStyle    = chartFg(0.4);
   ctx.textAlign    = 'center';
   ctx.textBaseline = 'alphabetic';
@@ -399,17 +390,52 @@ function drawLine(txs) {
     ctx.fillText(d, x, H - pB + 18);
   }
 
+  _lineBaseImage  = ctx.getImageData(0, 0, W, H);
+  _lineHoveredIdx = -1;
+
+  function redrawLineDots(hovIdx) {
+    ctx.putImageData(_lineBaseImage, 0, 0);
+    _lineChartPts.forEach((p, i) => {
+      if (p.v === 0) return;
+      const hovered = i === hovIdx;
+      const r = hovered ? 7 : 4;
+      if (hovered) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(124,58,237,0.22)';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fillStyle   = hovered ? '#7c3aed' : '#a78bfa';
+      ctx.fill();
+      ctx.strokeStyle = chartBg();
+      ctx.lineWidth   = hovered ? 2.5 : 2;
+      ctx.stroke();
+    });
+  }
+
+  redrawLineDots(-1);
+
   canvas.onmousemove = e => {
     const r  = canvas.getBoundingClientRect();
     const mx = (e.clientX - r.left) * (canvas.width  / r.width);
     const my = (e.clientY - r.top)  * (canvas.height / r.height);
-    const hit = _lineChartPts.find(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 14);
-    canvas.style.cursor = hit ? 'pointer' : 'default';
-    if (hit) showLineTooltip(hit, r);
+    const idx = _lineChartPts.findIndex(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 16);
+    canvas.style.cursor = idx >= 0 ? 'pointer' : 'default';
+    if (idx !== _lineHoveredIdx) {
+      _lineHoveredIdx = idx;
+      redrawLineDots(idx);
+    }
+    if (idx >= 0) showLineTooltip(_lineChartPts[idx], r);
     else hideLineTooltip();
   };
 
-  canvas.onmouseleave = () => { canvas.style.cursor = 'default'; hideLineTooltip(); };
+  canvas.onmouseleave = () => {
+    canvas.style.cursor = 'default';
+    if (_lineHoveredIdx !== -1) { _lineHoveredIdx = -1; redrawLineDots(-1); }
+    hideLineTooltip();
+  };
 }
 
 // =============================================

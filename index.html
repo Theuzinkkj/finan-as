@@ -103,14 +103,14 @@
           <div class="card-value" id="balance-value">R$ 0,00</div>
           <div class="card-sub" id="balance-sub"></div>
         </div>
-        <div class="card card-income">
+        <div class="card card-income card-clickable" id="card-income" title="Ver receitas" onclick="goToTransactions('receita')">
           <div class="card-icon-box income-box">↑</div>
           <div>
             <div class="card-label">Receitas</div>
             <div class="card-value" id="income-value">R$ 0,00</div>
           </div>
         </div>
-        <div class="card card-expense">
+        <div class="card card-expense card-clickable" id="card-expense" title="Ver despesas" onclick="goToTransactions('despesa')">
           <div class="card-icon-box expense-box">↓</div>
           <div>
             <div class="card-label">Despesas</div>

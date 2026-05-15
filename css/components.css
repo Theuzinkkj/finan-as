@@ -7,7 +7,7 @@
   border-radius:   var(--r);
   padding:         22px;
   backdrop-filter: blur(12px);
-  transition:      border-color .25s;
+  transition:      border-color .25s, opacity .2s, transform .2s;
 }
 .card:hover { border-color: var(--border-h); }
 
@@ -25,6 +25,9 @@
 }
 .card-income  { border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
+.card-clickable { cursor: pointer; user-select: none; }
+.card-clickable:hover { opacity: .85; transform: translateY(-2px); }
+.card-clickable:active { opacity: .7; transform: translateY(0); }
 
 .card-label {
   font-size:      .75rem;
