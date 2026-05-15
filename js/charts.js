@@ -470,15 +470,15 @@ function drawLine(txs) {
     const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     const rows = pt.txList.map((t, i) => {
       const cat = CATEGORIES[t.category] || CATEGORIES.outros;
-      return `<div class="line-click-tx" style="animation-delay:${i * 70}ms">
+      return `<div class="line-click-tx" style="animation-delay:${120 + i * 110}ms">
         <span class="line-click-tx-desc">${cat.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t.description)}</span></span>
         <span class="line-click-tx-amount">${fmtV(t.amount)}</span>
       </div>`;
     }).join('');
     panel.innerHTML = `
-      <div class="line-click-day">Dia ${pt.day}</div>
+      <div class="line-click-day" style="animation-delay:60ms">Dia ${pt.day}</div>
       ${rows}
-      <div class="line-click-total" style="animation-delay:${pt.txList.length * 70}ms">
+      <div class="line-click-total" style="animation-delay:${120 + pt.txList.length * 110}ms">
         <span class="line-click-total-label">Total do dia</span>
         <span class="line-click-total-value">${fmtV(pt.v)}</span>
       </div>`;
