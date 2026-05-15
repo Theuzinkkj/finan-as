@@ -212,12 +212,8 @@
   .main           { padding: 20px 16px 90px; }
   .nav-tabs      { display: none; }
   .mobile-nav    { display: flex; }
-  .floating-dock {
-    bottom:        72px;
-    border-radius: 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    padding:       10px 16px;
-  }
+  .floating-dock { bottom: 76px; }
+  .dock-shelf    { height: 130px; }
 }
 
 @media (max-width: 560px) {
