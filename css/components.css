@@ -459,24 +459,67 @@
 .ai-section li + li   { margin-top: 3px; }
 
 /* =============================================
-   FLOATING DOCK (estilo Nubank)
+   PAGE FOOTER
    ============================================= */
-
-/* base gradiente fixa — cria o "chão" do dock */
-.dock-shelf {
-  position:       fixed;
-  bottom:         0;
-  left:           0;
-  right:          0;
-  height:         72px;
-  background:     linear-gradient(to top, rgba(8,8,18,1) 30%, transparent 100%);
-  pointer-events: none;
-  z-index:        199;
+.page-footer {
+  margin-top:      52px;
+  padding:         28px 0 32px;
+  border-top:      1px solid var(--border);
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             10px;
 }
 
+.page-footer-brand {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+  font-weight: 700;
+  font-size:   1rem;
+  color:       var(--text-2);
+  opacity:     .5;
+}
+.page-footer-brand .logo-icon { font-size: 1.15rem; }
+
+.page-footer-hint {
+  font-size: .72rem;
+  color:     var(--text-3);
+  opacity:   .4;
+}
+
+.page-footer-actions {
+  display:    flex;
+  gap:        10px;
+  margin-top: 6px;
+}
+
+.page-footer-btn {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  background:    rgba(255,255,255,.05);
+  border:        1px solid var(--border);
+  border-radius: 20px;
+  color:         var(--text-2);
+  font-family:   var(--font);
+  font-size:     .78rem;
+  padding:       7px 14px;
+  cursor:        pointer;
+  transition:    background .2s, border-color .2s, color .2s;
+}
+.page-footer-btn:hover {
+  background:   rgba(124,58,237,.12);
+  border-color: rgba(124,58,237,.35);
+  color:        var(--text);
+}
+
+/* =============================================
+   FLOATING DOCK (estilo Nubank)
+   ============================================= */
 .floating-dock {
   position:                fixed;
-  bottom:                  18px;
+  bottom:                  28px;
   left:                    50%;
   transform:               translateX(-50%);
   display:                 flex;

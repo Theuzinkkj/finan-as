@@ -213,7 +213,6 @@
   .nav-tabs      { display: none; }
   .mobile-nav    { display: flex; }
   .floating-dock { bottom: 76px; }
-  .dock-shelf    { height: 130px; }
 }
 
 @media (max-width: 560px) {
