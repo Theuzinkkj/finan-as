@@ -885,13 +885,11 @@ function switchTab(tabName) {
   const inlineAdd  = document.getElementById('btn-add-inline');
   const dock       = document.querySelector('.floating-dock');
   const inlineChat = document.getElementById('btn-chat-inline');
-  const footerActions = document.querySelector('.page-footer-actions');
   if (tabName === 'transactions') {
     fab.style.display        = 'none';
     inlineAdd.style.display  = 'flex';
     dock.style.display       = '';
     inlineChat.classList.add('hidden');
-    if (footerActions) footerActions.style.display = 'none';
     const ft = document.getElementById('filter-type');
     const fc = document.getElementById('filter-category');
     if (ft) ft.value = '';
@@ -902,13 +900,11 @@ function switchTab(tabName) {
     inlineAdd.style.display  = 'none';
     dock.style.display       = 'none';
     inlineChat.classList.remove('hidden');
-    if (footerActions) footerActions.style.display = 'none';
   } else {
     fab.style.display        = '';
     inlineAdd.style.display  = 'none';
     dock.style.display       = '';
     inlineChat.classList.add('hidden');
-    if (footerActions) footerActions.style.display = '';
   }
   if (tabName === 'analysis')  setTimeout(() => drawBars(txOfMonth()), 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
