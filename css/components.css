@@ -213,19 +213,18 @@
 .tx-menu-btn:hover { color: var(--text-1); background: rgba(255,255,255,.1); }
 
 .tx-fatura-btn {
-  background:    rgba(139,92,246,.15);
-  border:        1px solid rgba(139,92,246,.3);
+  background:    rgba(139,92,246,.12);
+  border:        1px solid rgba(139,92,246,.25);
   color:         var(--purple);
   cursor:        pointer;
-  padding:       3px 9px;
-  border-radius: 20px;
-  font-size:     .72rem;
-  font-weight:   600;
-  white-space:   nowrap;
+  padding:       3px 6px;
+  border-radius: 6px;
+  font-size:     .78rem;
+  line-height:   1;
   flex-shrink:   0;
   transition:    all .2s;
 }
-.tx-fatura-btn:hover { background: rgba(139,92,246,.28); border-color: rgba(139,92,246,.55); }
+.tx-fatura-btn:hover { background: rgba(139,92,246,.25); border-color: rgba(139,92,246,.5); }
 
 .view-fatura-date-label { font-size: .75rem; color: var(--text-3); display: block; margin-top: 2px; }
 .view-fatura-item {

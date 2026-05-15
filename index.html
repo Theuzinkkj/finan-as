@@ -261,7 +261,6 @@
   <div id="tx-context-menu" class="tx-context-menu hidden">
     <button onclick="openRenameModal()">✏️ Renomear</button>
     <button onclick="openEditAmountModal()">💲 Editar valor</button>
-    <button id="btn-menu-add-fatura" class="hidden" onclick="openAddToFaturaModal()">➕ Adicionar à fatura</button>
     <button onclick="openChangeCatModal()">🔁 Trocar categoria</button>
     <button id="btn-menu-fixed" onclick="toggleFixedTx()">🔄 Repetir todo mês</button>
     <button class="tx-menu-danger" onclick="txMenuDelete()">🗑️ Excluir</button>
@@ -351,6 +350,7 @@
         </div>
       </div>
       <div class="form-actions">
+        <button class="btn-secondary" onclick="openAddFaturaFromView()">➕ Adicionar item</button>
         <button class="btn-primary" data-close="modal-view-fatura">Fechar</button>
       </div>
     </div>

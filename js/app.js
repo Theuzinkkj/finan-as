@@ -180,7 +180,7 @@ function txHTML(t) {
   const fixedBadge  = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
   const isSel       = selectedTxIds.has(t.id);
   const faturaBtn   = (t.invoiceItems && t.invoiceItems.length > 0)
-    ? `<button class="tx-fatura-btn" onclick="openViewFaturaModal('${t.id}', event)" title="Ver itens da fatura">📄 Fatura</button>`
+    ? `<button class="tx-fatura-btn" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
     : '';
   return `
     <div class="tx-item${isSel ? ' tx-selected' : ''}" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
@@ -448,9 +448,6 @@ function openTxMenu(id, event) {
   const tx = transactions.find(t => t.id === id);
   const fixedBtn = document.getElementById('btn-menu-fixed');
   if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
-  const addFaturaBtn = document.getElementById('btn-menu-add-fatura');
-  if (addFaturaBtn) addFaturaBtn.classList.toggle('hidden', tx?.paymentMethod !== 'credito');
-
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
   const mw   = 190;
@@ -660,8 +657,9 @@ function openViewFaturaModal(id, event) {
   const tx = transactions.find(t => t.id === id);
   if (!tx || !tx.invoiceItems || tx.invoiceItems.length === 0) return;
 
-  document.getElementById('view-fatura-title').textContent = tx.description || 'Fatura';
-  document.getElementById('view-fatura-date').textContent  = fmtDate(tx.date);
+  document.getElementById('modal-view-fatura').dataset.txId = id;
+  document.getElementById('view-fatura-title').textContent  = tx.description || 'Fatura';
+  document.getElementById('view-fatura-date').textContent   = fmtDate(tx.date);
 
   const list = document.getElementById('view-fatura-list');
   list.innerHTML = tx.invoiceItems.map(it => `
@@ -674,6 +672,14 @@ function openViewFaturaModal(id, event) {
     fmt(tx.invoiceItems.reduce((s, it) => s + it.value, 0));
 
   openModal('modal-view-fatura');
+}
+
+function openAddFaturaFromView() {
+  const id = document.getElementById('modal-view-fatura').dataset.txId;
+  if (!id) return;
+  closeModal('modal-view-fatura');
+  activeTxId = id;
+  openAddToFaturaModal();
 }
 
 function txMenuDelete() {
