@@ -33,11 +33,11 @@
 .card-income  { border: 1px solid transparent; border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border: 1px solid transparent; border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable.card-income:hover  { border-left-width: 4px; background: linear-gradient(to right, rgba(16,185,129,.14) 0%, rgba(16,185,129,.06) 40%, transparent 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.32), -5px 0 18px rgba(16,185,129,.22); transform: translateY(-1px); }
-.card-clickable.card-expense:hover { border-left-width: 4px; background: linear-gradient(to right, rgba(239,68,68,.14)  0%, rgba(239,68,68,.06)  40%, transparent 100%); box-shadow: 0 0 0 1px rgba(239,68,68,.38),  -5px 0 18px rgba(239,68,68,.24); transform: translateY(-1px); }
+.card-clickable.card-income:hover  { border-left-width: 4px; background: radial-gradient(circle 120px at var(--mx,50%) var(--my,50%), rgba(16,185,129,.18) 0%, rgba(16,185,129,.07) 50%, transparent 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.32), -5px 0 18px rgba(16,185,129,.22); transform: translateY(-1px); }
+.card-clickable.card-expense:hover { border-left-width: 4px; background: radial-gradient(circle 120px at var(--mx,50%) var(--my,50%), rgba(239,68,68,.18)  0%, rgba(239,68,68,.07)  50%, transparent 100%); box-shadow: 0 0 0 1px rgba(239,68,68,.38),  -5px 0 18px rgba(239,68,68,.24); transform: translateY(-1px); }
 .card-clickable:active { transform: translateY(1px); }
-.card-clickable.card-income:active  { border-left-width: 4px; background: linear-gradient(to right, rgba(16,185,129,.22) 0%, rgba(16,185,129,.09) 45%, transparent 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.48), -6px 0 22px rgba(16,185,129,.28); transform: translateY(1px); }
-.card-clickable.card-expense:active { border-left-width: 4px; background: linear-gradient(to right, rgba(239,68,68,.22)  0%, rgba(239,68,68,.09)  45%, transparent 100%); box-shadow: 0 0 0 2px rgba(239,68,68,.52),  -6px 0 22px rgba(239,68,68,.30); transform: translateY(1px); }
+.card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 140px at var(--mx,50%) var(--my,50%), rgba(16,185,129,.28) 0%, rgba(16,185,129,.10) 50%, transparent 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.48), -6px 0 22px rgba(16,185,129,.28); transform: translateY(1px); }
+.card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 140px at var(--mx,50%) var(--my,50%), rgba(239,68,68,.28)  0%, rgba(239,68,68,.10)  50%, transparent 100%); box-shadow: 0 0 0 2px rgba(239,68,68,.52),  -6px 0 22px rgba(239,68,68,.30); transform: translateY(1px); }
 
 .card-label {
   font-size:      .75rem;

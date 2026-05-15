@@ -1327,3 +1327,16 @@ async function startApp() {
 }
 
 init();
+
+// Mouse spotlight nos cards de receita/despesa
+document.querySelectorAll('.card-clickable').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    card.style.setProperty('--my', `${e.clientY - r.top}px`);
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.removeProperty('--mx');
+    card.style.removeProperty('--my');
+  });
+});
