@@ -40,6 +40,7 @@ let _donutTotal   = 0;
 let _donutGeo     = { cx: 0, cy: 0, OR: 0, IR: 0 };
 let _donutTooltip = null;
 let _donutHovered = -1;
+let _donutCtx     = null;
 
 function getOrCreateDonutTooltip() {
   if (_donutTooltip) return _donutTooltip;
@@ -165,6 +166,7 @@ function drawDonut(txs) {
   _donutGeo   = { cx, cy, OR, IR };
   _donutTotal = total;
   _donutHovered = -1;
+  _donutCtx = ctx;
 
   let angle = -Math.PI / 2;
   const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
@@ -175,19 +177,40 @@ function drawDonut(txs) {
     const startAngle = angle;
     const endAngle   = angle + sweep;
     angle            = endAngle;
-    return { cat, val, pct: ((val / total) * 100).toFixed(1), startAngle, endAngle };
+    return { cat, val, pct: ((val / total) * 100).toFixed(1), startAngle, endAngle, key };
   });
 
-  _donutSlices.forEach(slice => {
-    legend.innerHTML += `
-      <div class="legend-item">
-        <div class="legend-dot" style="background:${slice.cat.color}"></div>
-        <span class="legend-label">${slice.cat.icon} ${slice.cat.label}</span>
-        <span class="legend-pct">${slice.pct}%</span>
-      </div>`;
+  _donutSlices.forEach((slice, i) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+
+    const barW = Math.round(parseFloat(slice.pct));
+    item.innerHTML = `
+      <div class="legend-dot" style="background:${slice.cat.color}"></div>
+      <span class="legend-label">${slice.cat.icon} ${slice.cat.label}</span>
+      <span class="legend-pct">${slice.pct}%</span>
+      <div class="legend-bar-track"><div class="legend-bar-fill" style="width:${barW}%;background:${slice.cat.color}"></div></div>`;
+
+    item.addEventListener('mouseenter', () => {
+      if (_donutCtx) { _donutHovered = i; redrawDonut(_donutCtx, i); }
+      item.classList.add('legend-active');
+    });
+    item.addEventListener('mouseleave', () => {
+      if (_donutCtx) { _donutHovered = -1; redrawDonut(_donutCtx, -1); hideDonutTooltip(); }
+      item.classList.remove('legend-active');
+    });
+    item.addEventListener('click', () => goToTransactions('despesa', slice.key));
+
+    legend.appendChild(item);
   });
 
   redrawDonut(ctx, -1);
+
+  canvas.onclick = e => {
+    if (_donutHovered >= 0) {
+      goToTransactions('despesa', _donutSlices[_donutHovered].key);
+    }
+  };
 
   canvas.onmousemove = e => {
     const r   = canvas.getBoundingClientRect();
@@ -395,6 +418,30 @@ function drawLine(txs) {
 
   function redrawLineDots(hovIdx) {
     ctx.putImageData(_lineBaseImage, 0, 0);
+
+    if (hovIdx >= 0) {
+      const hp = _lineChartPts[hovIdx];
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(hp.x, pT);
+      ctx.lineTo(hp.x, pT + cH);
+      ctx.strokeStyle = 'rgba(124,58,237,0.45)';
+      ctx.lineWidth   = 1;
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+
+      ctx.save();
+      ctx.font         = 'bold 10px Inter';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle    = 'rgba(124,58,237,0.9)';
+      const labelX = Math.max(pL + 16, Math.min(W - pR - 16, hp.x));
+      ctx.fillText(`Dia ${hp.day}`, labelX, pT - 3);
+      ctx.restore();
+    }
+
     _lineChartPts.forEach((p, i) => {
       if (p.v === 0) return;
       const hovered = i === hovIdx;

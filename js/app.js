@@ -779,10 +779,13 @@ function switchTab(tabName) {
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
 
-function goToTransactions(type) {
+function goToTransactions(type, category) {
   switchTab('transactions');
-  const sel = document.getElementById('filter-type');
-  if (sel) { sel.value = type; renderAllTxs(); }
+  const selType = document.getElementById('filter-type');
+  const selCat  = document.getElementById('filter-category');
+  if (selType) selType.value = type || '';
+  if (selCat)  selCat.value  = category || '';
+  renderAllTxs();
 }
 
 // =============================================
