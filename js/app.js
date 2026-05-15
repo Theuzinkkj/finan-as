@@ -719,10 +719,7 @@ async function handleFormSubmit(e) {
 
   if (hasInvoiceItems) {
     if (!selectedCat) selectedCat = 'compras';
-    if (!desc) {
-      const names = invoiceItems.slice(0, 3).map(it => it.desc).join(', ');
-      desc = invoiceItems.length > 3 ? `${names}…` : names;
-    }
+    if (!desc) desc = 'Cartão';
   }
 
   const finalAmount = (selectedPayment === 'credito' && invoiceItems.length > 0)
@@ -1022,10 +1019,7 @@ async function saveAddToFatura() {
 
   tx.invoiceItems = [...faturaEditItems];
   tx.amount       = faturaEditItems.reduce((s, it) => s + it.value, 0);
-  tx.description  = (() => {
-    const names = faturaEditItems.slice(0, 3).map(it => it.desc).join(', ');
-    return faturaEditItems.length > 3 ? `${names}…` : names;
-  })();
+  tx.description  = tx.description || 'Cartão';
   closeModal('modal-add-fatura');
 
   if (Demo.active) { renderAll(); toast('Fatura atualizada. (modo demo — não salva)'); return; }
