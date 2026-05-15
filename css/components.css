@@ -516,13 +516,13 @@
    PAGE FOOTER
    ============================================= */
 .page-footer {
-  margin-top:      52px;
-  padding:         28px 0 32px;
-  border-top:      1px solid var(--border);
-  display:         flex;
-  flex-direction:  column;
-  align-items:     center;
-  gap:             10px;
+  margin-top:     56px;
+  padding:        32px 0 40px;
+  border-top:     1px solid var(--border);
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            18px;
 }
 
 .page-footer-brand {
@@ -530,43 +530,114 @@
   align-items: center;
   gap:         8px;
   font-weight: 700;
-  font-size:   1rem;
-  color:       var(--text-2);
-  opacity:     .5;
+  font-size:   1.05rem;
+  color:       var(--text);
 }
-.page-footer-brand .logo-icon { font-size: 1.15rem; }
+.page-footer-brand .logo-icon  { font-size: 1.2rem; }
+.page-footer-logo-text          { color: var(--text-2); }
 
-.page-footer-hint {
-  font-size: .72rem;
-  color:     var(--text-3);
-  opacity:   .4;
+.page-footer-month {
+  font-size:   .75rem;
+  color:       var(--text-3);
+  margin-top:  -10px;
 }
+
+.page-footer-stats {
+  display:   flex;
+  gap:       10px;
+  width:     100%;
+  max-width: 400px;
+}
+
+.footer-stat {
+  flex:            1;
+  background:      rgba(255,255,255,.03);
+  border:          1px solid var(--border);
+  border-radius:   14px;
+  padding:         14px 10px;
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  gap:             5px;
+  cursor:          default;
+  transition:      transform .2s, border-color .2s, background .2s;
+}
+.footer-stat:hover { transform: translateY(-3px); }
+
+.footer-stat-income  { border-color: rgba(16,185,129,.18); }
+.footer-stat-income:hover  { border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.05); }
+.footer-stat-expense { border-color: rgba(239,68,68,.18); }
+.footer-stat-expense:hover { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.05); }
+.footer-stat-balance { border-color: rgba(124,58,237,.18); }
+.footer-stat-balance:hover { border-color: rgba(124,58,237,.4); background: rgba(124,58,237,.05); }
+
+.footer-stat-label {
+  font-size:      .62rem;
+  color:          var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+}
+.footer-stat-value {
+  font-size:            .9rem;
+  font-weight:          700;
+  font-variant-numeric: tabular-nums;
+}
+.footer-stat-income  .footer-stat-value { color: var(--green); }
+.footer-stat-expense .footer-stat-value { color: var(--red); }
+.footer-stat-balance .footer-stat-value { color: var(--text); }
+.footer-stat-balance.negative .footer-stat-value { color: var(--red); }
 
 .page-footer-actions {
-  display:    flex;
-  gap:        10px;
-  margin-top: 6px;
+  display: flex;
+  gap:     10px;
 }
 
 .page-footer-btn {
   display:       flex;
   align-items:   center;
-  gap:           6px;
-  background:    rgba(255,255,255,.05);
-  border:        1px solid var(--border);
-  border-radius: 20px;
-  color:         var(--text-2);
+  gap:           7px;
+  border-radius: 22px;
   font-family:   var(--font);
-  font-size:     .78rem;
-  padding:       7px 14px;
+  font-size:     .82rem;
+  font-weight:   500;
+  padding:       9px 18px;
   cursor:        pointer;
-  transition:    background .2s, border-color .2s, color .2s;
+  transition:    transform .18s, box-shadow .18s, opacity .18s;
+  border:        none;
 }
-.page-footer-btn:hover {
-  background:   rgba(124,58,237,.12);
-  border-color: rgba(124,58,237,.35);
-  color:        var(--text);
+.page-footer-btn:hover  { transform: translateY(-2px); }
+.page-footer-btn:active { transform: translateY(0); }
+
+.page-footer-btn-add {
+  background:  linear-gradient(135deg, var(--purple), #2563eb);
+  color:       #fff;
+  box-shadow:  0 4px 16px rgba(124,58,237,.35);
 }
+.page-footer-btn-add:hover  { box-shadow: 0 8px 24px rgba(124,58,237,.5); }
+
+.page-footer-btn-chat {
+  background:  rgba(255,255,255,.06);
+  border:      1px solid var(--border);
+  color:       var(--text-2);
+}
+.page-footer-btn-chat:hover { background: rgba(255,255,255,.1); color: var(--text); border-color: var(--border-h); }
+
+.page-footer-totop {
+  display:       flex;
+  align-items:   center;
+  gap:           5px;
+  background:    none;
+  border:        none;
+  color:         var(--text-3);
+  font-family:   var(--font);
+  font-size:     .72rem;
+  cursor:        pointer;
+  padding:       5px 12px;
+  border-radius: 20px;
+  transition:    color .2s, background .2s;
+  margin-top:    -4px;
+}
+.page-footer-totop:hover { color: var(--text-2); background: rgba(255,255,255,.05); }
 
 /* =============================================
    FLOATING DOCK (estilo Nubank)
