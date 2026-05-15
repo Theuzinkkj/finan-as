@@ -991,7 +991,30 @@ function bindEvents() {
 
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      const isHidden = panel.classList.contains('hidden');
       panel.classList.toggle('hidden');
+      if (isHidden) {
+        const modal    = document.querySelector('#modal-custom-cat .modal');
+        const modalRect = modal.getBoundingClientRect();
+        const panelW   = 252;
+        const panelH   = panel.offsetHeight || 220;
+        const gap      = 14;
+
+        let left = modalRect.right + gap;
+        if (left + panelW > window.innerWidth - 8) {
+          left = modalRect.left - panelW - gap;
+        }
+
+        const btnRect = btn.getBoundingClientRect();
+        let top = btnRect.top;
+        if (top + panelH > window.innerHeight - 8) {
+          top = window.innerHeight - panelH - 8;
+        }
+        if (top < 8) top = 8;
+
+        panel.style.left = left + 'px';
+        panel.style.top  = top  + 'px';
+      }
     });
 
     document.addEventListener('click', e => {

@@ -35,9 +35,9 @@
 .card-clickable { cursor: pointer; user-select: none; }
 .card-clickable.card-income:hover  { border-color: transparent; border-left-color: var(--green); }
 .card-clickable.card-expense:hover { border-color: transparent; border-left-color: var(--red); }
-.card-clickable:active { transform: translateY(0); box-shadow: none; }
-.card-clickable.card-income:active  { border-left-width: 4px; box-shadow: 0 0 0 2px rgba(16,185,129,.35); transform: translateY(0); }
-.card-clickable.card-expense:active { border-left-width: 4px; box-shadow: 0 0 0 2px rgba(239,68,68,.40); transform: translateY(0); }
+.card-clickable:active { transform: translateY(1px); }
+.card-clickable.card-income:active  { border-left-width: 4px; background: rgba(16,185,129,.08); box-shadow: 0 0 0 2px rgba(16,185,129,.45), -6px 0 20px rgba(16,185,129,.25); transform: translateY(1px); }
+.card-clickable.card-expense:active { border-left-width: 4px; background: rgba(239,68,68,.08);  box-shadow: 0 0 0 2px rgba(239,68,68,.50),  -6px 0 20px rgba(239,68,68,.28); transform: translateY(1px); }
 
 .card-label {
   font-size:      .75rem;
@@ -630,12 +630,12 @@
 .btn-emoji-pick:hover { border-color: var(--purple); }
 
 .emoji-picker-panel {
-  position: absolute; right: 0; bottom: calc(100% + 8px);
+  position: fixed; left: 0; top: 0;
   width: 252px; background: var(--surface-2, #1a1a2e);
   border: 1px solid var(--border-h); border-radius: 12px;
-  padding: 10px; z-index: 9999;
+  padding: 10px; z-index: 10000;
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;
-  box-shadow: 0 -4px 24px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
+  box-shadow: 0 4px 28px rgba(0,0,0,.55);
 }
 .emoji-picker-panel .ep-emoji {
   width: 36px; height: 36px; font-size: 1.25rem;
