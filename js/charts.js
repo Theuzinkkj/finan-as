@@ -464,6 +464,33 @@ function drawLine(txs) {
 
   redrawLineDots(-1);
 
+  function showLinePanel(pt) {
+    const panel = document.getElementById('line-click-info');
+    if (!panel || pt.txList.length === 0) { hideLinePanel(); return; }
+    const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const rows = pt.txList.map((t, i) => {
+      const cat = CATEGORIES[t.category] || CATEGORIES.outros;
+      return `<div class="line-click-tx" style="animation-delay:${i * 70}ms">
+        <span class="line-click-tx-desc">${cat.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t.description)}</span></span>
+        <span class="line-click-tx-amount">${fmtV(t.amount)}</span>
+      </div>`;
+    }).join('');
+    panel.innerHTML = `
+      <div class="line-click-day">Dia ${pt.day}</div>
+      ${rows}
+      <div class="line-click-total" style="animation-delay:${pt.txList.length * 70}ms">
+        <span class="line-click-total-label">Total do dia</span>
+        <span class="line-click-total-value">${fmtV(pt.v)}</span>
+      </div>`;
+    panel.classList.remove('open');
+    requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
+  }
+
+  function hideLinePanel() {
+    const el = document.getElementById('line-click-info');
+    if (el) el.classList.remove('open');
+  }
+
   canvas.onmousemove = e => {
     const r  = canvas.getBoundingClientRect();
     const mx = (e.clientX - r.left) * (canvas.width  / r.width);
@@ -473,58 +500,15 @@ function drawLine(txs) {
     if (idx !== _lineHoveredIdx) {
       _lineHoveredIdx = idx;
       redrawLineDots(idx);
+      if (idx >= 0) showLinePanel(_lineChartPts[idx]);
+      else hideLinePanel();
     }
-    if (idx >= 0) showLineTooltip(_lineChartPts[idx], r);
-    else hideLineTooltip();
   };
 
   canvas.onmouseleave = () => {
     canvas.style.cursor = 'default';
     if (_lineHoveredIdx !== -1) { _lineHoveredIdx = -1; redrawLineDots(-1); }
-    hideLineTooltip();
-  };
-
-  let _lineClickedDay = -1;
-  canvas.onclick = e => {
-    const r  = canvas.getBoundingClientRect();
-    const mx = (e.clientX - r.left) * (canvas.width  / r.width);
-    const my = (e.clientY - r.top)  * (canvas.height / r.height);
-    const idx = _lineChartPts.findIndex(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 16);
-    const panel = document.getElementById('line-click-info');
-    if (!panel) return;
-
-    if (idx < 0) return;
-    const pt = _lineChartPts[idx];
-
-    if (_lineClickedDay === pt.day) {
-      panel.classList.remove('open');
-      _lineClickedDay = -1;
-      return;
-    }
-    _lineClickedDay = pt.day;
-
-    const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const rows = pt.txList.map(t => {
-      const cat = CATEGORIES[t.category] || CATEGORIES.outros;
-      return `<div class="line-click-tx">
-        <span class="line-click-tx-desc">${cat.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t.description)}</span></span>
-        <span class="line-click-tx-amount">${fmtV(t.amount)}</span>
-      </div>`;
-    }).join('');
-
-    panel.innerHTML = `
-      <div class="line-click-day">
-        Dia ${pt.day}
-        <button class="line-click-close" onclick="this.closest('.line-click-panel').classList.remove('open')">✕</button>
-      </div>
-      ${rows}
-      <div class="line-click-total">
-        <span class="line-click-total-label">Total do dia</span>
-        <span class="line-click-total-value">${fmtV(pt.v)}</span>
-      </div>`;
-
-    panel.classList.remove('open');
-    requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
+    hideLinePanel();
   };
 }
 

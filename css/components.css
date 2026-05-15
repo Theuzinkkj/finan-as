@@ -33,11 +33,11 @@
 .card-income  { border: 1px solid transparent; border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border: 1px solid transparent; border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable.card-income:hover  { border-left-width: 4px; background: radial-gradient(circle 120px at var(--mx,50%) var(--my,50%), rgba(16,185,129,.18) 0%, rgba(16,185,129,.07) 50%, transparent 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.32), -5px 0 18px rgba(16,185,129,.22); transform: translateY(-1px); }
-.card-clickable.card-expense:hover { border-left-width: 4px; background: radial-gradient(circle 120px at var(--mx,50%) var(--my,50%), rgba(239,68,68,.18)  0%, rgba(239,68,68,.07)  50%, transparent 100%); box-shadow: 0 0 0 1px rgba(239,68,68,.38),  -5px 0 18px rgba(239,68,68,.24); transform: translateY(-1px); }
+.card-clickable.card-income:hover  { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.30) 0%, transparent 65%), linear-gradient(135deg, rgba(16,185,129,.38) 0%, rgba(16,185,129,.18) 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.40), -5px 0 20px rgba(16,185,129,.28); transform: translateY(-1px); }
+.card-clickable.card-expense:hover { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.30) 0%, transparent 65%), linear-gradient(135deg, rgba(239,68,68,.38) 0%, rgba(239,68,68,.18) 100%);  box-shadow: 0 0 0 1px rgba(239,68,68,.45),  -5px 0 20px rgba(239,68,68,.30); transform: translateY(-1px); }
 .card-clickable:active { transform: translateY(1px); }
-.card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 140px at var(--mx,50%) var(--my,50%), rgba(16,185,129,.28) 0%, rgba(16,185,129,.10) 50%, transparent 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.48), -6px 0 22px rgba(16,185,129,.28); transform: translateY(1px); }
-.card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 140px at var(--mx,50%) var(--my,50%), rgba(239,68,68,.28)  0%, rgba(239,68,68,.10)  50%, transparent 100%); box-shadow: 0 0 0 2px rgba(239,68,68,.52),  -6px 0 22px rgba(239,68,68,.30); transform: translateY(1px); }
+.card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 110px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.40) 0%, transparent 65%), linear-gradient(135deg, rgba(16,185,129,.52) 0%, rgba(16,185,129,.26) 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.55), -6px 0 26px rgba(16,185,129,.35); transform: translateY(1px); }
+.card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 110px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.40) 0%, transparent 65%), linear-gradient(135deg, rgba(239,68,68,.52) 0%, rgba(239,68,68,.26) 100%);  box-shadow: 0 0 0 2px rgba(239,68,68,.60),  -6px 0 26px rgba(239,68,68,.38); transform: translateY(1px); }
 
 .card-label {
   font-size:      .75rem;
@@ -1193,8 +1193,13 @@
 }
 
 /* =============================================
-   LINE CHART CLICK PANEL
+   LINE CHART HOVER PANEL
    ============================================= */
+@keyframes lineItemIn {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .line-click-panel {
   margin-top:     14px;
   background:     rgba(124,58,237,.08);
@@ -1204,7 +1209,7 @@
   overflow:       hidden;
   max-height:     0;
   opacity:        0;
-  transition:     max-height .35s ease, opacity .3s ease, padding .3s ease;
+  transition:     max-height .45s ease, opacity .35s ease, padding .35s ease;
   pointer-events: none;
 }
 .line-click-panel.open {
@@ -1220,21 +1225,7 @@
   text-transform: uppercase;
   letter-spacing: .06em;
   margin-bottom:  10px;
-  display:        flex;
-  align-items:    center;
-  justify-content: space-between;
 }
-.line-click-close {
-  background:    none;
-  border:        none;
-  color:         var(--text-3);
-  cursor:        pointer;
-  font-size:     .85rem;
-  padding:       0 2px;
-  line-height:   1;
-  transition:    color .15s;
-}
-.line-click-close:hover { color: var(--text-1); }
 .line-click-tx {
   display:       flex;
   align-items:   center;
@@ -1243,6 +1234,10 @@
   padding:       7px 0;
   border-bottom: 1px solid var(--border);
   font-size:     .83rem;
+  opacity:       0;
+}
+.line-click-panel.open .line-click-tx {
+  animation: lineItemIn .32s ease forwards;
 }
 .line-click-tx:last-of-type { border-bottom: none; }
 .line-click-tx-desc {
@@ -1268,6 +1263,10 @@
   padding-top:   10px;
   font-size:     .88rem;
   font-weight:   700;
+  opacity:       0;
+}
+.line-click-panel.open .line-click-total {
+  animation: lineItemIn .32s ease forwards;
 }
 .line-click-total-label { color: var(--text-2); }
 .line-click-total-value { color: #f87171; }
