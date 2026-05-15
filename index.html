@@ -475,6 +475,33 @@
     <button class="sel-clear" onclick="clearTxSelection()">✕ Limpar</button>
   </div>
 
+  <!-- Modal: Custom Category -->
+  <div class="modal-overlay hidden" id="modal-custom-cat">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Nova Categoria</h2>
+        <button class="modal-close" data-close="modal-custom-cat">✕</button>
+      </div>
+      <form id="form-custom-cat" novalidate>
+        <div class="form-group custom-cat-emoji-row">
+          <div class="custom-cat-emoji-wrap">
+            <label for="input-cat-icon">Emoji</label>
+            <input type="text" id="input-cat-icon" placeholder="🏷️" maxlength="2" class="input-emoji">
+          </div>
+          <div class="custom-cat-name-wrap">
+            <label for="input-cat-label">Nome</label>
+            <input type="text" id="input-cat-label" placeholder="Ex: Academia" maxlength="20" required>
+            <span class="field-error hidden" id="cat-label-error">Digite um nome</span>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-custom-cat">Cancelar</button>
+          <button type="submit" class="btn-primary">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 

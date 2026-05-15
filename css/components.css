@@ -23,6 +23,12 @@
 .card-balance {
   background:   linear-gradient(135deg, rgba(124,58,237,.22), rgba(37,99,235,.10));
   border-color: rgba(124,58,237,.28);
+  cursor:       default;
+}
+.card-balance:hover {
+  border-color: rgba(124,58,237,.55);
+  box-shadow:   0 0 0 2px rgba(124,58,237,.28);
+  transform:    translateY(-2px);
 }
 .card-income  { border: 1px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border: 1px solid var(--red);   display: flex; gap: 14px; align-items: center; }
@@ -594,6 +600,15 @@
 .cat-btn .cat-icon { font-size: 1.2rem; }
 .cat-btn:hover     { border-color: var(--border-h); background: rgba(255,255,255,.08); }
 .cat-btn.selected  { border-color: var(--purple); background: rgba(124,58,237,.2); color: var(--purple-l); }
+
+.cat-btn-add { border-style: dashed; color: var(--text-2); }
+.cat-btn-add .cat-icon { font-size: 1.5rem; font-weight: 300; line-height: 1; }
+.cat-btn-add:hover { border-color: var(--purple); color: var(--purple-l); }
+
+.custom-cat-emoji-row { display: flex; gap: 10px; align-items: flex-start; }
+.custom-cat-emoji-wrap { flex: 0 0 auto; }
+.custom-cat-name-wrap  { flex: 1; }
+.input-emoji { width: 62px; text-align: center; font-size: 1.4rem; padding: 6px 4px; }
 
 /* =============================================
    PAYMENT METHOD
