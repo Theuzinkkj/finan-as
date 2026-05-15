@@ -317,7 +317,7 @@ app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 
-app.post('/api/ai/chat', requireAuth, aiLimiter, async (req, res, next) => {
+app.post('/api/ai/chat', aiLimiter, async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(
       'https://api.groq.com/openai/v1/chat/completions',
