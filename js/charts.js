@@ -122,15 +122,11 @@ function getOrCreateLineTooltip() {
   ].join(';');
   document.body.appendChild(el);
   _lineChartTooltip = el;
-  document.addEventListener('click', e => {
-    if (!e.target.closest('#line-chart')) hideLineTooltip();
-  });
   return el;
 }
 
 function showLineTooltip(pt, rect) {
   const el  = getOrCreateLineTooltip();
-  if (el.dataset.day === String(pt.day)) { hideLineTooltip(); return; }
   el.dataset.day = pt.day;
 
   const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -275,18 +271,11 @@ function drawLine(txs) {
     const my = (e.clientY - r.top)  * (canvas.height / r.height);
     const hit = _lineChartPts.find(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 14);
     canvas.style.cursor = hit ? 'pointer' : 'default';
-  };
-
-  canvas.onclick = e => {
-    const r  = canvas.getBoundingClientRect();
-    const mx = (e.clientX - r.left) * (canvas.width  / r.width);
-    const my = (e.clientY - r.top)  * (canvas.height / r.height);
-    const hit = _lineChartPts.find(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 14);
-    if (hit) { e.stopPropagation(); showLineTooltip(hit, r); }
+    if (hit) showLineTooltip(hit, r);
     else hideLineTooltip();
   };
 
-  canvas.onmouseleave = () => { canvas.style.cursor = 'default'; };
+  canvas.onmouseleave = () => { canvas.style.cursor = 'default'; hideLineTooltip(); };
 }
 
 // =============================================
