@@ -10,6 +10,7 @@ let selectedPayment = '';
 let selectedFixed   = false;
 let invoiceItems    = [];
 let transactions   = [];
+let selectedTxIds  = new Set();
 let chatHistory    = [];
 let appInitialized = false;
 let activeTxId     = null;
@@ -426,12 +427,23 @@ function buildChatContext() {
     .map(([k, v]) => `${CATEGORIES[k]?.label}: R$${v.toFixed(2)}`)
     .join(', ') || 'nenhum dado';
 
+  const txLines = txs
+    .sort((a, b) => b.amount - a.amount)
+    .map(t => {
+      const cat  = CATEGORIES[t.category]?.label || 'Outros';
+      const tipo = t.type === 'receita' ? 'Receita' : 'Despesa';
+      return `• ${fmtDate(t.date)} | ${tipo} | ${cat} | R$${t.amount.toFixed(2)} | ${t.description}`;
+    })
+    .join('\n') || 'Nenhuma transação neste mês.';
+
   return `Você é um assistente financeiro pessoal simpático, direto e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.
 
 CONTEXTO — ${monthLabel(currentDate)}:
 - Receitas: R$${totalInc.toFixed(2)} | Despesas: R$${totalExp.toFixed(2)} | Saldo: R$${(totalInc - totalExp).toFixed(2)}
 - Por categoria: ${catSummary}
-- Total de transações: ${txs.length}`;
+
+TRANSAÇÕES DO MÊS (ordenadas por valor):
+${txLines}`;
 }
 
 function demoChatReply(msg) {
