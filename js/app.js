@@ -161,8 +161,10 @@ function txHTML(t) {
   const cat        = CATEGORIES[t.category] || CATEGORIES.outros;
   const note       = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
   const fixedBadge = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
+  const isSel      = selectedTxIds.has(t.id);
   return `
-    <div class="tx-item" data-id="${t.id}">
+    <div class="tx-item${isSel ? ' tx-selected' : ''}" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
+      <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
       <div class="tx-icon">${isIncome ? '💰' : cat.icon}</div>
       <div class="tx-info">
         <div class="tx-desc">${escHtml(t.description)}${fixedBadge}</div>
@@ -174,6 +176,54 @@ function txHTML(t) {
       </div>
       <button class="tx-menu-btn" onclick="openTxMenu('${t.id}', event)" title="Opções">⋮</button>
     </div>`;
+}
+
+function toggleTxSelection(id, event) {
+  if (event.target.closest('.tx-menu-btn')) return;
+  if (selectedTxIds.has(id)) selectedTxIds.delete(id);
+  else selectedTxIds.add(id);
+  document.querySelectorAll(`.tx-item[data-id="${id}"]`).forEach(el => {
+    el.classList.toggle('tx-selected', selectedTxIds.has(id));
+    el.querySelector('.tx-select-check')?.classList.toggle('checked', selectedTxIds.has(id));
+  });
+  renderSelectionBar();
+}
+
+function clearTxSelection() {
+  selectedTxIds.clear();
+  document.querySelectorAll('.tx-item.tx-selected').forEach(el => {
+    el.classList.remove('tx-selected');
+    el.querySelector('.tx-select-check')?.classList.remove('checked');
+  });
+  renderSelectionBar();
+}
+
+function renderSelectionBar() {
+  const bar = document.getElementById('selection-bar');
+  if (!bar) return;
+  if (selectedTxIds.size === 0) { bar.classList.add('hidden'); return; }
+
+  const all     = txOfMonth();
+  const selected = all.filter(t => selectedTxIds.has(t.id));
+  if (selected.length === 0) { bar.classList.add('hidden'); return; }
+
+  bar.classList.remove('hidden');
+
+  const income  = selected.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const expense = selected.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+  const n       = selected.length;
+  const net     = income - expense;
+
+  const parts = [];
+  if (expense > 0) parts.push(`<span class="sel-expense">−${fmt(expense)}</span>`);
+  if (income  > 0) parts.push(`<span class="sel-income">+${fmt(income)}</span>`);
+
+  document.getElementById('sel-count').textContent   = `${n} selecionada${n !== 1 ? 's' : ''}`;
+  document.getElementById('sel-amounts').innerHTML   = parts.join('<span class="sel-dot">·</span>');
+  document.getElementById('sel-net').innerHTML       =
+    parts.length > 1
+      ? `= <span class="${net >= 0 ? 'sel-income' : 'sel-expense'}">${net >= 0 ? '+' : '−'}${fmt(Math.abs(net))}</span>`
+      : '';
 }
 
 function emptyHTML(msg = 'Nenhuma transação ainda.') {
@@ -1430,11 +1480,13 @@ function bindEvents() {
   // Navegação de mês
   document.getElementById('prev-month').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    renderMonthLabel(); renderAll(); resetAIResult();
+    selectedTxIds.clear();
+    renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
   document.getElementById('next-month').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    renderMonthLabel(); renderAll(); resetAIResult();
+    selectedTxIds.clear();
+    renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
 
   // Abas desktop / mobile
