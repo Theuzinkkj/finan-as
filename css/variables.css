@@ -99,16 +99,16 @@ body {
 
 @property --px { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
 @property --py { syntax: '<percentage>'; inherits: false; initial-value: 20%; }
-@property --vx { syntax: '<percentage>'; inherits: false; initial-value: 80%; }
-@property --vy { syntax: '<percentage>'; inherits: false; initial-value: 75%; }
+@property --vx { syntax: '<percentage>'; inherits: false; initial-value: 82%; }
+@property --vy { syntax: '<percentage>'; inherits: false; initial-value: 78%; }
 
 @keyframes orb-a {
   from { --px: 15%; --py: 20%; }
-  to   { --px: 72%; --py: 68%; }
+  to   { --px: 70%; --py: 65%; }
 }
 @keyframes orb-b {
-  from { --vx: 80%; --vy: 75%; }
-  to   { --vx: 22%; --vy: 18%; }
+  from { --vx: 82%; --vy: 78%; }
+  to   { --vx: 20%; --vy: 15%; }
 }
 
 body::before {
@@ -116,8 +116,8 @@ body::before {
   position: fixed;
   inset:    0;
   background:
-    radial-gradient(ellipse 55% 45% at var(--px) var(--py), rgba(88,28,220,.13)  0%, transparent 70%),
-    radial-gradient(ellipse 50% 42% at var(--vx) var(--vy), rgba(67,20,170,.10)  0%, transparent 70%);
+    radial-gradient(ellipse 70% 60% at var(--px) var(--py), rgba(99,102,241,.30) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(99,102,241,.22) 0%, transparent 65%);
   pointer-events: none;
   z-index:  0;
   animation:
