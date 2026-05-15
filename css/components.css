@@ -207,6 +207,28 @@
 .filter-select:focus  { border-color: var(--border-h); }
 .filter-count { margin-left: auto; font-size: .78rem; color: var(--text-3); }
 
+.btn-add-inline {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           30px;
+  height:          30px;
+  border-radius:   50%;
+  background:      linear-gradient(135deg, var(--purple), #2563eb);
+  color:           #fff;
+  font-size:       1.3rem;
+  border:          none;
+  cursor:          pointer;
+  box-shadow:      0 4px 14px rgba(124,58,237,.4);
+  transition:      transform .2s, box-shadow .2s;
+  line-height:     1;
+  flex-shrink:     0;
+}
+.btn-add-inline:hover {
+  transform:  scale(1.12) rotate(90deg);
+  box-shadow: 0 6px 22px rgba(124,58,237,.55);
+}
+
 /* =============================================
    ANALYSIS — STATS + AI
    ============================================= */

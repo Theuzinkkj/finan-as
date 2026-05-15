@@ -726,6 +726,15 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(s => {
     s.classList.toggle('active', s.id === `tab-${tabName}`);
   });
+  const fab       = document.getElementById('btn-add');
+  const inlineAdd = document.getElementById('btn-add-inline');
+  if (tabName === 'transactions') {
+    fab.style.display       = 'none';
+    inlineAdd.style.display = 'flex';
+  } else {
+    fab.style.display       = '';
+    inlineAdd.style.display = 'none';
+  }
   if (tabName === 'analysis')  setTimeout(() => drawBars(txOfMonth()), 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
@@ -872,6 +881,13 @@ function bindEvents() {
     resetTransactionModal();
     openModal('modal-transaction');
   });
+
+  // Botão inline na aba de transações
+  document.getElementById('btn-add-inline').addEventListener('click', () => {
+    resetTransactionModal();
+    openModal('modal-transaction');
+  });
+  document.getElementById('btn-add-inline').style.display = 'none';
 
   // Fechar modais via [data-close]
   document.addEventListener('click', e => {
