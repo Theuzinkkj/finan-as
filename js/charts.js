@@ -35,6 +35,108 @@ function rrect(ctx, x, y, w, h, r) {
 // =============================================
 //  DONUT CHART
 // =============================================
+let _donutSlices  = [];
+let _donutTotal   = 0;
+let _donutGeo     = { cx: 0, cy: 0, OR: 0, IR: 0 };
+let _donutTooltip = null;
+let _donutHovered = -1;
+
+function getOrCreateDonutTooltip() {
+  if (_donutTooltip) return _donutTooltip;
+  const el = document.createElement('div');
+  el.id = 'donut-tooltip';
+  el.style.cssText = [
+    'position:fixed', 'z-index:9999',
+    'background:var(--bg-card)', 'border:1px solid var(--border-h)',
+    'border-radius:12px', 'padding:12px 14px',
+    'box-shadow:0 8px 32px rgba(0,0,0,.45)',
+    'min-width:160px',
+    'pointer-events:none', 'display:none',
+    'backdrop-filter:blur(12px)',
+  ].join(';');
+  document.body.appendChild(el);
+  _donutTooltip = el;
+  return el;
+}
+
+function showDonutTooltip(slice, clientX, clientY) {
+  const el  = getOrCreateDonutTooltip();
+  const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="width:10px;height:10px;border-radius:50%;background:${slice.cat.color};flex-shrink:0;display:inline-block"></span>
+      <span style="font-size:13px;font-weight:600;color:var(--text-1)">${slice.cat.icon} ${slice.cat.label}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:16px;font-size:12px;">
+      <span style="color:var(--text-3)">Valor</span>
+      <span style="color:var(--red);font-weight:700">${fmt(slice.val)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:16px;font-size:12px;margin-top:4px;">
+      <span style="color:var(--text-3)">Participação</span>
+      <span style="color:var(--text-1);font-weight:600">${slice.pct}%</span>
+    </div>`;
+  el.style.display = 'block';
+  const W = el.offsetWidth, H2 = el.offsetHeight;
+  let x = clientX + 14, y = clientY - H2 / 2;
+  if (x + W  > window.innerWidth  - 8) x = clientX - W - 14;
+  if (x < 8) x = 8;
+  if (y + H2 > window.innerHeight - 8) y = window.innerHeight - H2 - 8;
+  if (y < 8) y = 8;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+}
+
+function hideDonutTooltip() {
+  if (_donutTooltip) _donutTooltip.style.display = 'none';
+}
+
+function redrawDonut(ctx, hoveredIdx) {
+  const W = ctx.canvas.width, H = ctx.canvas.height;
+  const { cx, cy, OR, IR } = _donutGeo;
+  const fmt = v => v >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  ctx.clearRect(0, 0, W, H);
+
+  _donutSlices.forEach((slice, i) => {
+    const expand  = i === hoveredIdx ? 6 : 0;
+    const midAngle = slice.startAngle + (slice.endAngle - slice.startAngle) / 2;
+    const ox = expand * Math.cos(midAngle);
+    const oy = expand * Math.sin(midAngle);
+
+    ctx.beginPath();
+    ctx.moveTo(cx + ox, cy + oy);
+    ctx.arc(cx + ox, cy + oy, OR + (i === hoveredIdx ? 4 : 0), slice.startAngle, slice.endAngle);
+    ctx.closePath();
+    ctx.fillStyle   = slice.cat.color;
+    ctx.globalAlpha = (hoveredIdx >= 0 && i !== hoveredIdx) ? 0.45 : 1;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = chartBg();
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, IR, 0, Math.PI * 2);
+  ctx.fillStyle = chartBg();
+  ctx.fill();
+
+  ctx.fillStyle    = chartFg();
+  ctx.font         = 'bold 11px Inter';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (hoveredIdx >= 0) {
+    const s = _donutSlices[hoveredIdx];
+    ctx.fillText(fmt(s.val), cx, cy - 7);
+    ctx.font      = '10px Inter';
+    ctx.fillStyle = chartFg(0.55);
+    ctx.fillText(s.pct + '%', cx, cy + 9);
+  } else {
+    ctx.fillText(fmt(_donutTotal), cx, cy);
+  }
+}
+
 function drawDonut(txs) {
   const canvas = document.getElementById('donut-chart');
   const ctx    = canvas.getContext('2d');
@@ -50,6 +152,7 @@ function drawDonut(txs) {
   legend.innerHTML = '';
 
   if (total === 0) {
+    _donutSlices = [];
     ctx.fillStyle = chartFg(0.07);
     ctx.beginPath(); ctx.arc(W / 2, H / 2, 72, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = chartFg(0.4);
@@ -59,46 +162,77 @@ function drawDonut(txs) {
   }
 
   const cx = W / 2, cy = H / 2, OR = 80, IR = 52;
+  _donutGeo   = { cx, cy, OR, IR };
+  _donutTotal = total;
+  _donutHovered = -1;
+
   let angle = -Math.PI / 2;
   const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
 
-  sorted.forEach(([key, val]) => {
-    const cat   = CATEGORIES[key] || CATEGORIES.outros;
-    const sweep = (val / total) * Math.PI * 2;
+  _donutSlices = sorted.map(([key, val]) => {
+    const cat        = CATEGORIES[key] || CATEGORIES.outros;
+    const sweep      = (val / total) * Math.PI * 2;
+    const startAngle = angle;
+    const endAngle   = angle + sweep;
+    angle            = endAngle;
+    return { cat, val, pct: ((val / total) * 100).toFixed(1), startAngle, endAngle };
+  });
 
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, OR, angle, angle + sweep);
-    ctx.closePath();
-    ctx.fillStyle   = cat.color;
-    ctx.fill();
-    ctx.strokeStyle = chartBg();
-    ctx.lineWidth   = 2;
-    ctx.stroke();
-    angle += sweep;
-
-    const pct = ((val / total) * 100).toFixed(1);
+  _donutSlices.forEach(slice => {
     legend.innerHTML += `
       <div class="legend-item">
-        <div class="legend-dot" style="background:${cat.color}"></div>
-        <span class="legend-label">${cat.icon} ${cat.label}</span>
-        <span class="legend-pct">${pct}%</span>
+        <div class="legend-dot" style="background:${slice.cat.color}"></div>
+        <span class="legend-label">${slice.cat.icon} ${slice.cat.label}</span>
+        <span class="legend-pct">${slice.pct}%</span>
       </div>`;
   });
 
-  ctx.beginPath();
-  ctx.arc(cx, cy, IR, 0, Math.PI * 2);
-  ctx.fillStyle = chartBg();
-  ctx.fill();
+  redrawDonut(ctx, -1);
 
-  ctx.fillStyle    = chartFg();
-  ctx.font         = 'bold 11px Inter';
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(
-    total >= 1000 ? `R$${(total / 1000).toFixed(1)}k` : total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-    cx, cy
-  );
+  canvas.onmousemove = e => {
+    const r   = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const mx  = (e.clientX - r.left) * scaleX;
+    const my  = (e.clientY - r.top)  * scaleY;
+    const dx  = mx - cx, dy = my - cy;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist < IR || dist > OR + 8) {
+      if (_donutHovered !== -1) { _donutHovered = -1; redrawDonut(ctx, -1); hideDonutTooltip(); }
+      canvas.style.cursor = 'default';
+      return;
+    }
+
+    let a = Math.atan2(dy, dx);
+    // normalize angle to match our -π/2 start
+    const normStart = -Math.PI / 2;
+    let rel = a - normStart;
+    if (rel < 0) rel += Math.PI * 2;
+
+    const idx = _donutSlices.findIndex(s => {
+      let sa = s.startAngle - normStart;
+      let ea = s.endAngle   - normStart;
+      if (sa < 0) sa += Math.PI * 2;
+      if (ea < 0) ea += Math.PI * 2;
+      if (sa <= ea) return rel >= sa && rel <= ea;
+      return rel >= sa || rel <= ea;
+    });
+
+    canvas.style.cursor = idx >= 0 ? 'pointer' : 'default';
+    if (idx !== _donutHovered) {
+      _donutHovered = idx;
+      redrawDonut(ctx, idx);
+    }
+    if (idx >= 0) showDonutTooltip(_donutSlices[idx], e.clientX, e.clientY);
+    else hideDonutTooltip();
+  };
+
+  canvas.onmouseleave = () => {
+    canvas.style.cursor = 'default';
+    if (_donutHovered !== -1) { _donutHovered = -1; redrawDonut(ctx, -1); }
+    hideDonutTooltip();
+  };
 }
 
 // =============================================
