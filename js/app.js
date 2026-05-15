@@ -255,7 +255,7 @@ function emptyHTML(msg = 'Nenhuma transação ainda.') {
 }
 
 function renderRecent(txs) {
-  const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date));
   document.getElementById('recent-transactions').innerHTML =
     recent.length ? recent.map(txHTML).join('') : emptyHTML();
 }
