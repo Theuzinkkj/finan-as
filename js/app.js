@@ -770,6 +770,91 @@ function buildCategoryFilter() {
   if (prev) sel.value = prev;
 }
 
+function initCustomSelects() {
+  document.querySelectorAll('.filter-select').forEach(sel => {
+    if (sel._customInit) return;
+    sel._customInit = true;
+    sel.style.display = 'none';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'custom-select';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'cs-trigger';
+    trigger.innerHTML = '<span class="cs-label"></span><span class="cs-arrow">▼</span>';
+    wrap.insertBefore(trigger, sel);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'cs-dropdown';
+    dropdown.style.display = 'none';
+    wrap.appendChild(dropdown);
+
+    const labelEl = trigger.querySelector('.cs-label');
+
+    function syncLabel() {
+      labelEl.textContent = sel.options[sel.selectedIndex]?.text || '';
+    }
+
+    function buildOptions() {
+      dropdown.innerHTML = '';
+      Array.from(sel.options).forEach(opt => {
+        const item = document.createElement('div');
+        item.className = 'cs-option' + (opt.value === sel.value ? ' cs-selected' : '');
+        item.dataset.value = opt.value;
+        item.textContent = opt.text;
+        item.addEventListener('click', () => {
+          sel.value = opt.value;
+          syncLabel();
+          dropdown.querySelectorAll('.cs-option').forEach(o =>
+            o.classList.toggle('cs-selected', o.dataset.value === opt.value));
+          close();
+          sel.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        dropdown.appendChild(item);
+      });
+    }
+
+    function open() {
+      buildOptions();
+      dropdown.style.display = 'block';
+      wrap.classList.add('open');
+    }
+
+    function close() {
+      dropdown.style.display = 'none';
+      wrap.classList.remove('open');
+    }
+
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      if (wrap.classList.contains('open')) {
+        close();
+      } else {
+        document.querySelectorAll('.custom-select.open').forEach(w => {
+          w.classList.remove('open');
+          w.querySelector('.cs-dropdown').style.display = 'none';
+        });
+        open();
+      }
+    });
+
+    document.addEventListener('click', close);
+
+    const nativeDesc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    Object.defineProperty(sel, 'value', {
+      get() { return nativeDesc.get.call(this); },
+      set(v) { nativeDesc.set.call(this, v); syncLabel(); },
+      configurable: true
+    });
+
+    new MutationObserver(syncLabel).observe(sel, { childList: true });
+    syncLabel();
+  });
+}
+
 function setTodayDate() {
   document.getElementById('input-date').value = todayLocal();
 }
@@ -1338,6 +1423,7 @@ async function startApp() {
   loadCustomCategories();
   buildCategoryGrid();
   buildCategoryFilter();
+  initCustomSelects();
   setTodayDate();
 
   if (Demo.active) {
