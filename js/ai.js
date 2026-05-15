@@ -197,14 +197,14 @@ function buildChatContext() {
 
   return `Você é um assistente financeiro pessoal simpático, direto e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.
 
-REGRA IMPORTANTE: Quando o usuário mencionar um nome (ex: "cartão", "mercado", "netflix"), busque esse termo na coluna DESCRIÇÃO das transações, não na categoria. Some os valores de todas as transações cuja descrição contenha o termo mencionado.
-
 CONTEXTO — ${monthLabel(currentDate)}:
 - Receitas: R$${totalInc.toFixed(2)} | Despesas: R$${totalExp.toFixed(2)} | Saldo: R$${(totalInc - totalExp).toFixed(2)}
 - Por categoria: ${catSummary}
 
 TRANSAÇÕES DO MÊS (ordenadas por valor):
-${txLines}`;
+${txLines}
+
+REGRA IMPORTANTE: Quando o usuário mencionar um nome (ex: "cartão", "mercado", "netflix"), busque esse termo na coluna DESCRIÇÃO das transações, não na categoria. Some os valores de todas as transações cuja descrição contenha o termo mencionado. Se perguntar sobre o que está dentro da fatura do cartão, verifique os gastos de dentro da categoria cartão e veja os gastos.`;
 }
 
 function demoChatReply(msg) {
