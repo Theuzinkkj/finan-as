@@ -568,5 +568,18 @@
   <script src="js/export.js"></script>
   <script src="js/ai.js"></script>
   <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const dock   = document.querySelector('.floating-dock');
+      const footer = document.querySelector('.page-footer');
+      if (!dock || !footer) return;
+      function onScroll() {
+        const rect = footer.getBoundingClientRect();
+        dock.classList.toggle('dock--hidden', rect.top < window.innerHeight);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+    })();
+  </script>
 </body>
 </html>
