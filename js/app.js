@@ -444,6 +444,10 @@ function openTxMenu(id, event) {
   activeTxId = id;
   menu.classList.remove('hidden');
 
+  const inDashboard = !!event.currentTarget.closest('#tab-dashboard');
+  const deleteBtn = menu.querySelector('.tx-menu-danger');
+  if (deleteBtn) deleteBtn.classList.toggle('hidden', inDashboard);
+
   const tx = transactions.find(t => t.id === id);
   const fixedBtn = document.getElementById('btn-menu-fixed');
   if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
