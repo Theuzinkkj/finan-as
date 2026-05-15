@@ -796,19 +796,30 @@ function switchTab(tabName) {
   document.querySelectorAll('.tab-content').forEach(s => {
     s.classList.toggle('active', s.id === `tab-${tabName}`);
   });
-  const fab       = document.getElementById('btn-add');
-  const inlineAdd = document.getElementById('btn-add-inline');
+  const fab        = document.getElementById('btn-add');
+  const inlineAdd  = document.getElementById('btn-add-inline');
+  const dock       = document.querySelector('.floating-dock');
+  const inlineChat = document.getElementById('btn-chat-inline');
   if (tabName === 'transactions') {
-    fab.style.display       = 'none';
-    inlineAdd.style.display = 'flex';
+    fab.style.display        = 'none';
+    inlineAdd.style.display  = 'flex';
+    dock.style.display       = '';
+    inlineChat.classList.add('hidden');
     const ft = document.getElementById('filter-type');
     const fc = document.getElementById('filter-category');
     if (ft) ft.value = '';
     if (fc) fc.value = '';
     renderAllTxs();
+  } else if (tabName === 'analysis') {
+    fab.style.display        = 'none';
+    inlineAdd.style.display  = 'none';
+    dock.style.display       = 'none';
+    inlineChat.classList.remove('hidden');
   } else {
-    fab.style.display       = '';
-    inlineAdd.style.display = 'none';
+    fab.style.display        = '';
+    inlineAdd.style.display  = 'none';
+    dock.style.display       = '';
+    inlineChat.classList.add('hidden');
   }
   if (tabName === 'analysis')  setTimeout(() => drawBars(txOfMonth()), 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
@@ -1237,9 +1248,9 @@ function bindEvents() {
   document.getElementById('btn-export-pdf').addEventListener('click',   () => { closeModal('modal-settings'); exportPDF(); });
 
   // Chat
-  document.getElementById('btn-chat').addEventListener('click', () => {
-    document.getElementById('chat-panel').classList.toggle('hidden');
-  });
+  const toggleChat = () => document.getElementById('chat-panel').classList.toggle('hidden');
+  document.getElementById('btn-chat').addEventListener('click', toggleChat);
+  document.getElementById('btn-chat-inline').addEventListener('click', toggleChat);
   document.getElementById('btn-chat-close').addEventListener('click', () => {
     document.getElementById('chat-panel').classList.add('hidden');
   });
