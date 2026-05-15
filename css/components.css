@@ -30,13 +30,14 @@
   box-shadow:   0 0 0 2px rgba(124,58,237,.28);
   transform:    translateY(-2px);
 }
-.card-income  { border: 1px solid var(--green); display: flex; gap: 14px; align-items: center; }
-.card-expense { border: 1px solid transparent; border-left: 3px solid var(--red); box-shadow: -4px 0 12px rgba(239,68,68,.22); display: flex; gap: 14px; align-items: center; }
+.card-income  { border: 1px solid transparent; border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
+.card-expense { border: 1px solid transparent; border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable.card-income:hover  { border-color: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,.35); transform: translateY(-2px); }
-.card-clickable.card-expense:hover { border-color: transparent; border-left-color: var(--red); box-shadow: -5px 0 16px rgba(239,68,68,.32); transform: translateY(-2px); }
+.card-clickable.card-income:hover  { border-color: transparent; border-left-color: var(--green); }
+.card-clickable.card-expense:hover { border-color: transparent; border-left-color: var(--red); }
 .card-clickable:active { transform: translateY(0); box-shadow: none; }
-.card-clickable.card-expense:active { border: 2px solid var(--red); box-shadow: 0 0 0 2px rgba(239,68,68,.40); transform: translateY(0); }
+.card-clickable.card-income:active  { border-left-width: 4px; box-shadow: 0 0 0 2px rgba(16,185,129,.35); transform: translateY(0); }
+.card-clickable.card-expense:active { border-left-width: 4px; box-shadow: 0 0 0 2px rgba(239,68,68,.40); transform: translateY(0); }
 
 .card-label {
   font-size:      .75rem;
@@ -629,20 +630,23 @@
 .btn-emoji-pick:hover { border-color: var(--purple); }
 
 .emoji-picker-panel {
-  position: absolute; right: 0; top: calc(100% + 6px);
-  width: 220px; background: var(--surface-2);
-  border: 1px solid var(--border); border-radius: 10px;
-  padding: 8px; z-index: 9999;
-  display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px;
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  position: absolute; right: 0; bottom: calc(100% + 8px);
+  width: 252px; background: var(--surface-2, #1a1a2e);
+  border: 1px solid var(--border-h); border-radius: 12px;
+  padding: 10px; z-index: 9999;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px;
+  box-shadow: 0 -4px 24px rgba(0,0,0,.5), 0 8px 24px rgba(0,0,0,.3);
 }
 .emoji-picker-panel .ep-emoji {
-  width: 32px; height: 32px; font-size: 1.2rem;
+  width: 36px; height: 36px; font-size: 1.25rem;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 6px; cursor: pointer; transition: background .12s;
+  border-radius: 8px; cursor: pointer; transition: background .12s, transform .1s;
   border: none; background: transparent;
 }
-.emoji-picker-panel .ep-emoji:hover { background: var(--surface-3, rgba(255,255,255,.08)); }
+.emoji-picker-panel .ep-emoji:hover {
+  background: rgba(255,255,255,.1);
+  transform: scale(1.2);
+}
 
 /* =============================================
    PAYMENT METHOD
