@@ -56,7 +56,7 @@
 [data-theme="light"] .tx-item:hover   { background: rgba(255,252,245,1); border-color: var(--border-h); }
 [data-theme="light"] .tx-icon         { background: rgba(120,90,50,.06); }
 [data-theme="light"] .filter-select option { background: #fdf8f0; color: #292118; }
-[data-theme="light"] .filter-select   { background: rgba(255,252,245,.85); }
+[data-theme="light"] .filter-select   { background: rgba(99,102,241,.06); border-color: rgba(99,102,241,.22); }
 [data-theme="light"] .cat-btn         { background: rgba(120,90,50,.04); }
 [data-theme="light"] .cat-btn:hover   { background: rgba(120,90,50,.09); }
 [data-theme="light"] .theme-opt       { background: rgba(120,90,50,.05); }

@@ -480,8 +480,8 @@ body::before {
   flex-wrap: wrap;
 }
 .filter-select {
-  background: rgba(255,255,255,.07);
-  border: 1px solid var(--border);
+  background: rgba(99,102,241,.07);
+  border: 1px solid rgba(99,102,241,.25);
   border-radius: var(--r-sm);
   color: var(--text);
   padding: 8px 12px;
@@ -489,14 +489,17 @@ body::before {
   font-size: .84rem;
   cursor: pointer;
   outline: none;
-  transition: border-color .2s;
+  transition: border-color .2s, box-shadow .2s;
 }
 .filter-select option {
   background: #0f0f1e;
   color: #f1f5f9;
 }
 .filter-select:hover,
-.filter-select:focus { border-color: var(--border-h); }
+.filter-select:focus {
+  border-color: rgba(99,102,241,.6);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
 .filter-count { margin-left: auto; font-size: .78rem; color: var(--text-3); }
 
 /* =============================================
