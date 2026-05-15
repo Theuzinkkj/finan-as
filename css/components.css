@@ -213,16 +213,19 @@
 .tx-menu-btn:hover { color: var(--text-1); background: rgba(255,255,255,.1); }
 
 .tx-fatura-btn {
-  background:    rgba(139,92,246,.12);
-  border:        1px solid rgba(139,92,246,.25);
-  color:         var(--purple);
-  cursor:        pointer;
-  padding:       3px 6px;
-  border-radius: 6px;
-  font-size:     .78rem;
-  line-height:   1;
-  flex-shrink:   0;
-  transition:    all .2s;
+  display:        inline-flex;
+  align-items:    center;
+  background:     rgba(139,92,246,.12);
+  border:         1px solid rgba(139,92,246,.25);
+  color:          var(--purple);
+  cursor:         pointer;
+  padding:        1px 5px;
+  border-radius:  5px;
+  font-size:      .72rem;
+  line-height:    1.4;
+  vertical-align: middle;
+  margin-left:    5px;
+  transition:     all .2s;
 }
 .tx-fatura-btn:hover { background: rgba(139,92,246,.25); border-color: rgba(139,92,246,.5); }
 

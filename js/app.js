@@ -187,14 +187,13 @@ function txHTML(t) {
       <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
       <div class="tx-icon">${isIncome ? '💰' : cat.icon}</div>
       <div class="tx-info">
-        <div class="tx-desc">${escHtml(t.description)}${fixedBadge}</div>
+        <div class="tx-desc">${escHtml(t.description)}${fixedBadge}${faturaBtn}</div>
         <div class="tx-meta">${isIncome ? 'Receita' : cat.label} &bull; ${fmtDate(t.date)}</div>
         ${note}
       </div>
       <div class="tx-amount ${isIncome ? 'income' : 'expense'}">
         ${isIncome ? '+' : '−'}${fmt(t.amount)}
       </div>
-      ${faturaBtn}
       <button class="tx-menu-btn" onclick="openTxMenu('${t.id}', event)" title="Opções">⋮</button>
     </div>`;
 }
