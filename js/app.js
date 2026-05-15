@@ -1383,6 +1383,7 @@ async function handleAuthRedirect() {
 async function init() {
   initTheme();
   bindEvents();
+  initCustomSelects();
 
   if (Demo.active) { await startApp(); return; }
 

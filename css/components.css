@@ -309,8 +309,8 @@
   display:         flex;
   align-items:     center;
   gap:             8px;
-  background:      rgba(99,102,241,.07);
-  border:          1px solid rgba(99,102,241,.25);
+  background:      rgba(255,255,255,.05);
+  border:          1px solid rgba(255,255,255,.08);
   border-radius:   var(--r-sm);
   color:           var(--text);
   padding:         8px 12px;
@@ -319,12 +319,13 @@
   cursor:          pointer;
   outline:         none;
   white-space:     nowrap;
-  transition:      border-color .2s, box-shadow .2s;
+  transition:      border-color .2s, background .2s, box-shadow .2s;
 }
 .cs-trigger:hover,
 .custom-select.open .cs-trigger {
-  border-color: rgba(99,102,241,.6);
-  box-shadow:   0 0 0 3px rgba(99,102,241,.12);
+  background:   rgba(99,102,241,.1);
+  border-color: rgba(99,102,241,.45);
+  box-shadow:   0 0 0 3px rgba(99,102,241,.08);
 }
 .cs-arrow {
   font-size:   .6rem;
@@ -340,10 +341,10 @@
   top:           calc(100% + 6px);
   left:          0;
   min-width:     100%;
-  background:    #131320;
-  border:        1px solid rgba(99,102,241,.3);
+  background:    #0d0d1a;
+  border:        1px solid rgba(255,255,255,.07);
   border-radius: var(--r-sm);
-  box-shadow:    0 8px 32px rgba(0,0,0,.6);
+  box-shadow:    0 8px 32px rgba(0,0,0,.7);
   z-index:       500;
   overflow:      hidden;
   animation:     fadeUp .15s ease;
@@ -356,16 +357,17 @@
   font-size:   .84rem;
   color:       var(--text);
   cursor:      pointer;
-  transition:  background .13s, color .13s;
+  transition:  background .13s;
 }
-.cs-option:hover     { background: rgba(99,102,241,.22); color: var(--purple-l); }
-.cs-option.cs-selected { background: rgba(99,102,241,.14); color: var(--purple-l); }
+.cs-option:hover       { background: rgba(99,102,241,.13); }
+.cs-option.cs-selected { background: rgba(99,102,241,.18); color: var(--purple-l); }
 
-[data-theme="light"] .cs-trigger { color: #292118; background: rgba(99,102,241,.06); }
-[data-theme="light"] .cs-dropdown { background: #fdf8f0; border-color: rgba(99,102,241,.25); }
+[data-theme="light"] .cs-trigger { color: #292118; background: rgba(0,0,0,.03); border-color: rgba(0,0,0,.12); }
+[data-theme="light"] .cs-trigger:hover, [data-theme="light"] .custom-select.open .cs-trigger { background: rgba(99,102,241,.07); border-color: rgba(99,102,241,.4); }
+[data-theme="light"] .cs-dropdown { background: #fdf8f0; border-color: rgba(0,0,0,.08); }
 [data-theme="light"] .cs-option { color: #292118; }
-[data-theme="light"] .cs-option:hover { background: rgba(99,102,241,.12); color: #4338ca; }
-[data-theme="light"] .cs-option.cs-selected { background: rgba(99,102,241,.10); color: #4338ca; }
+[data-theme="light"] .cs-option:hover { background: rgba(99,102,241,.09); }
+[data-theme="light"] .cs-option.cs-selected { background: rgba(99,102,241,.13); color: #4338ca; }
 
 .filter-count { margin-left: auto; font-size: .78rem; color: var(--text-3); }
 
