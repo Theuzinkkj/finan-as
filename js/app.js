@@ -766,6 +766,11 @@ function switchTab(tabName) {
   if (tabName === 'transactions') {
     fab.style.display       = 'none';
     inlineAdd.style.display = 'flex';
+    const ft = document.getElementById('filter-type');
+    const fc = document.getElementById('filter-category');
+    if (ft) ft.value = '';
+    if (fc) fc.value = '';
+    renderAllTxs();
   } else {
     fab.style.display       = '';
     inlineAdd.style.display = 'none';
