@@ -437,31 +437,56 @@
 .ai-section li + li   { margin-top: 3px; }
 
 /* =============================================
-   FAB
+   FLOATING DOCK (estilo Nubank)
    ============================================= */
-.fab {
-  position:      fixed;
-  bottom:        28px;
-  right:         28px;
-  width:         58px;
-  height:        58px;
-  border-radius: 50%;
-  background:    linear-gradient(135deg, var(--purple), #2563eb);
-  color:         #fff;
-  font-size:     1.75rem;
-  border:        none;
-  cursor:        pointer;
-  box-shadow:    0 8px 30px rgba(124,58,237,.45);
-  display:       flex;
-  align-items:   center;
-  justify-content: center;
-  z-index:       200;
-  transition:    transform .22s, box-shadow .22s;
-  line-height:   1;
+.floating-dock {
+  position:        fixed;
+  bottom:          28px;
+  left:            50%;
+  transform:       translateX(-50%);
+  display:         flex;
+  align-items:     center;
+  gap:             10px;
+  background:      rgba(12, 12, 24, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border:          1px solid rgba(255,255,255,0.1);
+  border-radius:   56px;
+  padding:         10px 14px;
+  box-shadow:      0 8px 40px rgba(0,0,0,.5), 0 2px 8px rgba(0,0,0,.3);
+  z-index:         200;
 }
-.fab:hover {
-  transform:  scale(1.08) rotate(90deg);
-  box-shadow: 0 12px 40px rgba(124,58,237,.55);
+
+.dock-btn {
+  width:           54px;
+  height:          54px;
+  border-radius:   50%;
+  border:          none;
+  cursor:          pointer;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  color:           #fff;
+  transition:      transform .22s, box-shadow .22s;
+  flex-shrink:     0;
+}
+
+.dock-btn-chat {
+  background:  linear-gradient(135deg, #0ea5e9, #6366f1);
+  box-shadow:  0 4px 16px rgba(99,102,241,.4);
+}
+.dock-btn-chat:hover {
+  transform:  scale(1.1);
+  box-shadow: 0 8px 28px rgba(99,102,241,.6);
+}
+
+.dock-btn-add {
+  background:  linear-gradient(135deg, var(--purple), #2563eb);
+  box-shadow:  0 4px 16px rgba(124,58,237,.4);
+}
+.dock-btn-add:hover {
+  transform:  scale(1.1) rotate(90deg);
+  box-shadow: 0 8px 28px rgba(124,58,237,.6);
 }
 
 /* =============================================
