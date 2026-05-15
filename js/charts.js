@@ -104,6 +104,71 @@ function drawDonut(txs) {
 // =============================================
 //  LINE CHART
 // =============================================
+let _lineChartPts    = [];
+let _lineChartTooltip = null;
+
+function getOrCreateLineTooltip() {
+  if (_lineChartTooltip) return _lineChartTooltip;
+  const el = document.createElement('div');
+  el.id = 'line-tooltip';
+  el.style.cssText = [
+    'position:fixed', 'z-index:9999',
+    'background:var(--bg-card)', 'border:1px solid var(--border-h)',
+    'border-radius:12px', 'padding:12px 14px',
+    'box-shadow:0 8px 32px rgba(0,0,0,.45)',
+    'min-width:200px', 'max-width:290px',
+    'pointer-events:none', 'display:none',
+    'backdrop-filter:blur(12px)',
+  ].join(';');
+  document.body.appendChild(el);
+  _lineChartTooltip = el;
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#line-chart')) hideLineTooltip();
+  });
+  return el;
+}
+
+function showLineTooltip(pt, rect) {
+  const el  = getOrCreateLineTooltip();
+  if (el.dataset.day === String(pt.day)) { hideLineTooltip(); return; }
+  el.dataset.day = pt.day;
+
+  const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const rows = pt.txList.map(t => {
+    const cat = CATEGORIES[t.category] || CATEGORIES.outros;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cat.icon} ${escHtml(t.description)}</span>
+      <span style="color:var(--red);font-weight:600;white-space:nowrap;flex-shrink:0">${fmtV(t.amount)}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="font-size:11px;color:var(--text-3);margin-bottom:7px;font-weight:500;letter-spacing:.03em">DIA ${pt.day}</div>
+    ${rows}
+    <div style="display:flex;justify-content:space-between;padding-top:7px;font-size:13px;font-weight:700;">
+      <span style="color:var(--text-2)">Total</span>
+      <span style="color:var(--red)">${fmtV(pt.v)}</span>
+    </div>`;
+
+  el.style.display = 'block';
+  const tooltipW = 290;
+  let x = rect.left + pt.x + 14;
+  let y = rect.top  + pt.y - 16;
+  if (x + tooltipW > window.innerWidth  - 8) x = rect.left + pt.x - tooltipW - 14;
+  if (x < 8) x = 8;
+  const tooltipH = el.offsetHeight;
+  if (y + tooltipH > window.innerHeight - 8) y = window.innerHeight - tooltipH - 8;
+  if (y < 8) y = 8;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+}
+
+function hideLineTooltip() {
+  if (!_lineChartTooltip) return;
+  _lineChartTooltip.style.display = 'none';
+  delete _lineChartTooltip.dataset.day;
+}
+
 function drawLine(txs) {
   const canvas = document.getElementById('line-chart');
   if (!canvas) return;
@@ -122,10 +187,12 @@ function drawLine(txs) {
   const maxDay      = (now.getMonth() === month && now.getFullYear() === year)
                         ? now.getDate() : daysInMonth;
 
-  const daily = Array(daysInMonth + 1).fill(0);
+  const daily    = Array(daysInMonth + 1).fill(0);
+  const dailyTxs = Array.from({ length: daysInMonth + 1 }, () => []);
   txs.filter(t => t.type === 'despesa').forEach(t => {
     const d = parseInt(t.date.split('-')[2], 10);
     daily[d] += t.amount;
+    dailyTxs[d].push(t);
   });
 
   const maxVal = Math.max(...daily, 1);
@@ -152,8 +219,11 @@ function drawLine(txs) {
       x: pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * cW,
       y: pT + cH - (daily[d] / maxVal) * cH,
       v: daily[d],
+      day: d,
+      txList: dailyTxs[d],
     });
   }
+  _lineChartPts = pts;
   if (pts.length < 2) return;
 
   const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
@@ -198,6 +268,25 @@ function drawLine(txs) {
     const x = pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * cW;
     ctx.fillText(d, x, H - pB + 18);
   }
+
+  canvas.onmousemove = e => {
+    const r  = canvas.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (canvas.width  / r.width);
+    const my = (e.clientY - r.top)  * (canvas.height / r.height);
+    const hit = _lineChartPts.find(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 14);
+    canvas.style.cursor = hit ? 'pointer' : 'default';
+  };
+
+  canvas.onclick = e => {
+    const r  = canvas.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (canvas.width  / r.width);
+    const my = (e.clientY - r.top)  * (canvas.height / r.height);
+    const hit = _lineChartPts.find(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 14);
+    if (hit) { e.stopPropagation(); showLineTooltip(hit, r); }
+    else hideLineTooltip();
+  };
+
+  canvas.onmouseleave = () => { canvas.style.cursor = 'default'; };
 }
 
 // =============================================
