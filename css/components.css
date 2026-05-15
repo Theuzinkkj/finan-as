@@ -33,8 +33,8 @@
 .card-income  { border: 1px solid transparent; border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border: 1px solid transparent; border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable.card-income:hover  { border-color: transparent; border-left-color: var(--green); }
-.card-clickable.card-expense:hover { border-color: transparent; border-left-color: var(--red); }
+.card-clickable.card-income:hover  { border-left-width: 4px; background: rgba(16,185,129,.05); box-shadow: 0 0 0 1px rgba(16,185,129,.30), -4px 0 14px rgba(16,185,129,.18); transform: translateY(-1px); }
+.card-clickable.card-expense:hover { border-left-width: 4px; background: rgba(239,68,68,.05);  box-shadow: 0 0 0 1px rgba(239,68,68,.35),  -4px 0 14px rgba(239,68,68,.20); transform: translateY(-1px); }
 .card-clickable:active { transform: translateY(1px); }
 .card-clickable.card-income:active  { border-left-width: 4px; background: rgba(16,185,129,.08); box-shadow: 0 0 0 2px rgba(16,185,129,.45), -6px 0 20px rgba(16,185,129,.25); transform: translateY(1px); }
 .card-clickable.card-expense:active { border-left-width: 4px; background: rgba(239,68,68,.08);  box-shadow: 0 0 0 2px rgba(239,68,68,.50),  -6px 0 20px rgba(239,68,68,.28); transform: translateY(1px); }
