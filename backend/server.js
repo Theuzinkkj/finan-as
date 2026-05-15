@@ -57,7 +57,7 @@ app.use((req, res, next) => {
   // Cabeçalhos CORS para origens permitidas
   res.setHeader('Access-Control-Allow-Origin',      origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods',     'GET, POST, DELETE');
+  res.setHeader('Access-Control-Allow-Methods',     'GET, POST, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers',     'Content-Type');
   res.setHeader('Vary', 'Origin');
 
@@ -317,7 +317,7 @@ app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 
-app.post('/api/ai/chat', aiLimiter, async (req, res, next) => {
+app.post('/api/ai/chat', aiLimiter, requireAuth, async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(
       'https://api.groq.com/openai/v1/chat/completions',
