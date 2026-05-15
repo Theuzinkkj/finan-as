@@ -33,11 +33,11 @@
 .card-income  { border: 1px solid transparent; border-left: 3px solid var(--green); display: flex; gap: 14px; align-items: center; }
 .card-expense { border: 1px solid transparent; border-left: 3px solid var(--red);   display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
-.card-clickable.card-income:hover  { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.30) 0%, transparent 65%), linear-gradient(135deg, rgba(16,185,129,.38) 0%, rgba(16,185,129,.18) 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.40), -5px 0 20px rgba(16,185,129,.28); transform: translateY(-1px); }
-.card-clickable.card-expense:hover { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.30) 0%, transparent 65%), linear-gradient(135deg, rgba(239,68,68,.38) 0%, rgba(239,68,68,.18) 100%);  box-shadow: 0 0 0 1px rgba(239,68,68,.45),  -5px 0 20px rgba(239,68,68,.30); transform: translateY(-1px); }
+.card-clickable.card-income:hover  { border-left-width: 4px; background: radial-gradient(circle 90px at var(--mx,50%) var(--my,50%), rgba(4,50,32,.55) 0%, transparent 65%), radial-gradient(circle 90px at calc(100% - var(--mx,50%)) calc(100% - var(--my,50%)), rgba(4,50,32,.55) 0%, transparent 65%), linear-gradient(135deg, rgba(74,222,128,.42) 0%, rgba(6,78,59,.62) 100%); box-shadow: 0 0 0 1px rgba(16,185,129,.40), -5px 0 20px rgba(16,185,129,.28); transform: translateY(-1px); }
+.card-clickable.card-expense:hover { border-left-width: 4px; background: radial-gradient(circle 90px at var(--mx,50%) var(--my,50%), rgba(80,8,8,.55)  0%, transparent 65%), radial-gradient(circle 90px at calc(100% - var(--mx,50%)) calc(100% - var(--my,50%)), rgba(80,8,8,.55)  0%, transparent 65%), linear-gradient(135deg, rgba(252,165,165,.38) 0%, rgba(153,27,27,.60) 100%);  box-shadow: 0 0 0 1px rgba(239,68,68,.45),  -5px 0 20px rgba(239,68,68,.30); transform: translateY(-1px); }
 .card-clickable:active { transform: translateY(1px); }
-.card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 110px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.40) 0%, transparent 65%), linear-gradient(135deg, rgba(16,185,129,.52) 0%, rgba(16,185,129,.26) 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.55), -6px 0 26px rgba(16,185,129,.35); transform: translateY(1px); }
-.card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 110px at var(--mx,50%) var(--my,50%), rgba(0,0,0,.40) 0%, transparent 65%), linear-gradient(135deg, rgba(239,68,68,.52) 0%, rgba(239,68,68,.26) 100%);  box-shadow: 0 0 0 2px rgba(239,68,68,.60),  -6px 0 26px rgba(239,68,68,.38); transform: translateY(1px); }
+.card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(3,36,22,.65) 0%, transparent 65%), radial-gradient(circle 100px at calc(100% - var(--mx,50%)) calc(100% - var(--my,50%)), rgba(3,36,22,.65) 0%, transparent 65%), linear-gradient(135deg, rgba(74,222,128,.55) 0%, rgba(6,78,59,.78) 100%); box-shadow: 0 0 0 2px rgba(16,185,129,.55), -6px 0 26px rgba(16,185,129,.35); transform: translateY(1px); }
+.card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 100px at var(--mx,50%) var(--my,50%), rgba(60,5,5,.65)  0%, transparent 65%), radial-gradient(circle 100px at calc(100% - var(--mx,50%)) calc(100% - var(--my,50%)), rgba(60,5,5,.65)  0%, transparent 65%), linear-gradient(135deg, rgba(252,165,165,.50) 0%, rgba(153,27,27,.75) 100%);  box-shadow: 0 0 0 2px rgba(239,68,68,.60),  -6px 0 26px rgba(239,68,68,.38); transform: translateY(1px); }
 
 .card-label {
   font-size:      .75rem;
@@ -93,10 +93,10 @@
   letter-spacing: 0;
   text-transform: none;
   color:          var(--text-3);
-  opacity:        0;
+  opacity:        1;
   transition:     opacity .2s;
 }
-.chart-card:hover .chart-title-hint { opacity: 1; }
+.chart-card:hover .chart-title-hint { opacity: 0; }
 
 .donut-wrapper {
   display:     flex;
@@ -1196,7 +1196,7 @@
    LINE CHART HOVER PANEL
    ============================================= */
 @keyframes lineItemIn {
-  from { opacity: 0; transform: translateY(7px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -1209,11 +1209,11 @@
   overflow:       hidden;
   max-height:     0;
   opacity:        0;
-  transition:     max-height .45s ease, opacity .35s ease, padding .35s ease;
+  transition:     max-height .65s cubic-bezier(.22,1,.36,1), opacity .55s ease, padding .5s ease;
   pointer-events: none;
 }
 .line-click-panel.open {
-  max-height:     400px;
+  max-height:     500px;
   opacity:        1;
   padding:        14px 16px;
   pointer-events: auto;
@@ -1225,6 +1225,10 @@
   text-transform: uppercase;
   letter-spacing: .06em;
   margin-bottom:  10px;
+  opacity:        0;
+}
+.line-click-panel.open .line-click-day {
+  animation: lineItemIn .4s ease forwards;
 }
 .line-click-tx {
   display:       flex;
@@ -1237,7 +1241,7 @@
   opacity:       0;
 }
 .line-click-panel.open .line-click-tx {
-  animation: lineItemIn .32s ease forwards;
+  animation: lineItemIn .42s ease forwards;
 }
 .line-click-tx:last-of-type { border-bottom: none; }
 .line-click-tx-desc {
@@ -1266,7 +1270,7 @@
   opacity:       0;
 }
 .line-click-panel.open .line-click-total {
-  animation: lineItemIn .32s ease forwards;
+  animation: lineItemIn .42s ease forwards;
 }
 .line-click-total-label { color: var(--text-2); }
 .line-click-total-value { color: #f87171; }
