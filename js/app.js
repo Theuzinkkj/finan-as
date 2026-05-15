@@ -200,6 +200,7 @@ function txHTML(t) {
 
 function toggleTxSelection(id, event) {
   if (event.target.closest('.tx-menu-btn')) return;
+  if (event.currentTarget.closest('#tab-dashboard')) return;
   if (selectedTxIds.has(id)) selectedTxIds.delete(id);
   else selectedTxIds.add(id);
   document.querySelectorAll(`.tx-item[data-id="${id}"]`).forEach(el => {

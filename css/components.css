@@ -155,10 +155,10 @@
    TRANSACTIONS
    ============================================= */
 .transactions-list { display: flex; flex-direction: column; gap: 6px; }
-#recent-transactions { max-height: 420px; overflow-y: auto; padding-right: 4px; }
-#recent-transactions::-webkit-scrollbar { width: 4px; }
+#recent-transactions { max-height: 420px; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.12) transparent; }
+#recent-transactions::-webkit-scrollbar { width: 2px; }
 #recent-transactions::-webkit-scrollbar-track { background: transparent; }
-#recent-transactions::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 4px; }
+#recent-transactions::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 2px; }
 
 .tx-item {
   display:       flex;
