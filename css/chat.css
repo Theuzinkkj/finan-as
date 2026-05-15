@@ -1,29 +1,4 @@
-/* =============================================
-   CHAT FAB
-   ============================================= */
-.chat-fab {
-  position:        fixed;
-  bottom:          28px;
-  left:            28px;
-  width:           54px;
-  height:          54px;
-  border-radius:   50%;
-  background:      linear-gradient(135deg, #0ea5e9, #6366f1);
-  color:           #fff;
-  font-size:       1.35rem;
-  border:          none;
-  cursor:          pointer;
-  box-shadow:      0 8px 28px rgba(99,102,241,.45);
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  z-index:         200;
-  transition:      transform .22s, box-shadow .22s;
-}
-.chat-fab:hover {
-  transform:  scale(1.08);
-  box-shadow: 0 12px 36px rgba(99,102,241,.55);
-}
+/* .chat-fab estilos movidos para .dock-btn-chat em components.css */
 
 /* =============================================
    CHAT PANEL
@@ -213,6 +188,5 @@
    RESPONSIVE CHAT
    ============================================= */
 @media (max-width: 900px) {
-  .chat-fab   { bottom: 84px; left: 16px; width: 48px; height: 48px; font-size: 1.2rem; }
   .chat-panel { width: 100%; height: calc(100vh - 62px); border-left: none; border-top: 1px solid var(--border-h); }
 }
