@@ -42,8 +42,8 @@
    ============================================= */
 [data-theme="light"] body::before {
   background:
-    radial-gradient(ellipse 70% 60% at var(--px) var(--py), rgba(139,92,246,.18) 0%, transparent 65%),
-    radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(99,102,241,.13) 0%, transparent 65%);
+    radial-gradient(ellipse 70% 60% at var(--px) var(--py), rgba(245,158,11,.20) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(251,113,133,.14) 0%, transparent 65%);
 }
 [data-theme="light"] .header,
 [data-theme="light"] .header-row,
