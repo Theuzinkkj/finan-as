@@ -97,24 +97,18 @@ body {
   overflow-x:  hidden;
 }
 
-@property --px { syntax: '<percentage>'; inherits: false; initial-value: 10%; }
-@property --py { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
-@property --bx { syntax: '<percentage>'; inherits: false; initial-value: 88%; }
-@property --by { syntax: '<percentage>'; inherits: false; initial-value: 80%; }
-@property --vx { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
-@property --vy { syntax: '<percentage>'; inherits: false; initial-value: 50%; }
+@property --px { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
+@property --py { syntax: '<percentage>'; inherits: false; initial-value: 20%; }
+@property --vx { syntax: '<percentage>'; inherits: false; initial-value: 80%; }
+@property --vy { syntax: '<percentage>'; inherits: false; initial-value: 75%; }
 
-@keyframes orb-purple {
-  from { --px: 10%; --py: 15%; }
-  to   { --px: 78%; --py: 72%; }
+@keyframes orb-a {
+  from { --px: 15%; --py: 20%; }
+  to   { --px: 72%; --py: 68%; }
 }
-@keyframes orb-blue {
-  from { --bx: 88%; --by: 80%; }
-  to   { --bx: 12%; --by: 18%; }
-}
-@keyframes orb-violet {
-  from { --vx: 50%; --vy: 55%; }
-  to   { --vx: 30%; --vy: 25%; }
+@keyframes orb-b {
+  from { --vx: 80%; --vy: 75%; }
+  to   { --vx: 22%; --vy: 18%; }
 }
 
 body::before {
@@ -122,13 +116,11 @@ body::before {
   position: fixed;
   inset:    0;
   background:
-    radial-gradient(ellipse 65% 55% at var(--px) var(--py), rgba(99,102,241,.45)  0%, transparent 65%),
-    radial-gradient(ellipse 55% 45% at var(--bx) var(--by), rgba(59,130,246,.35)  0%, transparent 65%),
-    radial-gradient(ellipse 45% 40% at var(--vx) var(--vy), rgba(139,92,246,.25)  0%, transparent 60%);
+    radial-gradient(ellipse 55% 45% at var(--px) var(--py), rgba(88,28,220,.13)  0%, transparent 70%),
+    radial-gradient(ellipse 50% 42% at var(--vx) var(--vy), rgba(67,20,170,.10)  0%, transparent 70%);
   pointer-events: none;
   z-index:  0;
   animation:
-    orb-purple 9s  ease-in-out infinite alternate,
-    orb-blue   11s ease-in-out infinite alternate-reverse,
-    orb-violet 13s ease-in-out infinite alternate;
+    orb-a 12s ease-in-out infinite alternate,
+    orb-b 15s ease-in-out infinite alternate-reverse;
 }
