@@ -31,11 +31,12 @@
   transform:    translateY(-2px);
 }
 .card-income  { border: 1px solid var(--green); display: flex; gap: 14px; align-items: center; }
-.card-expense { border: 1px solid var(--red);   display: flex; gap: 14px; align-items: center; }
+.card-expense { border: 1px solid transparent; border-left: 3px solid var(--red); box-shadow: -4px 0 12px rgba(239,68,68,.22); display: flex; gap: 14px; align-items: center; }
 .card-clickable { cursor: pointer; user-select: none; }
 .card-clickable.card-income:hover  { border-color: var(--green); box-shadow: 0 0 0 2px rgba(16,185,129,.35); transform: translateY(-2px); }
-.card-clickable.card-expense:hover { border-color: var(--red);   box-shadow: 0 0 0 2px rgba(239,68,68,.35);   transform: translateY(-2px); }
+.card-clickable.card-expense:hover { border-color: transparent; border-left-color: var(--red); box-shadow: -5px 0 16px rgba(239,68,68,.32); transform: translateY(-2px); }
 .card-clickable:active { transform: translateY(0); box-shadow: none; }
+.card-clickable.card-expense:active { border: 2px solid var(--red); box-shadow: 0 0 0 2px rgba(239,68,68,.40); transform: translateY(0); }
 
 .card-label {
   font-size:      .75rem;
