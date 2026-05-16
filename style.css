@@ -382,7 +382,7 @@ body::before {
   gap: 14px;
   margin-bottom: 18px;
 }
-.chart-card { padding: 20px; }
+.chart-card { padding: 20px 20px 28px; }
 .chart-title {
   font-size: .78rem;
   font-weight: 600;
@@ -504,7 +504,7 @@ body::before {
 .stat-value { font-size: 1.15rem; font-weight: 700; }
 
 /* ---- AI card ---- */
-.ai-card { margin-top: 24px; }
+.ai-card { margin-top: 40px; }
 .ai-header {
   display: flex;
   justify-content: space-between;
