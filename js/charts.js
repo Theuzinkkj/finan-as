@@ -207,9 +207,24 @@ function drawDonut(txs) {
   redrawDonut(ctx, -1);
 
   canvas.onclick = e => {
-    if (_donutHovered >= 0) {
-      goToTransactions('despesa', _donutSlices[_donutHovered].key);
-    }
+    const r      = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / r.width;
+    const scaleY = canvas.height / r.height;
+    const mx     = (e.clientX - r.left) * scaleX;
+    const my     = (e.clientY - r.top)  * scaleY;
+    const { cx, cy, OR, IR } = _donutGeo;
+    const dist = Math.hypot(mx - cx, my - cy);
+    if (dist < IR || dist > OR + 12) return;
+    const normStart = -Math.PI / 2;
+    let rel = Math.atan2(my - cy, mx - cx) - normStart;
+    if (rel < 0) rel += Math.PI * 2;
+    const slice = _donutSlices.find(s => {
+      let sa = s.startAngle - normStart, ea = s.endAngle - normStart;
+      if (sa < 0) sa += Math.PI * 2;
+      if (ea < 0) ea += Math.PI * 2;
+      return sa <= ea ? rel >= sa && rel <= ea : rel >= sa || rel <= ea;
+    });
+    if (slice) goToTransactions('despesa', slice.key);
   };
 
   canvas.onmousemove = e => {

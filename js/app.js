@@ -121,13 +121,22 @@ function escHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function toast(msg, type = 'ok') {
+function toast(msg, type = 'ok', undoFn = null) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
   el.style.borderColor = type === 'err' ? 'rgba(239,68,68,.4)' : 'rgba(255,255,255,.15)';
+  if (undoFn) {
+    el.innerHTML = `<span>${escHtml(msg)}</span><button class="toast-undo" type="button">Desfazer</button>`;
+    el.querySelector('.toast-undo').onclick = () => {
+      clearTimeout(el._tid);
+      el.classList.remove('show');
+      undoFn();
+    };
+  } else {
+    el.textContent = msg;
+  }
   el.classList.add('show');
   clearTimeout(el._tid);
-  el._tid = setTimeout(() => el.classList.remove('show'), 2800);
+  el._tid = setTimeout(() => el.classList.remove('show'), undoFn ? 5000 : 2800);
 }
 
 // =============================================
@@ -291,11 +300,13 @@ function renderRecent(txs) {
 }
 
 function renderAllTxs() {
-  const catF  = document.getElementById('filter-category').value;
-  const typeF = document.getElementById('filter-type').value;
-  const list  = txOfMonth()
-    .filter(t => !catF  || t.category === catF)
-    .filter(t => !typeF || t.type === typeF)
+  const catF   = document.getElementById('filter-category').value;
+  const typeF  = document.getElementById('filter-type').value;
+  const search = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+  const list   = txOfMonth()
+    .filter(t => !catF   || t.category === catF)
+    .filter(t => !typeF  || t.type === typeF)
+    .filter(t => !search || t.description.toLowerCase().includes(search) || (t.notes || '').toLowerCase().includes(search))
     .sort((a, b) => b.date.localeCompare(a.date));
 
   document.getElementById('all-transactions').innerHTML =
@@ -357,6 +368,8 @@ function resetTransactionModal() {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('cat-error').classList.add('hidden');
+  const amtPreview = document.getElementById('amount-preview');
+  if (amtPreview) amtPreview.textContent = '';
   document.getElementById('invoice-group').classList.add('hidden');
   document.getElementById('invoice-items-list').innerHTML = '';
   document.getElementById('invoice-total').classList.add('hidden');
@@ -437,25 +450,44 @@ async function handleFormSubmit(e) {
 }
 
 async function deleteTx(id) {
+  const tx = transactions.find(t => t.id === id);
+  if (!tx) return;
+
+  transactions = transactions.filter(t => t.id !== id);
+  resetAIResult();
+  renderAll();
+
   if (Demo.active) {
-    transactions = transactions.filter(t => t.id !== id);
-    resetAIResult();
-    renderAll();
-    toast('Transação removida. (modo demo — não salva)');
+    toast('Transação removida.', 'ok', () => {
+      transactions.push(tx);
+      renderAll();
+      toast('Exclusão desfeita. (modo demo)');
+    });
     return;
   }
+
   try {
     await DB.remove(id);
-    transactions = transactions.filter(t => t.id !== id);
-    resetAIResult();
-    renderAll();
-    toast('Transação removida.');
-
+    toast('Transação removida.', 'ok', async () => {
+      try {
+        await DB.put(tx);
+        transactions.push(tx);
+        renderAll();
+        toast('Exclusão desfeita.');
+        CloudDB.add(tx)
+          .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
+          .catch(() => {});
+      } catch {
+        toast('Erro ao desfazer exclusão.', 'err');
+      }
+    });
     CloudDB.remove(id)
       .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
       .catch(err => toast('Nuvem: ' + err.message, 'err'));
   } catch (err) {
     toast('Erro ao remover transação.', 'err');
+    transactions.push(tx);
+    renderAll();
   }
 }
 
@@ -1343,6 +1375,7 @@ function bindEvents() {
   // Filtros
   document.getElementById('filter-category').addEventListener('change', renderAllTxs);
   document.getElementById('filter-type').addEventListener('change', renderAllTxs);
+  document.getElementById('filter-search').addEventListener('input', renderAllTxs);
 
   // Abrir configurações
   document.getElementById('btn-settings').addEventListener('click', () => {
@@ -1423,6 +1456,82 @@ function bindEvents() {
     e.preventDefault();
     txItem.click();
   });
+
+  // Atalho N — nova transação (apenas fora de inputs e modais)
+  document.addEventListener('keydown', e => {
+    if (e.target.matches('input, textarea, select, [contenteditable]')) return;
+    if (document.querySelector('.modal-overlay:not(.hidden)')) return;
+    if (e.key === 'n' || e.key === 'N') {
+      e.preventDefault();
+      resetTransactionModal();
+      openModal('modal-transaction');
+    }
+  });
+
+  // Preview de valor em tempo real
+  document.getElementById('input-amount').addEventListener('input', e => {
+    const preview = document.getElementById('amount-preview');
+    if (!preview) return;
+    const val = parseFloat(e.target.value);
+    preview.textContent = val > 0 ? fmt(val) : '';
+  });
+
+  // Swipe para deletar no mobile
+  initSwipeToDelete();
+}
+
+// =============================================
+//  SWIPE TO DELETE (mobile)
+// =============================================
+function initSwipeToDelete() {
+  const container = document.getElementById('tab-transactions');
+  if (!container) return;
+
+  let startX = 0, startY = 0, txEl = null, axisLocked = null;
+
+  container.addEventListener('touchstart', e => {
+    const tx = e.target.closest('.tx-item[role="button"]');
+    if (!tx) { txEl = null; return; }
+    txEl = tx; axisLocked = null;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tx.style.transition = 'none';
+  }, { passive: true });
+
+  container.addEventListener('touchmove', e => {
+    if (!txEl) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if (!axisLocked) {
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+      axisLocked = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+    }
+    if (axisLocked === 'v' || dx > 0) { txEl.style.transform = ''; txEl = null; return; }
+    e.preventDefault();
+    const clamped = Math.max(dx, -88);
+    txEl.style.transform   = `translateX(${clamped}px)`;
+    const ratio = Math.min(Math.abs(dx) / 120, 1);
+    txEl.style.borderColor = `rgba(239,68,68,${(ratio * 0.6).toFixed(2)})`;
+    txEl.style.background  = `rgba(239,68,68,${(ratio * 0.15).toFixed(2)})`;
+  }, { passive: false });
+
+  container.addEventListener('touchend', e => {
+    if (!txEl) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const el = txEl; txEl = null;
+    if (dx < -65) {
+      el.style.transition = 'transform .22s ease-in, opacity .22s ease-in';
+      el.style.transform  = 'translateX(-110%)';
+      el.style.opacity    = '0';
+      setTimeout(() => deleteTx(el.dataset.id), 200);
+    } else {
+      el.style.transition  = 'transform .3s ease, border-color .3s, background .3s';
+      el.style.transform   = '';
+      el.style.borderColor = '';
+      el.style.background  = '';
+      setTimeout(() => { el.style.transition = ''; }, 300);
+    }
+  }, { passive: true });
 }
 
 // =============================================
