@@ -89,7 +89,10 @@ function loadProfile() {
 function saveProfile(data) {
   localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...data }));
   if (!Demo.active) {
-    API.req('PATCH', '/api/profile', data).catch(() => {});
+    const { photo: _dropped, ...serverData } = data;
+    if (Object.keys(serverData).length > 0) {
+      API.req('PATCH', '/api/profile', serverData).catch(() => {});
+    }
   }
 }
 
