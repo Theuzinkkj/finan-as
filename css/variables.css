@@ -46,8 +46,7 @@
     radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(251,113,133,.14) 0%, transparent 65%);
 }
 [data-theme="light"] .header,
-[data-theme="light"] .header-row,
-[data-theme="light"] .header-month-row { background: rgba(245,240,232,0.92); }
+[data-theme="light"] .header-row { background: rgba(245,240,232,0.92); }
 [data-theme="light"] .modal            { background: #fdf8f0; }
 [data-theme="light"] .dropdown-menu   { background: #fdf8f0; box-shadow: 0 8px 32px rgba(0,0,0,.10); }
 [data-theme="light"] .mobile-nav      { background: rgba(245,240,232,0.96); }

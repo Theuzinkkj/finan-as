@@ -20,11 +20,17 @@
   gap:             16px;
 }
 
-.header-month-row {
+.month-float {
   display:         flex;
   justify-content: center;
-  padding:         8px 32px 12px;
-  border-top:      1px solid var(--border);
+  padding:         14px 32px 2px;
+  position:        sticky;
+  top:             60px;
+  z-index:         90;
+  pointer-events:  none;
+}
+.month-float .month-selector {
+  pointer-events: auto;
 }
 
 /* Logo */
@@ -208,7 +214,7 @@
   .charts-grid    { grid-template-columns: 1fr; }
   .analysis-stats { grid-template-columns: repeat(2, 1fr); }
   .header-row     { padding: 12px 16px; }
-  .header-month-row { padding: 6px 16px 10px; }
+  .month-float { padding: 10px 16px 0; top: 56px; }
   .main           { padding: 20px 16px 90px; }
   .nav-tabs      { display: none; }
   .mobile-nav    { display: flex; }
