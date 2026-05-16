@@ -142,10 +142,14 @@ function supaHeaders(token) {
 async function proxyFetch(url, opts) {
   let r;
   try {
-    r = await fetch(url, opts);
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 10_000);
+    r = await fetch(url, { ...opts, signal: controller.signal });
+    clearTimeout(tid);
   } catch (err) {
     // Erro de rede / DNS / timeout — Supabase ou Groq inacessível
-    const e = new Error('Serviço externo inacessível. Tente novamente.');
+    const isTimeout = err.name === 'AbortError';
+    const e = new Error(isTimeout ? 'Tempo limite excedido. Tente novamente.' : 'Serviço externo inacessível. Tente novamente.');
     e.status = 502;
     throw e;
   }

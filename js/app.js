@@ -1208,7 +1208,7 @@ function authErrorMsg(raw) {
     return 'Muitas tentativas. Aguarde um momento e tente novamente.';
   if (m.includes('signup_disabled'))
     return 'Cadastro desabilitado. Entre em contato com o suporte.';
-  if (m.includes('network') || m.includes('fetch'))
+  if (m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('failed to load'))
     return 'Erro de conexão. Verifique sua internet.';
   return raw;
 }
