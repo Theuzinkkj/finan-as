@@ -74,10 +74,10 @@
           <span class="logo-text">Atlas</span>
         </div>
       </div>
-      <nav class="nav-tabs" id="nav-tabs">
-        <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
-        <button class="nav-tab" data-tab="transactions">Transações</button>
-        <button class="nav-tab" data-tab="analysis">Análise IA</button>
+      <nav class="nav-tabs" id="nav-tabs" role="tablist" aria-label="Navegação principal">
+        <button class="nav-tab active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" id="nav-tab-dashboard">Dashboard</button>
+        <button class="nav-tab" data-tab="transactions" role="tab" aria-selected="false" aria-controls="tab-transactions" id="nav-tab-transactions">Transações</button>
+        <button class="nav-tab" data-tab="analysis" role="tab" aria-selected="false" aria-controls="tab-analysis" id="nav-tab-analysis">Análise IA</button>
       </nav>
       <div class="header-right">
         <span class="db-dot db-offline" id="db-status-dot-header" title="Sem banco de dados"></span>
@@ -97,7 +97,7 @@
   <main class="main">
 
     <!-- ======= DASHBOARD ======= -->
-    <section class="tab-content active" id="tab-dashboard">
+    <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
       <div class="summary-grid">
         <div class="card card-balance">
           <div class="card-label">Saldo do Mês</div>
@@ -167,7 +167,7 @@
     </section>
 
     <!-- ======= TRANSACTIONS ======= -->
-    <section class="tab-content" id="tab-transactions">
+    <section class="tab-content" id="tab-transactions" role="tabpanel" aria-labelledby="nav-tab-transactions">
       <div class="filters-bar">
         <select id="filter-category" class="filter-select">
           <option value="">Todas as categorias</option>
@@ -198,7 +198,7 @@
     </section>
 
     <!-- ======= ANALYSIS ======= -->
-    <section class="tab-content" id="tab-analysis">
+    <section class="tab-content" id="tab-analysis" role="tabpanel" aria-labelledby="nav-tab-analysis">
       <div class="analysis-stats">
         <div class="stat-box">
           <span class="stat-label">Despesas registradas</span>
@@ -286,7 +286,7 @@
         <button class="chat-action-btn" id="btn-chat-close" title="Fechar">✕</button>
       </div>
     </div>
-    <div class="chat-messages" id="chat-messages">
+    <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Conversa com assistente financeiro">
       <div class="chat-welcome">
         <div class="chat-welcome-icon">🤖</div>
         <p>Olá! Sou seu assistente financeiro pessoal. Tenho acesso aos seus dados do mês atual e posso responder dúvidas sobre seus gastos, dar dicas de economia ou ajudar com qualquer questão financeira.</p>
@@ -302,14 +302,14 @@
   </div>
 
   <!-- Mobile bottom nav -->
-  <nav class="mobile-nav">
-    <button class="mobile-nav-btn active" data-tab="dashboard">
+  <nav class="mobile-nav" role="tablist" aria-label="Navegação principal">
+    <button class="mobile-nav-btn active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" id="mobile-nav-tab-dashboard">
       <span>📊</span><span>Dashboard</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="transactions">
+    <button class="mobile-nav-btn" data-tab="transactions" role="tab" aria-selected="false" aria-controls="tab-transactions" id="mobile-nav-tab-transactions">
       <span>📋</span><span>Transações</span>
     </button>
-    <button class="mobile-nav-btn" data-tab="analysis">
+    <button class="mobile-nav-btn" data-tab="analysis" role="tab" aria-selected="false" aria-controls="tab-analysis" id="mobile-nav-tab-analysis">
       <span>🤖</span><span>IA</span>
     </button>
   </nav>
@@ -325,9 +325,9 @@
 
   <!-- Modal: Rename Transaction -->
   <div class="modal-overlay hidden" id="modal-rename-tx">
-    <div class="modal modal-sm">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-rename-tx-title">
       <div class="modal-header">
-        <h2>Renomear transação</h2>
+        <h2 id="modal-rename-tx-title">Renomear transação</h2>
         <button class="modal-close" data-close="modal-rename-tx">✕</button>
       </div>
       <div class="form-group">
@@ -343,9 +343,9 @@
 
   <!-- Modal: Edit Amount -->
   <div class="modal-overlay hidden" id="modal-edit-amount">
-    <div class="modal modal-sm">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-edit-amount-title">
       <div class="modal-header">
-        <h2>Editar valor</h2>
+        <h2 id="modal-edit-amount-title">Editar valor</h2>
         <button class="modal-close" data-close="modal-edit-amount">✕</button>
       </div>
       <div class="form-group">
@@ -361,9 +361,9 @@
 
   <!-- Modal: Add to Fatura -->
   <div class="modal-overlay hidden" id="modal-add-fatura">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-add-fatura-title">
       <div class="modal-header">
-        <h2>Adicionar à fatura</h2>
+        <h2 id="modal-add-fatura-title">Adicionar à fatura</h2>
         <button class="modal-close" data-close="modal-add-fatura">✕</button>
       </div>
       <div class="form-group">
@@ -391,7 +391,7 @@
 
   <!-- Modal: View Fatura -->
   <div class="modal-overlay hidden" id="modal-view-fatura">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="view-fatura-title">
       <div class="modal-header">
         <div>
           <h2 id="view-fatura-title">Fatura</h2>
@@ -415,9 +415,9 @@
 
   <!-- Modal: Change Category -->
   <div class="modal-overlay hidden" id="modal-change-cat">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-change-cat-title">
       <div class="modal-header">
-        <h2>Trocar categoria</h2>
+        <h2 id="modal-change-cat-title">Trocar categoria</h2>
         <button class="modal-close" data-close="modal-change-cat">✕</button>
       </div>
       <div class="form-group">
@@ -433,9 +433,9 @@
 
   <!-- Modal: Add Transaction -->
   <div class="modal-overlay hidden" id="modal-transaction">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-transaction-title">
       <div class="modal-header">
-        <h2>Nova Transação</h2>
+        <h2 id="modal-transaction-title">Nova Transação</h2>
         <button class="modal-close" data-close="modal-transaction">✕</button>
       </div>
       <div class="type-toggle">
@@ -505,9 +505,9 @@
 
   <!-- Modal: Settings -->
   <div class="modal-overlay hidden" id="modal-settings">
-    <div class="modal modal-settings">
+    <div class="modal modal-settings" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
       <div class="modal-header">
-        <h2>☰ Menu</h2>
+        <h2 id="modal-settings-title">☰ Menu</h2>
         <button class="modal-close" data-close="modal-settings">✕</button>
       </div>
 
@@ -558,9 +558,9 @@
 
   <!-- Modal: Custom Category -->
   <div class="modal-overlay hidden" id="modal-custom-cat">
-    <div class="modal modal-sm">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-custom-cat-title">
       <div class="modal-header">
-        <h2>Nova Categoria</h2>
+        <h2 id="modal-custom-cat-title">Nova Categoria</h2>
         <button class="modal-close" data-close="modal-custom-cat">✕</button>
       </div>
       <form id="form-custom-cat" novalidate>
@@ -585,7 +585,7 @@
   </div>
 
   <!-- Toast -->
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

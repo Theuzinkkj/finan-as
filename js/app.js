@@ -17,6 +17,35 @@ let activeTxId     = null;
 let activeChangeCat = null;
 
 // =============================================
+//  FOCUS MANAGEMENT
+// =============================================
+const _focusStack = [];
+const _FOCUSABLE  = 'button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+function trapFocus(modalEl) {
+  const getEls = () => [...modalEl.querySelectorAll(_FOCUSABLE)].filter(el => el.offsetParent !== null);
+  function handler(e) {
+    if (e.key !== 'Tab') return;
+    const els = getEls();
+    if (!els.length) return;
+    const first = els[0], last = els[els.length - 1];
+    if (e.shiftKey) { if (document.activeElement === first) { e.preventDefault(); last.focus(); } }
+    else            { if (document.activeElement === last)  { e.preventDefault(); first.focus(); } }
+  }
+  modalEl._trapHandler = handler;
+  modalEl.addEventListener('keydown', handler);
+  const els = getEls();
+  if (els.length) els[0].focus();
+}
+
+function releaseFocus(modalEl) {
+  if (modalEl._trapHandler) {
+    modalEl.removeEventListener('keydown', modalEl._trapHandler);
+    delete modalEl._trapHandler;
+  }
+}
+
+// =============================================
 //  THEME
 // =============================================
 function initTheme() {
@@ -183,7 +212,7 @@ function txHTML(t) {
     ? `<button class="tx-fatura-btn" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
     : '';
   return `
-    <div class="tx-item${isSel ? ' tx-selected' : ''}" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
+    <div class="tx-item${isSel ? ' tx-selected' : ''}" role="button" tabindex="0" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
       <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
       <div class="tx-icon">${isIncome ? '💰' : cat.icon}</div>
       <div class="tx-info">
@@ -863,12 +892,21 @@ function setTodayDate() {
 //  MODAL
 // =============================================
 function openModal(id) {
-  document.getElementById(id).classList.remove('hidden');
+  _focusStack.push(document.activeElement);
+  const overlay = document.getElementById(id);
+  overlay.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  const inner = overlay.querySelector('.modal') || overlay;
+  requestAnimationFrame(() => trapFocus(inner));
 }
 function closeModal(id) {
-  document.getElementById(id).classList.add('hidden');
+  const overlay = document.getElementById(id);
+  overlay.classList.add('hidden');
   document.body.style.overflow = '';
+  const inner = overlay.querySelector('.modal') || overlay;
+  releaseFocus(inner);
+  const prev = _focusStack.pop();
+  if (prev && typeof prev.focus === 'function') prev.focus();
 }
 
 // =============================================
@@ -876,7 +914,9 @@ function closeModal(id) {
 // =============================================
 function switchTab(tabName) {
   document.querySelectorAll('.nav-tab, .mobile-nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.tab === tabName);
+    const isActive = btn.dataset.tab === tabName;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
   });
   document.querySelectorAll('.tab-content').forEach(s => {
     s.classList.toggle('active', s.id === `tab-${tabName}`);
@@ -1352,6 +1392,36 @@ function bindEvents() {
     const txs = txOfMonth();
     if (active.id === 'tab-dashboard') drawLine(txs);
     if (active.id === 'tab-analysis')  drawBars(txs);
+  });
+
+  // Escape — fecha modal, chat ou menu de contexto (nessa ordem)
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    const visible = [...document.querySelectorAll('.modal-overlay:not(.hidden)')];
+    if (visible.length) { closeModal(visible[visible.length - 1].id); return; }
+    const chat = document.getElementById('chat-panel');
+    if (chat && !chat.classList.contains('hidden')) { chat.classList.add('hidden'); return; }
+    const menu = document.getElementById('tx-context-menu');
+    if (menu && !menu.classList.contains('hidden')) closeTxMenu();
+  });
+
+  // Setas para navegar entre abas desktop
+  document.getElementById('nav-tabs').addEventListener('keydown', e => {
+    const tabs = [...document.querySelectorAll('#nav-tabs .nav-tab')];
+    const idx  = tabs.indexOf(document.activeElement);
+    if (idx === -1) return;
+    if (e.key === 'ArrowRight') { e.preventDefault(); tabs[(idx + 1) % tabs.length].focus(); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); tabs[(idx - 1 + tabs.length) % tabs.length].focus(); }
+  });
+
+  // Enter / Space ativam itens de transação focados via teclado
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const txItem = e.target.closest('.tx-item[role="button"]');
+    if (!txItem) return;
+    if (e.target.closest('.tx-menu-btn, .tx-fatura-btn')) return;
+    e.preventDefault();
+    txItem.click();
   });
 }
 
