@@ -89,7 +89,9 @@ function loadProfile() {
 function saveProfile(data) {
   localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...data }));
   if (!Demo.active) {
-    const { photo: _dropped, ...serverData } = data;
+    const { photo, ...serverData } = data;
+    // Sincroniza URL da foto (curta) mas nunca base64 (enorme → quebra o JWT)
+    if (photo && photo.startsWith('http')) serverData.photo = photo;
     if (Object.keys(serverData).length > 0) {
       API.req('PATCH', '/api/profile', serverData).catch(() => {});
     }
@@ -1556,10 +1558,25 @@ function bindEvents() {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = ev => {
-      saveProfile({ photo: ev.target.result });
+    reader.onload = async ev => {
+      const base64 = ev.target.result;
+      // Mostra imediatamente (preview local)
+      const localProfile = { ...loadProfile(), photo: base64 };
+      localStorage.setItem(_profileKey(), JSON.stringify(localProfile));
       updateProfileUI();
-      toast('Foto atualizada!');
+
+      if (Demo.active) { toast('Foto atualizada!'); return; }
+
+      try {
+        toast('Enviando foto...');
+        const result = await API.req('POST', '/api/profile/photo', { base64 });
+        // Substitui base64 local pela URL permanente
+        saveProfile({ photo: result.url });
+        updateProfileUI();
+        toast('Foto atualizada!');
+      } catch (err) {
+        toast('Foto salva só neste dispositivo. ' + err.message, 'err');
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';

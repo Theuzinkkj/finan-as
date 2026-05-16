@@ -330,6 +330,60 @@ app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
+app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
+  try {
+    const { base64 } = req.body || {};
+    if (!base64) return res.status(400).json({ message: 'Imagem obrigatória.' });
+
+    const match = base64.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) return res.status(400).json({ message: 'Formato de imagem inválido.' });
+
+    const [, contentType, imageData] = match;
+    const ext     = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+    const buffer  = Buffer.from(imageData, 'base64');
+    const filePath = `${req.userId}.${ext}`;
+
+    let uploadRes;
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), 30_000);
+      uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/avatars/${filePath}`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  contentType,
+          'apikey':        SUPA_SERVICE,
+          'Authorization': `Bearer ${SUPA_SERVICE}`,
+          'x-upsert':      'true',
+        },
+        body:   buffer,
+        signal: controller.signal,
+      });
+      clearTimeout(tid);
+    } catch (err) {
+      const e = new Error(err.name === 'AbortError' ? 'Tempo limite ao enviar foto.' : 'Erro ao enviar foto.');
+      e.status = 502;
+      throw e;
+    }
+
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text().catch(() => '');
+      let errData; try { errData = JSON.parse(errText); } catch { errData = null; }
+      return res.status(uploadRes.status).json({ message: errData?.message || 'Erro ao salvar foto.' });
+    }
+
+    const photoUrl = `${SUPA_URL}/storage/v1/object/public/avatars/${filePath}`;
+
+    // Salva a URL (pequena) no user_metadata — não o base64
+    await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      method:  'PUT',
+      headers: supaHeaders(req.authToken),
+      body:    JSON.stringify({ data: { photo: photoUrl } }),
+    });
+
+    res.status(200).json({ url: photoUrl });
+  } catch (err) { next(err); }
+});
+
 app.get('/api/profile', requireAuth, async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
