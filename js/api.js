@@ -148,6 +148,7 @@ const Auth = {
   async signIn(email, password) {
     await API.req('POST', '/api/auth/signin', { email, password });
     await this.check();
+    if (!this.email) this._saveDisplay(email, this.userId);
   },
 
   async signUp(email, password) {

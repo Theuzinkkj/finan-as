@@ -253,8 +253,17 @@ app.post('/api/auth/signout', (req, res) => {
   res.status(200).json({ ok: true });
 });
 
-app.get('/api/auth/me', requireAuth, (req, res) => {
-  res.status(200).json({ id: req.userId, email: req.userEmail });
+app.get('/api/auth/me', requireAuth, async (req, res, next) => {
+  try {
+    let email = req.userEmail;
+    if (!email) {
+      const { ok, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+        headers: supaHeaders(req.authToken),
+      });
+      if (ok) email = data?.email || '';
+    }
+    res.status(200).json({ id: req.userId, email });
+  } catch (err) { next(err); }
 });
 
 // ── Transactions ──────────────────────────────────────────────────────────────
