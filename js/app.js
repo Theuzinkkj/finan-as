@@ -1479,12 +1479,6 @@ function bindEvents() {
     openSettingsModal();
   });
 
-  // Menu "Configurações" dentro do painel
-  document.getElementById('btn-open-settings-from-profile').addEventListener('click', () => {
-    closeProfilePanel();
-    openSettingsModal();
-  });
-
   // Logout do painel de perfil
   document.getElementById('btn-profile-logout').addEventListener('click', async () => {
     closeProfilePanel();
