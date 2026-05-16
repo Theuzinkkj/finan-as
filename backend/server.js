@@ -315,6 +315,30 @@ app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Profile ───────────────────────────────────────────────────────────────────
+
+app.get('/api/profile', requireAuth, async (req, res, next) => {
+  try {
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: supaHeaders(req.authToken),
+    });
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).json(data?.user_metadata || {});
+  } catch (err) { next(err); }
+});
+
+app.patch('/api/profile', requireAuth, async (req, res, next) => {
+  try {
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      method:  'PUT',
+      headers: supaHeaders(req.authToken),
+      body:    JSON.stringify({ data: req.body }),
+    });
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 // ── AI ────────────────────────────────────────────────────────────────────────
 
 app.post('/api/ai/chat', aiLimiter, requireAuth, async (req, res, next) => {

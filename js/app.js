@@ -88,6 +88,19 @@ function loadProfile() {
 
 function saveProfile(data) {
   localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...data }));
+  if (!Demo.active) {
+    API.req('PATCH', '/api/profile', data).catch(() => {});
+  }
+}
+
+async function syncProfileFromServer() {
+  if (Demo.active) return;
+  try {
+    const remote = await API.req('GET', '/api/profile');
+    if (remote && typeof remote === 'object' && Object.keys(remote).length) {
+      localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...remote }));
+    }
+  } catch { /* offline ou sem sessão — mantém cache local */ }
 }
 
 function updateProfileUI() {
@@ -1743,6 +1756,7 @@ async function startApp() {
   initCustomSelects();
   setTodayDate();
   updateProfileUI();
+  syncProfileFromServer().then(() => updateProfileUI());
 
   if (Demo.active) {
     transactions = Demo.transactions();
