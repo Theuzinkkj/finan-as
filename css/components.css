@@ -1870,6 +1870,48 @@
 }
 .profile-avatar-wrap:hover .profile-avatar-overlay { opacity: 1; }
 
+.profile-avatar-section { position: relative; }
+
+.avatar-menu {
+  position:         absolute;
+  top:              calc(100% + 8px);
+  left:             50%;
+  transform:        translateX(-50%) translateY(-6px);
+  background:       var(--card-bg, #1e1e2e);
+  border:           1px solid rgba(255,255,255,.1);
+  border-radius:    10px;
+  padding:          4px;
+  min-width:        160px;
+  box-shadow:       0 8px 24px rgba(0,0,0,.4);
+  opacity:          0;
+  pointer-events:   none;
+  transition:       opacity .15s, transform .15s;
+  z-index:          100;
+}
+.avatar-menu.open {
+  opacity:        1;
+  pointer-events: auto;
+  transform:      translateX(-50%) translateY(0);
+}
+.avatar-menu-item {
+  display:         flex;
+  align-items:     center;
+  gap:             9px;
+  width:           100%;
+  padding:         9px 12px;
+  background:      none;
+  border:          none;
+  border-radius:   7px;
+  color:           var(--text, #e2e8f0);
+  font-size:       .85rem;
+  cursor:          pointer;
+  transition:      background .15s;
+  white-space:     nowrap;
+}
+.avatar-menu-item:hover { background: rgba(255,255,255,.08); }
+.avatar-menu-remove { color: #f87171 !important; }
+.avatar-menu-remove:hover { background: rgba(248,113,113,.12) !important; }
+
 .profile-name-section {
   text-align: center;
   padding:    0 20px 14px;

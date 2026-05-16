@@ -384,6 +384,33 @@ app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+app.delete('/api/profile/photo', requireAuth, async (req, res, next) => {
+  try {
+    // Busca metadados para encontrar URL atual da foto
+    const { ok, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: supaHeaders(req.authToken),
+    });
+    if (ok && data?.user_metadata?.photo) {
+      // Extrai o caminho do arquivo da URL pública
+      const url = data.user_metadata.photo;
+      const match = url.match(/\/object\/public\/avatars\/(.+)$/);
+      if (match) {
+        await fetch(`${SUPA_URL}/storage/v1/object/avatars/${match[1]}`, {
+          method:  'DELETE',
+          headers: { 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}` },
+        });
+      }
+    }
+    // Remove foto dos metadados
+    await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      method:  'PUT',
+      headers: supaHeaders(req.authToken),
+      body:    JSON.stringify({ data: { photo: null } }),
+    });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 app.get('/api/profile', requireAuth, async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {

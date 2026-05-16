@@ -1550,17 +1550,47 @@ function bindEvents() {
     openModal('modal-edit-name');
   });
 
-  // Upload de foto
-  document.getElementById('profile-avatar-wrap').addEventListener('click', () => {
-    document.getElementById('profile-photo-input').click();
+  // Menu de foto de perfil
+  const avatarWrap   = document.getElementById('profile-avatar-wrap');
+  const avatarMenu   = document.getElementById('avatar-menu');
+  const menuChange   = document.getElementById('avatar-menu-change');
+  const menuRemove   = document.getElementById('avatar-menu-remove');
+  const photoInput   = document.getElementById('profile-photo-input');
+
+  function closeAvatarMenu() { avatarMenu.classList.remove('open'); }
+
+  avatarWrap.addEventListener('click', e => {
+    e.stopPropagation();
+    const hasPhoto = !!loadProfile().photo;
+    menuRemove.style.display = hasPhoto ? '' : 'none';
+    avatarMenu.classList.toggle('open');
   });
-  document.getElementById('profile-photo-input').addEventListener('change', e => {
+
+  document.addEventListener('click', e => {
+    if (!avatarMenu.contains(e.target)) closeAvatarMenu();
+  });
+
+  menuChange.addEventListener('click', () => { closeAvatarMenu(); photoInput.click(); });
+
+  menuRemove.addEventListener('click', async () => {
+    closeAvatarMenu();
+    saveProfile({ photo: null });
+    updateProfileUI();
+    if (Demo.active) { toast('Foto removida!'); return; }
+    try {
+      await API.req('DELETE', '/api/profile/photo');
+      toast('Foto removida!');
+    } catch (err) {
+      toast('Foto removida localmente. ' + err.message, 'err');
+    }
+  });
+
+  photoInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = async ev => {
       const base64 = ev.target.result;
-      // Mostra imediatamente (preview local)
       const localProfile = { ...loadProfile(), photo: base64 };
       localStorage.setItem(_profileKey(), JSON.stringify(localProfile));
       updateProfileUI();
@@ -1570,7 +1600,6 @@ function bindEvents() {
       try {
         toast('Enviando foto...');
         const result = await API.req('POST', '/api/profile/photo', { base64 });
-        // Substitui base64 local pela URL permanente
         saveProfile({ photo: result.url });
         updateProfileUI();
         toast('Foto atualizada!');
