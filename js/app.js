@@ -346,7 +346,7 @@ function renderAll() {
   renderAnalysisStats(txs);
   drawDonut(txs);
   drawLine(txs);
-  drawBars(txs);
+  drawAnalysisChart(txs);
 }
 
 // (AI analysis, chat and export moved to js/ai.js and js/export.js)
@@ -978,7 +978,7 @@ function switchTab(tabName) {
     dock.style.display       = '';
     inlineChat.classList.add('hidden');
   }
-  if (tabName === 'analysis')  setTimeout(() => drawBars(txOfMonth()), 40);
+  if (tabName === 'analysis')  setTimeout(() => drawAnalysisChart(txOfMonth()), 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
 
@@ -1398,6 +1398,15 @@ function bindEvents() {
   document.getElementById('theme-btn-dark').addEventListener('click',  () => { applyTheme('dark');  renderAll(); });
   document.getElementById('theme-btn-light').addEventListener('click', () => { applyTheme('light'); renderAll(); });
 
+  // Tipo de gráfico de análise
+  document.querySelectorAll('.chart-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      drawAnalysisChart(txOfMonth(), btn.dataset.type);
+    });
+  });
+
   // Análise IA
   document.getElementById('btn-analyze').addEventListener('click', runAI);
 
@@ -1424,7 +1433,7 @@ function bindEvents() {
     if (!active) return;
     const txs = txOfMonth();
     if (active.id === 'tab-dashboard') drawLine(txs);
-    if (active.id === 'tab-analysis')  drawBars(txs);
+    if (active.id === 'tab-analysis')  drawAnalysisChart(txs);
   });
 
   // Escape — fecha modal, chat ou menu de contexto (nessa ordem)

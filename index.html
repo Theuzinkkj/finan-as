@@ -203,28 +203,69 @@
 
     <!-- ======= ANALYSIS ======= -->
     <section class="tab-content" id="tab-analysis" role="tabpanel" aria-labelledby="nav-tab-analysis">
-      <div class="analysis-stats">
-        <div class="stat-box">
-          <span class="stat-label">Despesas registradas</span>
-          <span class="stat-value" id="stat-count">0</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">Maior gasto único</span>
-          <span class="stat-value" id="stat-max">R$ 0,00</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">Média por dia ativo</span>
-          <span class="stat-value" id="stat-avg">R$ 0,00</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">Categoria líder</span>
-          <span class="stat-value" id="stat-top-cat">—</span>
-        </div>
-      </div>
 
-      <div class="card chart-card">
-        <h3 class="chart-title">Ranking de Categorias</h3>
-        <canvas id="bar-chart"></canvas>
+      <div class="card analysis-main-card">
+        <div class="analysis-chart-header">
+          <span class="chart-title-main">Análise de Gastos</span>
+          <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
+            <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/>
+                <rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/>
+                <rect x="1" y="10" width="10" height="2.5" rx="1.2"/>
+              </svg>
+              Barras
+            </button>
+            <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="7" cy="7" r="5.5"/>
+                <path d="M7 7V1.5M7 7L11.7 4.2"/>
+              </svg>
+              Pizza
+            </button>
+            <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,11 4,5 7,8 10,3 13,6"/>
+                <circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/>
+              </svg>
+              Linha
+            </button>
+            <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/>
+                <polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/>
+                <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+              Radar
+            </button>
+          </div>
+        </div>
+
+        <div class="analysis-body">
+          <div class="analysis-chart-area">
+            <canvas id="analysis-chart"></canvas>
+            <div id="analysis-legend" class="analysis-legend"></div>
+          </div>
+          <div class="analysis-info-panel">
+            <div class="stat-box">
+              <span class="stat-label">Despesas registradas</span>
+              <span class="stat-value" id="stat-count">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Maior gasto único</span>
+              <span class="stat-value" id="stat-max">R$ 0,00</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Média por dia ativo</span>
+              <span class="stat-value" id="stat-avg">R$ 0,00</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Categoria líder</span>
+              <span class="stat-value" id="stat-top-cat">—</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="card ai-card">
