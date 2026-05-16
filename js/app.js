@@ -78,6 +78,89 @@ function saveCustomCategory(key, cat) {
 }
 
 // =============================================
+//  PROFILE
+// =============================================
+function _profileKey() { return `atlas_profile_${Auth.userId || 'anon'}`; }
+
+function loadProfile() {
+  return JSON.parse(localStorage.getItem(_profileKey()) || '{}');
+}
+
+function saveProfile(data) {
+  localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...data }));
+}
+
+function updateProfileUI() {
+  const profile  = loadProfile();
+  const email    = Demo.active ? 'Modo Demo' : (Auth.email || '');
+  const rawName  = profile.name || (email ? email.split('@')[0] : '');
+  const name     = rawName || '—';
+  const initial  = name !== '—' ? name[0].toUpperCase() : '?';
+
+  // Header mini avatar
+  const miniEl = document.getElementById('profile-avatar-mini');
+  if (miniEl) {
+    if (profile.photo) {
+      miniEl.innerHTML = `<img src="${profile.photo}" alt="Foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      miniEl.innerHTML = `<span class="profile-initial-mini">${initial}</span>`;
+    }
+  }
+
+  // Header greeting
+  const greetEl   = document.getElementById('header-greeting');
+  const greetName = document.getElementById('header-greeting-name');
+  if (greetEl && greetName) {
+    greetName.textContent = name !== '—' ? name : '';
+    greetEl.classList.toggle('hidden', name === '—');
+  }
+
+  // Panel avatar
+  const panelImg = document.getElementById('profile-avatar-img');
+  if (panelImg) {
+    panelImg.innerHTML = profile.photo
+      ? `<img src="${profile.photo}" alt="Foto">`
+      : `<span class="profile-avatar-initial">${initial}</span>`;
+  }
+
+  // Panel name + email
+  const nameEl  = document.getElementById('profile-name-display');
+  const emailEl = document.getElementById('profile-email-display');
+  if (nameEl)  nameEl.textContent  = name;
+  if (emailEl) emailEl.textContent = email || '—';
+}
+
+function openProfilePanel() {
+  updateProfileUI();
+  document.getElementById('profile-panel-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfilePanel() {
+  document.getElementById('profile-panel-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+function openSettingsModal() {
+  const userBar = document.getElementById('auth-user-bar');
+  const authDiv = document.getElementById('auth-divider');
+  document.getElementById('auth-user-email').textContent = Demo.active ? 'Modo Demo' : Auth.email;
+  userBar.classList.remove('hidden');
+  authDiv.classList.remove('hidden');
+  openModal('modal-settings');
+}
+
+function saveProfileName() {
+  const input = document.getElementById('edit-name-input');
+  const name  = input.value.trim();
+  if (!name) return;
+  saveProfile({ name });
+  closeModal('modal-edit-name');
+  updateProfileUI();
+  toast('Nome atualizado!');
+}
+
+// =============================================
 //  UTILITIES
 // =============================================
 const fmt   = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -1379,14 +1462,61 @@ function bindEvents() {
   document.getElementById('filter-type').addEventListener('change', renderAllTxs);
   document.getElementById('filter-search').addEventListener('input', renderAllTxs);
 
-  // Abrir configurações
-  document.getElementById('btn-settings').addEventListener('click', () => {
-    const userBar = document.getElementById('auth-user-bar');
-    const authDiv = document.getElementById('auth-divider');
-    document.getElementById('auth-user-email').textContent = Demo.active ? 'Modo Demo' : Auth.email;
-    userBar.classList.remove('hidden');
-    authDiv.classList.remove('hidden');
-    openModal('modal-settings');
+  // Abrir painel de perfil
+  document.getElementById('btn-profile').addEventListener('click', openProfilePanel);
+
+  // Fechar painel de perfil
+  document.getElementById('btn-profile-close').addEventListener('click', closeProfilePanel);
+
+  // Clique no overlay fecha o painel
+  document.getElementById('profile-panel-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('profile-panel-overlay')) closeProfilePanel();
+  });
+
+  // Botão engrenagem no topo do painel → configurações
+  document.getElementById('btn-profile-to-settings').addEventListener('click', () => {
+    closeProfilePanel();
+    openSettingsModal();
+  });
+
+  // Menu "Configurações" dentro do painel
+  document.getElementById('btn-open-settings-from-profile').addEventListener('click', () => {
+    closeProfilePanel();
+    openSettingsModal();
+  });
+
+  // Logout do painel de perfil
+  document.getElementById('btn-profile-logout').addEventListener('click', async () => {
+    closeProfilePanel();
+    if (!Demo.active) await Auth.signOut();
+    else Demo.exit();
+    window.location.reload();
+  });
+
+  // Editar nome
+  document.getElementById('btn-edit-name').addEventListener('click', () => {
+    const profile = loadProfile();
+    const email   = Demo.active ? 'Modo Demo' : (Auth.email || '');
+    const current = profile.name || (email ? email.split('@')[0] : '');
+    document.getElementById('edit-name-input').value = current;
+    openModal('modal-edit-name');
+  });
+
+  // Upload de foto
+  document.getElementById('profile-avatar-wrap').addEventListener('click', () => {
+    document.getElementById('profile-photo-input').click();
+  });
+  document.getElementById('profile-photo-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      saveProfile({ photo: ev.target.result });
+      updateProfileUI();
+      toast('Foto atualizada!');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   });
 
   // Logout
@@ -1438,11 +1568,13 @@ function bindEvents() {
     if (active.id === 'tab-analysis')  drawAnalysisChart(txs);
   });
 
-  // Escape — fecha modal, chat ou menu de contexto (nessa ordem)
+  // Escape — fecha modal, painel de perfil, chat ou menu de contexto (nessa ordem)
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const visible = [...document.querySelectorAll('.modal-overlay:not(.hidden)')];
     if (visible.length) { closeModal(visible[visible.length - 1].id); return; }
+    const profileOverlay = document.getElementById('profile-panel-overlay');
+    if (profileOverlay && !profileOverlay.classList.contains('hidden')) { closeProfilePanel(); return; }
     const chat = document.getElementById('chat-panel');
     if (chat && !chat.classList.contains('hidden')) { chat.classList.add('hidden'); return; }
     const menu = document.getElementById('tx-context-menu');
@@ -1616,6 +1748,7 @@ async function startApp() {
   buildCategoryFilter();
   initCustomSelects();
   setTodayDate();
+  updateProfileUI();
 
   if (Demo.active) {
     transactions = Demo.transactions();
