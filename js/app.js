@@ -155,12 +155,45 @@ function closeProfilePanel() {
 }
 
 function openSettingsModal() {
-  const userBar = document.getElementById('auth-user-bar');
-  const authDiv = document.getElementById('auth-divider');
-  document.getElementById('auth-user-email').textContent = Demo.active ? 'Modo Demo' : Auth.email;
-  userBar.classList.remove('hidden');
-  authDiv.classList.remove('hidden');
+  const accountSection = document.getElementById('auth-user-bar');
+  if (accountSection) accountSection.classList.toggle('hidden', Demo.active);
   openModal('modal-settings');
+}
+
+async function resetPassword() {
+  const email = Auth.email;
+  if (!email) { toast('Nenhum email encontrado.', 'err'); return; }
+  const btn = document.getElementById('btn-reset-password');
+  if (btn) btn.disabled = true;
+  try {
+    await API.req('POST', '/api/auth/reset-password', { email });
+    toast(`Email enviado para ${email}. Verifique sua caixa de entrada.`);
+  } catch (err) {
+    toast('Erro ao enviar email: ' + err.message, 'err');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function deleteAccount() {
+  const textEl   = document.getElementById('delete-account-text');
+  const loaderEl = document.getElementById('delete-account-loader');
+  const btn      = document.getElementById('btn-confirm-delete');
+  if (btn)      btn.disabled    = true;
+  if (textEl)   textEl.classList.add('hidden');
+  if (loaderEl) loaderEl.classList.remove('hidden');
+  try {
+    await API.req('DELETE', '/api/auth/account');
+    Auth._clearDisplay();
+    localStorage.clear();
+    window.location.reload();
+  } catch (err) {
+    toast('Erro ao excluir conta: ' + err.message, 'err');
+    if (btn)      btn.disabled    = false;
+    if (textEl)   textEl.classList.remove('hidden');
+    if (loaderEl) loaderEl.classList.add('hidden');
+    closeModal('modal-confirm-delete');
+  }
 }
 
 function saveProfileName() {
@@ -1526,7 +1559,24 @@ function bindEvents() {
     e.target.value = '';
   });
 
-  // Logout
+  // Voltar ao perfil a partir das configurações
+  document.getElementById('btn-settings-back').addEventListener('click', () => {
+    closeModal('modal-settings');
+    openProfilePanel();
+  });
+
+  // Redefinir senha
+  document.getElementById('btn-reset-password').addEventListener('click', resetPassword);
+
+  // Excluir conta → abre confirmação
+  document.getElementById('btn-delete-account').addEventListener('click', () => {
+    openModal('modal-confirm-delete');
+  });
+
+  // Confirmar exclusão
+  document.getElementById('btn-confirm-delete').addEventListener('click', deleteAccount);
+
+  // Logout (elemento oculto mantido por compatibilidade)
   document.getElementById('btn-logout').addEventListener('click', async () => {
     if (!Demo.active) await Auth.signOut();
     else Demo.exit();

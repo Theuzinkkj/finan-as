@@ -1975,6 +1975,101 @@
   border-color: rgba(239,68,68,.4);
 }
 
+/* =============================================
+   SETTINGS MODAL — redesign
+   ============================================= */
+.settings-header {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  margin-bottom: 20px;
+}
+.settings-header h2 {
+  flex:        1;
+  text-align:  center;
+  font-size:   .95rem;
+  font-weight: 700;
+}
+
+.btn-settings-back {
+  background:      rgba(255,255,255,.07);
+  border:          1px solid var(--border);
+  border-radius:   50%;
+  width:           34px;
+  height:          34px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  cursor:          pointer;
+  color:           var(--text-2);
+  transition:      all .2s;
+  flex-shrink:     0;
+}
+.btn-settings-back:hover { background: rgba(255,255,255,.13); color: var(--text); border-color: var(--border-h); }
+
+.sgroup { margin-bottom: 18px; }
+.sgroup-label {
+  font-size:      .68rem;
+  font-weight:    700;
+  color:          var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  padding:        0 2px;
+  margin-bottom:  7px;
+}
+.slist {
+  background:    rgba(255,255,255,.03);
+  border:        1px solid var(--border);
+  border-radius: 14px;
+  overflow:      hidden;
+}
+.slist-row,
+.slist-btn {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  padding:     12px 14px;
+  width:       100%;
+  background:  none;
+  border:      none;
+  color:       var(--text);
+  font-family: var(--font);
+  font-size:   .88rem;
+  text-align:  left;
+  cursor:      default;
+}
+.slist-btn { cursor: pointer; transition: background .15s; }
+.slist-btn:hover { background: rgba(255,255,255,.05); }
+
+.slist-row + .slist-row,
+.slist-btn + .slist-btn,
+.slist-row + .slist-btn,
+.slist-btn + .slist-row { border-top: 1px solid var(--border); }
+
+.slist-icon {
+  width:           32px;
+  height:          32px;
+  border-radius:   8px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  font-size:       1rem;
+  flex-shrink:     0;
+}
+.slist-text    { flex: 1; font-size: .88rem; color: var(--text); }
+.slist-chevron { color: var(--text-3); flex-shrink: 0; }
+
+.slist-btn-danger .slist-text   { color: #f87171; }
+.slist-btn-danger:hover         { background: rgba(239,68,68,.07) !important; }
+
+/* Theme toggle inside slist-row */
+.slist-row .theme-btns { margin-left: auto; }
+
+[data-theme="light"] .slist          { background: rgba(0,0,0,.02); border-color: var(--border); }
+[data-theme="light"] .slist-btn:hover { background: rgba(0,0,0,.04); }
+[data-theme="light"] .btn-settings-back { background: rgba(120,90,50,.06); }
+[data-theme="light"] .btn-settings-back:hover { background: rgba(120,90,50,.12); }
+
 /* Light theme overrides for profile panel */
 [data-theme="light"] .profile-panel           { background: #fdf8f0; }
 [data-theme="light"] .profile-panel-btn       { background: rgba(120,90,50,.06); border-color: var(--border); }

@@ -339,6 +339,46 @@ app.patch('/api/profile', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// ── Auth extra ───────────────────────────────────────────────────────────────
+
+// Envia email de redefinição de senha (não requer autenticação prévia)
+app.post('/api/auth/reset-password', authLimiter, async (req, res, next) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ message: 'Email obrigatório.' });
+
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/recover`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+      body:    JSON.stringify({ email }),
+    });
+
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Exclui a conta do usuário autenticado (usa service key para admin)
+app.delete('/api/auth/account', requireAuth, async (req, res, next) => {
+  try {
+    const { ok, status, data } = await proxyFetch(
+      `${SUPA_URL}/auth/v1/admin/users/${req.userId}`,
+      {
+        method:  'DELETE',
+        headers: {
+          'Content-Type':  'application/json',
+          'apikey':        SUPA_SERVICE,
+          'Authorization': `Bearer ${SUPA_SERVICE}`,
+        },
+      }
+    );
+
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.clearCookie(SESSION_COOKIE, { path: '/', secure: IS_PROD, sameSite: 'lax' });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 // ── AI ────────────────────────────────────────────────────────────────────────
 
 app.post('/api/ai/chat', aiLimiter, requireAuth, async (req, res, next) => {

@@ -557,42 +557,88 @@
   <!-- Modal: Settings -->
   <div class="modal-overlay hidden" id="modal-settings">
     <div class="modal modal-settings" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
-      <div class="modal-header">
-        <h2 id="modal-settings-title">☰ Menu</h2>
+
+      <div class="modal-header settings-header">
+        <button class="btn-settings-back" id="btn-settings-back" title="Voltar ao perfil">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h2 id="modal-settings-title">Configurações</h2>
         <button class="modal-close" data-close="modal-settings">✕</button>
       </div>
 
-      <!-- Conta -->
-      <div class="settings-section" id="auth-user-bar">
-        <div class="settings-section-label">👤 Conta</div>
-        <div class="settings-row">
-          <span class="settings-row-text" id="auth-user-email" style="font-size:.84rem;overflow:hidden;text-overflow:ellipsis">—</span>
-          <button class="btn-secondary" id="btn-logout" style="padding:6px 14px;font-size:.82rem;flex-shrink:0">Sair</button>
-        </div>
-      </div>
-      <div class="settings-divider" id="auth-divider"></div>
-
       <!-- Aparência -->
-      <div class="settings-section">
-        <div class="settings-section-label">🎨 Aparência</div>
-        <div class="settings-row">
-          <span class="settings-row-text">Modo de exibição</span>
-          <div class="theme-btns">
-            <button class="theme-opt" id="theme-btn-dark">🌙 Noturno</button>
-            <button class="theme-opt" id="theme-btn-light">☀️ Diurno</button>
+      <div class="sgroup">
+        <div class="sgroup-label">Aparência</div>
+        <div class="slist">
+          <div class="slist-row">
+            <div class="slist-icon" style="background:rgba(99,102,241,.13)">🎨</div>
+            <span class="slist-text">Modo de exibição</span>
+            <div class="theme-btns">
+              <button class="theme-opt" id="theme-btn-dark">🌙 Noturno</button>
+              <button class="theme-opt" id="theme-btn-light">☀️ Diurno</button>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="settings-divider"></div>
-
       <!-- Exportar -->
-      <div class="settings-section">
-        <div class="settings-section-label">📤 Exportar Dados</div>
-        <div class="export-opts">
-          <button class="btn-export-opt" id="btn-export-excel">📊 Excel (.xlsx)</button>
-          <button class="btn-export-opt" id="btn-export-pdf">📄 PDF</button>
+      <div class="sgroup">
+        <div class="sgroup-label">Exportar Dados</div>
+        <div class="slist">
+          <button class="slist-btn" id="btn-export-excel">
+            <div class="slist-icon" style="background:rgba(16,185,129,.12)">📊</div>
+            <span class="slist-text">Excel (.xlsx)</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="slist-btn" id="btn-export-pdf">
+            <div class="slist-icon" style="background:rgba(59,130,246,.12)">📄</div>
+            <span class="slist-text">PDF</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
         </div>
+      </div>
+
+      <!-- Conta -->
+      <div class="sgroup" id="auth-user-bar">
+        <div class="sgroup-label">Conta</div>
+        <div class="slist">
+          <button class="slist-btn" id="btn-reset-password">
+            <div class="slist-icon" style="background:rgba(245,158,11,.12)">🔑</div>
+            <span class="slist-text">Redefinir senha</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="slist-btn slist-btn-danger" id="btn-delete-account">
+            <div class="slist-icon" style="background:rgba(239,68,68,.1)">🗑️</div>
+            <span class="slist-text">Excluir conta</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- elementos ocultos mantidos por compatibilidade com JS legado -->
+      <span style="display:none" id="auth-user-email"></span>
+      <div  style="display:none" id="auth-divider"></div>
+      <button style="display:none" id="btn-logout"></button>
+
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar exclusão de conta -->
+  <div class="modal-overlay hidden" id="modal-confirm-delete">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-delete-title">
+      <div class="modal-header">
+        <h2 id="modal-confirm-delete-title">Excluir conta</h2>
+        <button class="modal-close" data-close="modal-confirm-delete">✕</button>
+      </div>
+      <p style="font-size:.88rem;color:var(--text-2);line-height:1.65;margin-bottom:22px">
+        Essa ação é <strong style="color:var(--text)">irreversível</strong>. Todos os seus dados e transações serão excluídos permanentemente.
+      </p>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-confirm-delete">Cancelar</button>
+        <button class="btn-primary" id="btn-confirm-delete" style="background:linear-gradient(135deg,#dc2626,#b91c1c)">
+          <span id="delete-account-text">Excluir permanentemente</span>
+          <span id="delete-account-loader" class="loader hidden"></span>
+        </button>
       </div>
     </div>
   </div>
