@@ -63,16 +63,18 @@ function applyTheme(theme) {
 // =============================================
 //  CUSTOM CATEGORIES
 // =============================================
+function _catsKey() { return `atlas_custom_cats_${Auth.userId || 'anon'}`; }
+
 function loadCustomCategories() {
-  const saved = JSON.parse(localStorage.getItem('atlas_custom_cats') || '{}');
+  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
   Object.assign(CATEGORIES, saved);
 }
 
 function saveCustomCategory(key, cat) {
   CATEGORIES[key] = cat;
-  const saved = JSON.parse(localStorage.getItem('atlas_custom_cats') || '{}');
+  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
   saved[key] = cat;
-  localStorage.setItem('atlas_custom_cats', JSON.stringify(saved));
+  localStorage.setItem(_catsKey(), JSON.stringify(saved));
 }
 
 // =============================================

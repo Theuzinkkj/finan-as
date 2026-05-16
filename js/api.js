@@ -5,7 +5,7 @@
 // =============================================
 const DB = {
   _db: null,
-  DB_NAME:    'atlasfinance',
+  get DB_NAME() { return `atlasfinance_${Auth.userId || 'anon'}`; },
   DB_VERSION: 1,
   STORE:      'transactions',
 
