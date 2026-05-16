@@ -580,7 +580,9 @@
 
       /* esconde/mostra dock conforme rodapé entra na viewport */
       function onScroll() {
-        dock.classList.toggle('dock--hidden', footer.getBoundingClientRect().top < window.innerHeight);
+        const r = footer.getBoundingClientRect();
+        const rendered = r.width > 0 || r.height > 0;
+        dock.classList.toggle('dock--hidden', rendered && r.top < window.innerHeight);
       }
       window.addEventListener('scroll', onScroll, { passive: true });
       onScroll();
