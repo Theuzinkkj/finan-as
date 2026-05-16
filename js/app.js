@@ -143,7 +143,10 @@ function updateProfileUI() {
   if (emailEl) emailEl.textContent = email || '—';
 }
 
-function openProfilePanel() {
+async function openProfilePanel() {
+  if (!Demo.active && !Auth.email) {
+    await Auth.check().catch(() => {});
+  }
   updateProfileUI();
   document.getElementById('profile-panel-overlay').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -1766,8 +1769,8 @@ async function init() {
 
   if (Demo.active) { await startApp(); return; }
 
-  const redirected = await handleAuthRedirect();
-  const loggedIn   = redirected || await Auth.check();
+  await handleAuthRedirect();
+  const loggedIn = await Auth.check();
 
   if (!loggedIn) { showAuthScreen(); return; }
   await startApp();
