@@ -1795,20 +1795,67 @@ function initSwipeToDelete() {
 // limpamos o hash imediatamente — o token nunca fica exposto no JS.
 async function handleAuthRedirect() {
   const hash = window.location.hash.slice(1);
-  if (!hash) return false;
+  if (!hash) return { ok: false, recovery: false };
 
   const params      = new URLSearchParams(hash);
   const accessToken = params.get('access_token');
-  if (!accessToken) return false;
+  if (!accessToken) return { ok: false, recovery: false };
 
+  const isRecovery = params.get('type') === 'recovery';
   history.replaceState(null, '', window.location.pathname);
 
   try {
     await API.req('POST', '/api/auth/confirm', { access_token: accessToken });
-    return true;
+    return { ok: true, recovery: isRecovery };
   } catch {
-    return false;
+    return { ok: false, recovery: false };
   }
+}
+
+function showResetPasswordForm() {
+  return new Promise((resolve) => {
+    document.getElementById('reset-password-screen').classList.remove('hidden');
+    const form      = document.getElementById('reset-pw-form');
+    const errEl     = document.getElementById('reset-pw-error');
+    const btn       = document.getElementById('reset-pw-submit');
+    const btnText   = document.getElementById('reset-pw-submit-text');
+    const btnLoader = document.getElementById('reset-pw-submit-loader');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errEl.classList.add('hidden');
+      const password = document.getElementById('reset-pw-new').value;
+      const confirm  = document.getElementById('reset-pw-confirm').value;
+
+      if (password.length < 6) {
+        errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (password !== confirm) {
+        errEl.textContent = 'As senhas não coincidem.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      btn.disabled = true;
+      btnText.classList.add('hidden');
+      btnLoader.classList.remove('hidden');
+
+      try {
+        await API.req('POST', '/api/auth/update-password', { password });
+        document.getElementById('reset-password-screen').classList.add('hidden');
+        toast('Senha atualizada com sucesso!');
+        resolve();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btnText.classList.remove('hidden');
+        btnLoader.classList.add('hidden');
+      }
+    });
+  });
 }
 
 async function init() {
@@ -1818,7 +1865,9 @@ async function init() {
 
   if (Demo.active) { await startApp(); return; }
 
-  await handleAuthRedirect();
+  const redirect = await handleAuthRedirect();
+  if (redirect.recovery) await showResetPasswordForm();
+
   const loggedIn = await Auth.check();
 
   if (!loggedIn) { showAuthScreen(); return; }

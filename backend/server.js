@@ -57,7 +57,7 @@ app.use((req, res, next) => {
   // Cabeçalhos CORS para origens permitidas
   res.setHeader('Access-Control-Allow-Origin',      origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods',     'GET, POST, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Methods',     'GET, POST, PUT, PATCH, DELETE');
   res.setHeader('Access-Control-Allow-Headers',     'Content-Type');
   res.setHeader('Vary', 'Origin');
 
@@ -445,6 +445,28 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res, next) => {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
       body:    JSON.stringify({ email }),
+    });
+
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Atualiza senha do usuário autenticado (chamado após fluxo de recovery)
+app.post('/api/auth/update-password', requireAuth, async (req, res, next) => {
+  try {
+    const { password } = req.body || {};
+    if (!password || password.length < 6)
+      return res.status(400).json({ message: 'A senha deve ter pelo menos 6 caracteres.' });
+
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      method:  'PUT',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_ANON,
+        'Authorization': `Bearer ${req.authToken}`,
+      },
+      body: JSON.stringify({ password }),
     });
 
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
