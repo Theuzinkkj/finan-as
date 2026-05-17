@@ -1808,7 +1808,7 @@ async function handleAuthRedirect() {
     await API.req('POST', '/api/auth/confirm', { access_token: accessToken });
     return { ok: true, recovery: isRecovery };
   } catch {
-    return { ok: false, recovery: false };
+    return { ok: false, recovery: false, expiredRecovery: isRecovery };
   }
 }
 
@@ -1866,10 +1866,22 @@ async function init() {
   if (Demo.active) { await startApp(); return; }
 
   const redirect = await handleAuthRedirect();
-  if (redirect.recovery) await showResetPasswordForm();
+
+  if (redirect.recovery) {
+    await showResetPasswordForm();
+    await Auth.signOut().catch(() => {});
+    showAuthScreen();
+    showAuthSuccess('Senha redefinida com sucesso! Faça login com a nova senha.');
+    return;
+  }
+
+  if (redirect.expiredRecovery) {
+    showAuthScreen();
+    showAuthError('O link de redefinição expirou. Clique em "Esqueci minha senha" para receber um novo.');
+    return;
+  }
 
   const loggedIn = await Auth.check();
-
   if (!loggedIn) { showAuthScreen(); return; }
   await startApp();
 }
