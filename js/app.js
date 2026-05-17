@@ -1133,11 +1133,35 @@ function goToTransactions(type, category) {
 // =============================================
 //  AUTH SCREEN
 // =============================================
+function initPasswordToggles() {
+  document.querySelectorAll('.toggle-pw').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input   = document.getElementById(btn.dataset.target);
+      const visible = input.type === 'text';
+      input.type    = visible ? 'password' : 'text';
+      btn.querySelector('.eye-open').classList.toggle('hidden', !visible);
+      btn.querySelector('.eye-closed').classList.toggle('hidden', visible);
+      btn.setAttribute('aria-label', visible ? 'Mostrar senha' : 'Esconder senha');
+    });
+  });
+}
+
+function resetPasswordToggles() {
+  document.querySelectorAll('.toggle-pw').forEach(btn => {
+    const input = document.getElementById(btn.dataset.target);
+    if (input) input.type = 'password';
+    btn.querySelector('.eye-open').classList.remove('hidden');
+    btn.querySelector('.eye-closed').classList.add('hidden');
+    btn.setAttribute('aria-label', 'Mostrar senha');
+  });
+}
+
 function showAuthScreen() {
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('auth-email').value    = '';
   document.getElementById('auth-password').value = '';
   document.getElementById('auth-confirm').value  = '';
+  resetPasswordToggles();
   clearAuthFeedback();
   bindAuthEvents();
 }
@@ -1865,6 +1889,7 @@ async function init() {
     initTheme();
     bindEvents();
     initCustomSelects();
+    initPasswordToggles();
 
     if (Demo.active) { await startApp(); return; }
 

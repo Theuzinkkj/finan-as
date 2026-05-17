@@ -119,6 +119,7 @@
   background:    rgba(255,255,255,0.06);
   border:        1px solid rgba(255,255,255,0.22) !important;
   border-radius: 10px;
+  color:         var(--text);
 }
 .auth-card .form-group input:focus {
   border-color: var(--purple) !important;
@@ -127,11 +128,54 @@
 [data-theme="light"] .auth-card .form-group input {
   background:  rgba(120,90,50,0.05);
   border:      1px solid rgba(120,90,50,0.28) !important;
+  color:       var(--text);
 }
 [data-theme="light"] .auth-card .form-group input:focus {
   border-color: var(--purple) !important;
   box-shadow:   0 0 0 1px var(--purple);
 }
+
+/* Fix text selection visibility — purple highlight works on both themes */
+.auth-card .form-group input::selection,
+.form-group input::selection,
+.form-group textarea::selection {
+  background: rgba(99,102,241,0.55);
+  color:      #f1f5f9;
+}
+[data-theme="light"] .auth-card .form-group input::selection,
+[data-theme="light"] .form-group input::selection,
+[data-theme="light"] .form-group textarea::selection {
+  background: rgba(99,102,241,0.35);
+  color:      #1a1510;
+}
+
+/* Password field wrapper for eye toggle */
+.password-wrapper {
+  position: relative;
+  display:  flex;
+  align-items: center;
+}
+.password-wrapper input {
+  padding-right: 42px !important;
+  width:         100%;
+}
+.toggle-pw {
+  position:        absolute;
+  right:           10px;
+  background:      none;
+  border:          none;
+  cursor:          pointer;
+  color:           var(--text-3);
+  padding:         4px;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  border-radius:   4px;
+  transition:      color .2s;
+  flex-shrink:     0;
+}
+.toggle-pw:hover { color: var(--text-2); }
+.toggle-pw svg   { width: 18px; height: 18px; }
 
 /* Submit button — full width */
 .auth-submit {
