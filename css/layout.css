@@ -203,7 +203,7 @@
   padding:         6px 4px;
   transition:      color .2s;
 }
-.mobile-nav-btn > span:first-child { font-size: 1.25rem; }
+.mobile-nav-btn > svg { flex-shrink: 0; }
 .mobile-nav-btn.active             { color: var(--purple-l); }
 
 /* =============================================
