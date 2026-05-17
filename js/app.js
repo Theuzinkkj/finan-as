@@ -1813,8 +1813,10 @@ async function handleAuthRedirect() {
 }
 
 function showResetPasswordForm() {
-  return new Promise((resolve) => {
-    document.getElementById('reset-password-screen').classList.remove('hidden');
+  return new Promise((resolve, reject) => {
+    const screen = document.getElementById('reset-password-screen');
+    if (!screen) { reject(new Error('reset-password-screen not found')); return; }
+    screen.classList.remove('hidden');
     const form      = document.getElementById('reset-pw-form');
     const errEl     = document.getElementById('reset-pw-error');
     const btn       = document.getElementById('reset-pw-submit');
@@ -1844,7 +1846,7 @@ function showResetPasswordForm() {
 
       try {
         await API.req('POST', '/api/auth/update-password', { password });
-        document.getElementById('reset-password-screen').classList.add('hidden');
+        screen.classList.add('hidden');
         toast('Senha atualizada com sucesso!');
         resolve();
       } catch (err) {
@@ -1859,31 +1861,36 @@ function showResetPasswordForm() {
 }
 
 async function init() {
-  initTheme();
-  bindEvents();
-  initCustomSelects();
+  try {
+    initTheme();
+    bindEvents();
+    initCustomSelects();
 
-  if (Demo.active) { await startApp(); return; }
+    if (Demo.active) { await startApp(); return; }
 
-  const redirect = await handleAuthRedirect();
+    const redirect = await handleAuthRedirect();
 
-  if (redirect.recovery) {
-    await showResetPasswordForm();
-    await Auth.signOut().catch(() => {});
-    showAuthScreen();
-    showAuthSuccess('Senha redefinida com sucesso! Faça login com a nova senha.');
-    return;
+    if (redirect.recovery) {
+      await showResetPasswordForm();
+      await Auth.signOut().catch(() => {});
+      showAuthScreen();
+      showAuthSuccess('Senha redefinida com sucesso! Faça login com a nova senha.');
+      return;
+    }
+
+    if (redirect.expiredRecovery) {
+      showAuthScreen();
+      showAuthError('O link de redefinição expirou. Clique em "Esqueci minha senha" para receber um novo.');
+      return;
+    }
+
+    const loggedIn = await Auth.check();
+    if (!loggedIn) { showAuthScreen(); return; }
+    await startApp();
+  } catch (err) {
+    console.error('[init] erro inesperado:', err);
+    try { showAuthScreen(); } catch {}
   }
-
-  if (redirect.expiredRecovery) {
-    showAuthScreen();
-    showAuthError('O link de redefinição expirou. Clique em "Esqueci minha senha" para receber um novo.');
-    return;
-  }
-
-  const loggedIn = await Auth.check();
-  if (!loggedIn) { showAuthScreen(); return; }
-  await startApp();
 }
 
 function showDemoBanner() {
