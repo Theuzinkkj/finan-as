@@ -1,7 +1,8 @@
 /* =============================================
    AUTH SCREEN — full-page overlay
    ============================================= */
-#auth-screen {
+#auth-screen,
+#reset-password-screen {
   position:        fixed;
   inset:           0;
   z-index:         500;
@@ -13,7 +14,8 @@
   overflow-y:      auto;
 }
 
-#auth-screen.hidden { display: none !important; }
+#auth-screen.hidden,
+#reset-password-screen.hidden { display: none !important; }
 
 /* Animated background glow */
 .auth-bg-glow {
@@ -251,7 +253,8 @@ body.demo-mode { padding-top: 40px; }
 /* =============================================
    LIGHT THEME OVERRIDES
    ============================================= */
-[data-theme="light"] #auth-screen {
+[data-theme="light"] #auth-screen,
+[data-theme="light"] #reset-password-screen {
   background: var(--bg);
 }
 [data-theme="light"] .auth-card {
