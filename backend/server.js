@@ -72,14 +72,25 @@ app.use(express.static(path.join(__dirname, '..')));
 
 // ── Cookie ────────────────────────────────────────────────────────────────────
 
-const SESSION_COOKIE = 'atlas_sid';
-const COOKIE_OPTS    = {
+const SESSION_COOKIE  = 'atlas_sid';
+const REFRESH_COOKIE  = 'atlas_refresh';
+const COOKIE_OPTS     = {
   httpOnly: true,
   secure:   IS_PROD,
   sameSite: 'lax',
   path:     '/',
   maxAge:   7 * 24 * 60 * 60 * 1000, // 7 dias
 };
+
+function setSessionCookies(res, access_token, refresh_token) {
+  res.cookie(SESSION_COOKIE, access_token, COOKIE_OPTS);
+  if (refresh_token) res.cookie(REFRESH_COOKIE, refresh_token, COOKIE_OPTS);
+}
+
+function clearSessionCookies(res) {
+  res.clearCookie(SESSION_COOKIE,  { path: '/', secure: IS_PROD, sameSite: 'lax' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/', secure: IS_PROD, sameSite: 'lax' });
+}
 
 function parseCookies(req) {
   const out = {};
@@ -168,18 +179,45 @@ function supaErrorMsg(data) {
 
 // ── Middleware de autenticação ────────────────────────────────────────────────
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const cookies = parseCookies(req);
-  const token   = cookies[SESSION_COOKIE];
+  let token     = cookies[SESSION_COOKIE];
 
   if (!token) return res.status(401).json({ message: 'Autenticação necessária.' });
 
-  const payload = decodeJwtPayload(token);
+  let payload = decodeJwtPayload(token);
   if (!payload?.sub) return res.status(401).json({ message: 'Token inválido.' });
 
+  // Token expirado — tenta refresh automático com o refresh_token
   if (payload.exp && Date.now() / 1000 > payload.exp) {
-    res.clearCookie(SESSION_COOKIE, { path: '/' });
-    return res.status(401).json({ message: 'Sessão expirada. Faça login novamente.' });
+    const refreshToken = cookies[REFRESH_COOKIE];
+    if (!refreshToken) {
+      clearSessionCookies(res);
+      return res.status(401).json({ message: 'Sessão expirada. Faça login novamente.' });
+    }
+
+    try {
+      const { ok, data } = await proxyFetch(
+        `${SUPA_URL}/auth/v1/token?grant_type=refresh_token`,
+        {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+          body:    JSON.stringify({ refresh_token: refreshToken }),
+        }
+      );
+
+      if (!ok || !data?.access_token) {
+        clearSessionCookies(res);
+        return res.status(401).json({ message: 'Sessão expirada. Faça login novamente.' });
+      }
+
+      token   = data.access_token;
+      payload = decodeJwtPayload(token);
+      setSessionCookies(res, token, data.refresh_token || refreshToken);
+    } catch {
+      clearSessionCookies(res);
+      return res.status(401).json({ message: 'Sessão expirada. Faça login novamente.' });
+    }
   }
 
   req.userId    = payload.sub;
@@ -207,8 +245,9 @@ app.post('/api/auth/signup', authLimiter, async (req, res, next) => {
       return res.status(200).json({ ok: true, confirmEmail: true });
     }
 
-    const token = data?.session?.access_token || data?.access_token;
-    if (token) res.cookie(SESSION_COOKIE, token, COOKIE_OPTS);
+    const token   = data?.session?.access_token || data?.access_token;
+    const refresh = data?.session?.refresh_token || data?.refresh_token;
+    if (token) setSessionCookies(res, token, refresh);
 
     res.status(200).json({ ok: true });
   } catch (err) { next(err); }
@@ -230,7 +269,7 @@ app.post('/api/auth/signin', authLimiter, async (req, res, next) => {
       error_description: supaErrorMsg(data),
     });
 
-    res.cookie(SESSION_COOKIE, data.access_token, COOKIE_OPTS);
+    setSessionCookies(res, data.access_token, data.refresh_token);
     res.status(200).json({ ok: true });
   } catch (err) { next(err); }
 });
@@ -244,12 +283,12 @@ app.post('/api/auth/confirm', authLimiter, (req, res) => {
   if (!payload?.sub)                                return res.status(400).json({ message: 'Token inválido.' });
   if (payload.exp && Date.now() / 1000 > payload.exp) return res.status(400).json({ message: 'Token expirado.' });
 
-  res.cookie(SESSION_COOKIE, access_token, COOKIE_OPTS);
+  setSessionCookies(res, access_token);
   res.status(200).json({ ok: true });
 });
 
 app.post('/api/auth/signout', (req, res) => {
-  res.clearCookie(SESSION_COOKIE, { path: '/', secure: IS_PROD, sameSite: 'lax' });
+  clearSessionCookies(res);
   res.status(200).json({ ok: true });
 });
 
@@ -490,7 +529,7 @@ app.delete('/api/auth/account', requireAuth, async (req, res, next) => {
     );
 
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
-    res.clearCookie(SESSION_COOKIE, { path: '/', secure: IS_PROD, sameSite: 'lax' });
+    clearSessionCookies(res);
     res.status(200).json({ ok: true });
   } catch (err) { next(err); }
 });

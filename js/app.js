@@ -306,7 +306,7 @@ function setCloudStatus(status, label) {
   const dot = document.getElementById('db-status-dot-header');
   if (dot) {
     dot.className = `db-dot db-${status}`;
-    dot.title     = label || '';
+    dot.title     = (label ? label + '\n' : '') + 'Toque para sincronizar';
   }
 }
 
@@ -327,6 +327,7 @@ async function syncFromCloud() {
   } catch (err) {
     console.warn('Cloud sync error:', err.message);
     setCloudStatus('error', 'Erro ao sincronizar: ' + err.message);
+    toast('Erro ao sincronizar com a nuvem: ' + err.message, 'err');
   }
 }
 
@@ -2013,6 +2014,14 @@ async function startApp() {
 
   renderAll();
   syncFromCloud();
+
+  const dot = document.getElementById('db-status-dot-header');
+  if (dot) {
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('click', () => {
+      if (!Demo.active) syncFromCloud();
+    });
+  }
 }
 
 init();
