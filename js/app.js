@@ -320,7 +320,7 @@ async function syncFromCloud() {
     const remoteIds = new Set(remote.map(t => t.id));
     const local     = await DB.getAll();
     for (const tx of remote)                                   await DB.put(tx);
-    for (const tx of local.filter(t => !remoteIds.has(t.id))) await DB.remove(t.id);
+    for (const tx of local.filter(t => !remoteIds.has(t.id))) await DB.remove(tx.id);
     transactions = remote;
     renderAll();
     setCloudStatus('connected', `${remote.length} transações sincronizadas`);
