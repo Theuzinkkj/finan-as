@@ -1095,6 +1095,26 @@
 .cat-btn-add .cat-icon { font-size: 1.5rem; font-weight: 300; line-height: 1; }
 .cat-btn-add:hover { border-color: var(--purple); color: var(--purple-l); }
 
+.cat-btn { position: relative; }
+.cat-btn-delete {
+  position:      absolute;
+  top:           2px;
+  right:         2px;
+  width:         15px;
+  height:        15px;
+  border-radius: 50%;
+  background:    rgba(239,68,68,.85);
+  color:         #fff;
+  font-size:     .55rem;
+  line-height:   15px;
+  text-align:    center;
+  cursor:        pointer;
+  opacity:       0;
+  transition:    opacity .15s;
+  z-index:       1;
+}
+.cat-btn:hover .cat-btn-delete { opacity: 1; }
+
 .custom-cat-emoji-row { display: flex; gap: 10px; align-items: flex-start; }
 .custom-cat-emoji-wrap { flex: 0 0 auto; position: relative; }
 .custom-cat-name-wrap  { flex: 1; }
@@ -1178,7 +1198,23 @@
 }
 .invoice-add-row input:focus   { border-color: var(--purple); }
 .invoice-add-row input::placeholder { color: var(--text-3); }
-.invoice-add-row input[type="number"] { max-width: 100px; }
+.invoice-add-row input#invoice-item-value,
+.invoice-add-row input#fatura-edit-value { max-width: 100px; }
+
+@media (max-width: 480px) {
+  .invoice-add-row {
+    flex-wrap: wrap;
+  }
+  .invoice-add-row input#invoice-item-desc,
+  .invoice-add-row input#fatura-edit-desc {
+    flex-basis: 100%;
+  }
+  .invoice-add-row input#invoice-item-value,
+  .invoice-add-row input#fatura-edit-value {
+    flex: 1;
+    max-width: none;
+  }
+}
 .btn-add-item {
   background:    var(--purple);
   border:        none;

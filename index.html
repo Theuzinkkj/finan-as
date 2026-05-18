@@ -474,7 +474,7 @@
         <label>Novo item</label>
         <div class="invoice-add-row">
           <input type="text" id="fatura-edit-desc" placeholder="Ex: Tênis, jantar...">
-          <input type="number" id="fatura-edit-value" step="0.01" min="0.01" placeholder="0,00">
+          <input type="text" inputmode="decimal" id="fatura-edit-value" placeholder="0,00">
           <button type="button" class="btn-add-item" id="btn-fatura-edit-add">+</button>
         </div>
       </div>
@@ -565,7 +565,7 @@
           <label>Itens da Fatura</label>
           <div class="invoice-add-row">
             <input type="text" id="invoice-item-desc" placeholder="Ex: Netflix, gasolina...">
-            <input type="number" id="invoice-item-value" step="0.01" min="0.01" placeholder="0,00">
+            <input type="text" inputmode="decimal" id="invoice-item-value" placeholder="0,00">
             <button type="button" class="btn-add-item" id="btn-add-invoice-item">+</button>
           </div>
           <div id="invoice-items-list"></div>

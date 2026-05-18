@@ -77,6 +77,13 @@ function saveCustomCategory(key, cat) {
   localStorage.setItem(_catsKey(), JSON.stringify(saved));
 }
 
+function deleteCustomCategory(key) {
+  delete CATEGORIES[key];
+  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
+  delete saved[key];
+  localStorage.setItem(_catsKey(), JSON.stringify(saved));
+}
+
 // =============================================
 //  PROFILE
 // =============================================
@@ -753,13 +760,26 @@ function openChangeCatModal() {
   activeChangeCat = tx.category;
 
   const grid = document.getElementById('change-cat-grid');
-  grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
-    <button type="button" class="cat-btn${tx.category === key ? ' selected' : ''}" data-cat="${key}">
-      <span class="cat-icon">${cat.icon}</span>
-      <span>${cat.label}</span>
-    </button>`).join('');
+  const renderChangeCatGrid = () => {
+    grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+      <button type="button" class="cat-btn${activeChangeCat === key ? ' selected' : ''}" data-cat="${key}">
+        ${key.startsWith('custom_') ? `<span class="cat-btn-delete" data-delete-cat="${key}" title="Apagar categoria">✕</span>` : ''}
+        <span class="cat-icon">${cat.icon}</span>
+        <span>${cat.label}</span>
+      </button>`).join('');
+  };
+  renderChangeCatGrid();
 
   grid.onclick = e => {
+    const delBtn = e.target.closest('.cat-btn-delete');
+    if (delBtn) {
+      e.stopPropagation();
+      const key = delBtn.dataset.deleteCat;
+      deleteCustomCategory(key);
+      if (activeChangeCat === key) activeChangeCat = null;
+      renderChangeCatGrid();
+      return;
+    }
     const btn = e.target.closest('.cat-btn');
     if (!btn) return;
     grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
@@ -899,6 +919,7 @@ function renderCategoryGrid() {
   const grid = document.getElementById('category-grid');
   grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
     <button type="button" class="cat-btn" data-cat="${key}">
+      ${key.startsWith('custom_') ? `<span class="cat-btn-delete" data-delete-cat="${key}" title="Apagar categoria">✕</span>` : ''}
       <span class="cat-icon">${cat.icon}</span>
       <span>${cat.label}</span>
     </button>`).join('') + `
@@ -919,6 +940,15 @@ function buildCategoryGrid() {
       document.getElementById('cat-label-error').classList.add('hidden');
       document.getElementById('emoji-picker-panel').classList.add('hidden');
       openModal('modal-custom-cat');
+      return;
+    }
+    const delBtn = e.target.closest('.cat-btn-delete');
+    if (delBtn) {
+      e.stopPropagation();
+      const key = delBtn.dataset.deleteCat;
+      deleteCustomCategory(key);
+      if (selectedCat === key) selectedCat = null;
+      renderCategoryGrid();
       return;
     }
     const btn = e.target.closest('.cat-btn');
@@ -1457,7 +1487,7 @@ function bindEvents() {
     const descEl  = document.getElementById('invoice-item-desc');
     const valueEl = document.getElementById('invoice-item-value');
     const desc    = descEl.value.trim();
-    const value   = parseFloat(valueEl.value);
+    const value   = parseFloat(valueEl.value.replace(',', '.'));
     if (!desc || !value || value <= 0) return;
     invoiceItems.push({ desc, value });
     descEl.value  = '';
@@ -1487,7 +1517,7 @@ function bindEvents() {
     const descEl  = document.getElementById('fatura-edit-desc');
     const valueEl = document.getElementById('fatura-edit-value');
     const desc    = descEl.value.trim();
-    const value   = parseFloat(valueEl.value);
+    const value   = parseFloat(valueEl.value.replace(',', '.'));
     if (!desc || !value || value <= 0) return;
     faturaEditItems.push({ desc, value });
     descEl.value  = '';
