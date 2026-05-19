@@ -1472,9 +1472,6 @@ function bindEvents() {
     }
     const isCredito = selectedPayment === 'credito';
     document.getElementById('invoice-group').classList.toggle('hidden', !isCredito);
-    document.getElementById('amount-group').style.display   = isCredito ? 'none' : '';
-    document.getElementById('category-group').style.display = isCredito ? 'none' : '';
-    document.getElementById('desc-group').style.display     = isCredito ? 'none' : '';
     if (!isCredito) {
       invoiceItems = [];
       document.getElementById('invoice-items-list').innerHTML = '';
