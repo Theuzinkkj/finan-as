@@ -1194,7 +1194,6 @@ function showAuthScreen() {
   document.getElementById('auth-confirm').value  = '';
   resetPasswordToggles();
   clearAuthFeedback();
-  bindAuthEvents();
 }
 
 function hideAuthScreen() {
@@ -1850,20 +1849,21 @@ function initSwipeToDelete() {
 // limpamos o hash imediatamente — o token nunca fica exposto no JS.
 async function handleAuthRedirect() {
   const hash = window.location.hash.slice(1);
-  if (!hash) return { ok: false, recovery: false };
+  if (!hash) return { ok: false, attempted: false, recovery: false };
 
   const params      = new URLSearchParams(hash);
   const accessToken = params.get('access_token');
-  if (!accessToken) return { ok: false, recovery: false };
+  if (!accessToken) return { ok: false, attempted: false, recovery: false };
 
-  const isRecovery = params.get('type') === 'recovery';
+  const isRecovery   = params.get('type') === 'recovery';
+  const refreshToken = params.get('refresh_token');
   history.replaceState(null, '', window.location.pathname);
 
   try {
-    await API.req('POST', '/api/auth/confirm', { access_token: accessToken });
-    return { ok: true, recovery: isRecovery };
-  } catch {
-    return { ok: false, recovery: false, expiredRecovery: isRecovery };
+    await API.req('POST', '/api/auth/confirm', { access_token: accessToken, refresh_token: refreshToken });
+    return { ok: true, attempted: true, recovery: isRecovery };
+  } catch (err) {
+    return { ok: false, attempted: true, recovery: false, expiredRecovery: isRecovery, error: err.message };
   }
 }
 
@@ -1919,6 +1919,7 @@ async function init() {
   try {
     initTheme();
     bindEvents();
+    bindAuthEvents();
     initCustomSelects();
     initPasswordToggles();
 
@@ -1937,6 +1938,20 @@ async function init() {
     if (redirect.expiredRecovery) {
       showAuthScreen();
       showAuthError('O link de redefinição expirou. Clique em "Esqueci minha senha" para receber um novo.');
+      return;
+    }
+
+    if (redirect.attempted && !redirect.ok) {
+      showAuthScreen();
+      showAuthError('O link de confirmação expirou ou é inválido. Para receber um novo, cadastre-se novamente com o mesmo email.');
+      return;
+    }
+
+    if (redirect.attempted && redirect.ok) {
+      const loggedIn = await Auth.check();
+      if (loggedIn) { await startApp(); return; }
+      showAuthScreen();
+      showAuthSuccess('Email confirmado! Faça login para continuar.');
       return;
     }
 

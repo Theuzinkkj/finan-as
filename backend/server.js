@@ -276,14 +276,14 @@ app.post('/api/auth/signin', authLimiter, async (req, res, next) => {
 
 // Converte o token do redirect de confirmação de email em cookie httpOnly.
 app.post('/api/auth/confirm', authLimiter, (req, res) => {
-  const { access_token } = req.body || {};
+  const { access_token, refresh_token } = req.body || {};
   if (!access_token) return res.status(400).json({ message: 'Token ausente.' });
 
   const payload = decodeJwtPayload(access_token);
   if (!payload?.sub)                                return res.status(400).json({ message: 'Token inválido.' });
   if (payload.exp && Date.now() / 1000 > payload.exp) return res.status(400).json({ message: 'Token expirado.' });
 
-  setSessionCookies(res, access_token);
+  setSessionCookies(res, access_token, refresh_token || undefined);
   res.status(200).json({ ok: true });
 });
 
