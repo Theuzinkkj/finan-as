@@ -68,7 +68,7 @@ app.use((req, res, next) => {
 });
 
 // ── Arquivos estáticos ────────────────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // ── Cookie ────────────────────────────────────────────────────────────────────
 
