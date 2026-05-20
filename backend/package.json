@@ -2,8 +2,8 @@
   "name": "atlas-finance",
   "version": "1.0.0",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node --watch backend/server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
