@@ -46,16 +46,26 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    body::before {
-      content:  '';
-      position: fixed;
-      inset:    0;
-      background:
-        radial-gradient(ellipse 80% 60% at 10% 5%,  rgba(99,102,241,.26) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 90% 85%, rgba(16,185,129,.11) 0%, transparent 55%),
-        radial-gradient(ellipse 50% 40% at 80% 15%, rgba(99,102,241,.13) 0%, transparent 55%);
+    /* ── Orbs flutuantes ─────────────────── */
+    .orbs-bg {
+      position:       fixed;
+      inset:          0;
+      overflow:       hidden;
       pointer-events: none;
-      z-index: 0;
+      z-index:        0;
+    }
+    .orb {
+      position:      absolute;
+      border-radius: 50%;
+      width:         var(--s, 220px);
+      height:        var(--s, 220px);
+      background:    var(--c, rgba(99,102,241,.18));
+      filter:        blur(var(--blur, 75px));
+      animation:     orb-drift var(--dur, 20s) ease-in-out infinite alternate;
+    }
+    @keyframes orb-drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(var(--tx, 60px), var(--ty, 40px)) scale(var(--ts, 1.08)); }
     }
 
     /* ── Utilitários ──────────────────────── */
@@ -388,6 +398,17 @@
 </head>
 <body>
 
+  <!-- Orbs animados no fundo -->
+  <div class="orbs-bg" aria-hidden="true">
+    <div class="orb" style="--s:360px;--c:rgba(99,102,241,.20);--blur:100px;--dur:18s;--tx:130px;--ty:-70px;--ts:1.1;left:2%;top:10%"></div>
+    <div class="orb" style="--s:220px;--c:rgba(16,185,129,.14);--blur:72px;--dur:24s;--tx:-110px;--ty:90px;right:6%;top:4%"></div>
+    <div class="orb" style="--s:150px;--c:rgba(129,140,248,.18);--blur:52px;--dur:14s;--tx:70px;--ty:-110px;--ts:1.12;left:48%;top:55%"></div>
+    <div class="orb" style="--s:280px;--c:rgba(16,185,129,.10);--blur:90px;--dur:27s;--tx:-90px;--ty:50px;right:3%;bottom:18%"></div>
+    <div class="orb" style="--s:170px;--c:rgba(99,102,241,.16);--blur:58px;--dur:16s;--tx:90px;--ty:75px;left:18%;bottom:25%"></div>
+    <div class="orb" style="--s:110px;--c:rgba(99,102,241,.22);--blur:42px;--dur:11s;--tx:-55px;--ty:-85px;--ts:1.15;right:28%;top:38%"></div>
+    <div class="orb" style="--s:200px;--c:rgba(16,185,129,.12);--blur:65px;--dur:21s;--tx:60px;--ty:-50px;left:35%;top:8%"></div>
+  </div>
+
   <!-- ═══ NAV ═══════════════════════════════════════════════════════════════ -->
   <nav>
     <a class="nav-logo" href="landing.html">
@@ -411,12 +432,12 @@
 
     <p class="hero-sub">
       O Atlas registra seus gastos, mostra para onde vai cada real
-      e te ajuda a economizar de verdade — sem complicação.
+      e te ajuda a economizar de verdade. Sem enrolação.
     </p>
 
     <div class="hero-ctas">
       <a class="btn btn-primary btn-lg" href="/app?demo=1">
-        Testar agora — é grátis
+        Começar de graça
       </a>
       <a class="btn btn-ghost btn-lg" href="/app">
         Já tenho conta
@@ -520,7 +541,7 @@
       <p>Teste sem criar conta e veja como o Atlas pode transformar sua relação com o dinheiro.</p>
       <div class="cta-stack">
         <a class="btn btn-primary btn-lg" href="/app?demo=1">
-          Testar agora — sem cadastro
+          Experimentar agora
         </a>
         <a class="btn btn-ghost btn-lg" href="/app">
           Criar conta grátis
