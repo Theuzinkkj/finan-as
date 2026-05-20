@@ -730,7 +730,11 @@ app.use((err, req, res, _next) => {
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () =>
-  console.log(`Atlas Finance → http://localhost:${PORT}  [${IS_PROD ? 'prod' : 'dev'}]`)
-);
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, () =>
+    console.log(`Atlas Finance → http://localhost:${PORT}  [${IS_PROD ? 'prod' : 'dev'}]`)
+  );
+}
+
+module.exports = app;
