@@ -245,7 +245,14 @@
       width:       100%;
     }
     .spotlight-text  { flex: 1; }
-    .spotlight-visual { flex: 0 0 400px; max-width: 400px; }
+    .spotlight-visual { flex: 0 0 500px; max-width: 500px; }
+    .mockup-screen {
+      display: block;
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    }
 
     /* stagger: each child starts hidden and slides up */
     .spotlight-eyebrow,
@@ -921,35 +928,7 @@
     <div class="spotlight-item">
       <div class="spotlight-inner">
         <div class="spotlight-visual">
-          <div class="mockup">
-            <div class="mockup-head">
-              <span class="mkp-title">Outubro 2024</span>
-              <span class="mkp-sub">últimos 30 dias</span>
-            </div>
-            <div class="bar-rows">
-              <div class="bar-row">
-                <span class="bar-label">Alimentação</span>
-                <div class="bar-track"><div class="bar-fill bar-fill--purple" style="--w:72%"></div></div>
-                <span class="bar-amount">R$ 1.240</span>
-              </div>
-              <div class="bar-row">
-                <span class="bar-label">Transporte</span>
-                <div class="bar-track"><div class="bar-fill bar-fill--purple-l" style="--w:48%"></div></div>
-                <span class="bar-amount">R$ 820</span>
-              </div>
-              <div class="bar-row">
-                <span class="bar-label">Lazer</span>
-                <div class="bar-track"><div class="bar-fill bar-fill--green" style="--w:34%"></div></div>
-                <span class="bar-amount">R$ 580</span>
-              </div>
-              <div class="bar-row">
-                <span class="bar-label">Outros</span>
-                <div class="bar-track"><div class="bar-fill bar-fill--dim" style="--w:20%"></div></div>
-                <span class="bar-amount">R$ 200</span>
-              </div>
-            </div>
-            <div class="mkp-total">Total gasto: <strong data-count="2840" data-prefix="R$ ">R$ 0</strong></div>
-          </div>
+          <img class="mockup-screen" src="/img/screen-dashboard.png" alt="Dashboard de gastos do Atlas">
         </div>
         <div class="spotlight-text">
           <p class="spotlight-eyebrow">Por que usar</p>
@@ -968,23 +947,7 @@
           <p class="spotlight-desc">"Quanto gastei com delivery esse mês?" O assistente analisa seus dados e responde em segundos, em linguagem natural. Sem fórmulas, sem planilhas.</p>
         </div>
         <div class="spotlight-visual">
-          <div class="mockup">
-            <p class="ai-label">✦ Atlas IA</p>
-            <div class="chat-rows">
-              <div class="chat-row user">
-                <div class="chat-bubble">Quanto gastei com delivery esse mês?</div>
-              </div>
-              <div class="chat-row ai">
-                <div class="chat-bubble">Você gastou <strong>R$ 312</strong> em delivery, 24% acima da sua média. Quer ver onde dá pra cortar?</div>
-              </div>
-              <div class="chat-row user">
-                <div class="chat-bubble">Onde posso economizar R$ 200?</div>
-              </div>
-              <div class="chat-row ai">
-                <div class="chat-bubble">Reduza delivery para 3×/semana e economize ~R$ 180. Há também R$ 40 em assinaturas pouco usadas.<span class="chat-cursor"></span></div>
-              </div>
-            </div>
-          </div>
+          <img class="mockup-screen" src="/img/screen-ia.png" alt="Análise inteligente de gastos pelo Atlas IA">
         </div>
       </div>
     </div>
@@ -993,38 +956,7 @@
     <div class="spotlight-item">
       <div class="spotlight-inner">
         <div class="spotlight-visual">
-          <div class="mockup">
-            <div class="mockup-head">
-              <span class="mkp-title">Orçamentos</span>
-              <span class="mkp-sub">Novembro</span>
-            </div>
-            <div class="budget-rows">
-              <div>
-                <div class="budget-row-head">
-                  <span class="budget-row-name">Alimentação</span>
-                  <span class="budget-row-val">R$ 650 / R$ 800</span>
-                </div>
-                <div class="budget-track"><div class="budget-fill budget-fill--warn" style="--w:81%"></div></div>
-                <span class="budget-note budget-note--warn">⚠ R$ 150 restando</span>
-              </div>
-              <div>
-                <div class="budget-row-head">
-                  <span class="budget-row-name">Transporte</span>
-                  <span class="budget-row-val">R$ 380 / R$ 600</span>
-                </div>
-                <div class="budget-track"><div class="budget-fill budget-fill--ok" style="--w:63%"></div></div>
-                <span class="budget-note budget-note--ok">✓ Dentro do limite</span>
-              </div>
-              <div>
-                <div class="budget-row-head">
-                  <span class="budget-row-name">Lazer</span>
-                  <span class="budget-row-val">R$ 120 / R$ 400</span>
-                </div>
-                <div class="budget-track"><div class="budget-fill budget-fill--safe" style="--w:30%"></div></div>
-                <span class="budget-note budget-note--ok">✓ R$ 280 disponíveis</span>
-              </div>
-            </div>
-          </div>
+          <img class="mockup-screen" src="/img/screen-transacoes.png" alt="Lista de transações do Atlas">
         </div>
         <div class="spotlight-text">
           <p class="spotlight-eyebrow">Controle real</p>
@@ -1043,23 +975,7 @@
           <p class="spotlight-desc">Acesse de qualquer lugar. Tudo sincronizado na nuvem em tempo real, sem instalar nada e sem perder nenhum dado.</p>
         </div>
         <div class="spotlight-visual">
-          <div class="mockup">
-            <div class="devices-wrap">
-              <div class="dev-desktop">
-                <div class="dev-bar"></div>
-                <div class="dev-bar dev-bar--short"></div>
-                <div class="dev-bar dev-bar--xshort"></div>
-              </div>
-              <div class="dev-phone">
-                <div class="dev-bar"></div>
-                <div class="dev-bar dev-bar--short"></div>
-              </div>
-            </div>
-            <div class="sync-tag">
-              <span class="sync-dot"></span>
-              Sincronizado agora
-            </div>
-          </div>
+          <img class="mockup-screen" src="/img/screen-dashboard.png" alt="Atlas acessível em qualquer dispositivo">
         </div>
       </div>
     </div>
@@ -1073,62 +989,7 @@
           <p class="spotlight-desc">Acompanhe ações, fundos e cripto integrados ao seu controle financeiro. Veja o desempenho em tempo real e entenda quanto do seu patrimônio está crescendo.</p>
         </div>
         <div class="spotlight-visual">
-          <div class="mockup">
-            <div class="invest-header">
-              <span class="invest-total" data-count="12480" data-prefix="R$ ">R$ 0</span>
-              <span class="live-badge"><span class="live-dot2"></span>AO VIVO</span>
-              <div style="margin-top:6px">
-                <span class="mkp-sub">Patrimônio total</span>
-                <span class="invest-delta">▲ +2,4% hoje</span>
-              </div>
-            </div>
-            <div class="invest-chart">
-              <svg viewBox="0 0 280 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stop-color="#10b981" stop-opacity=".5"/>
-                    <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
-                  </linearGradient>
-                </defs>
-                <path class="chart-area" d="M0,55 C30,50 50,46 70,40 S100,32 120,28 S150,20 170,16 S200,12 220,9 S250,6 280,4 L280,70 L0,70 Z"/>
-                <path class="chart-line-path" d="M0,55 C30,50 50,46 70,40 S100,32 120,28 S150,20 170,16 S200,12 220,9 S250,6 280,4"/>
-                <circle class="chart-ring" cx="280" cy="4" r="5" fill="none" stroke="#10b981" stroke-width="1.5"/>
-                <circle class="chart-dot"  cx="280" cy="4" r="3" fill="#10b981"/>
-              </svg>
-            </div>
-            <div class="invest-rows">
-              <div class="invest-row">
-                <div>
-                  <div class="invest-name">IVVB11</div>
-                  <div class="invest-code">ETF S&amp;P 500</div>
-                </div>
-                <div class="invest-val">
-                  <div class="invest-price" data-base="248.50">R$ 248,50</div>
-                  <div class="invest-up">▲ +1,2%</div>
-                </div>
-              </div>
-              <div class="invest-row">
-                <div>
-                  <div class="invest-name">Tesouro Selic</div>
-                  <div class="invest-code">Renda Fixa</div>
-                </div>
-                <div class="invest-val">
-                  <div class="invest-price" data-base="5200">R$ 5.200,00</div>
-                  <div class="invest-up">▲ +0,8%</div>
-                </div>
-              </div>
-              <div class="invest-row">
-                <div>
-                  <div class="invest-name">Bitcoin</div>
-                  <div class="invest-code">Cripto</div>
-                </div>
-                <div class="invest-val">
-                  <div class="invest-price" data-base="3800">R$ 3.800,00</div>
-                  <div class="invest-down">▼ −0,3%</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <img class="mockup-screen" src="/img/screen-invest.png" alt="Carteira de investimentos no Atlas">
         </div>
       </div>
     </div>
