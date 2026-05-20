@@ -2443,7 +2443,15 @@ async function init() {
     }
 
     const loggedIn = await Auth.check();
-    if (!loggedIn) { showAuthScreen(); return; }
+    if (!loggedIn) {
+      showAuthScreen();
+      const pendingMode = sessionStorage.getItem('atlas_auth_mode');
+      if (pendingMode) {
+        sessionStorage.removeItem('atlas_auth_mode');
+        setAuthMode(pendingMode);
+      }
+      return;
+    }
     await startApp();
   } catch (err) {
     console.error('[init] erro inesperado:', err);
@@ -2456,9 +2464,11 @@ function showDemoBanner() {
   document.body.classList.add('demo-mode');
 
   document.getElementById('btn-demo-signup').addEventListener('click', () => {
-    exitDemoMode();
-    showAuthScreen();
-    setAuthMode('signup');
+    Demo.exit();
+    sessionStorage.setItem('atlas_auth_mode', 'signup');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('demo');
+    window.location.replace(url.toString());
   });
 
   document.getElementById('btn-demo-exit').addEventListener('click', () => {
