@@ -57,7 +57,7 @@
     @property --o4y { syntax: '<percentage>'; inherits: false; initial-value: 78%; }
 
     .orbs-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-    .orb     { position: absolute; inset: 0; }
+    .orb     { position: absolute; inset: 0; transition: transform 1.2s cubic-bezier(.16,1,.3,1); }
 
     .orb-1 {
       background: radial-gradient(circle 500px at var(--o1x) var(--o1y), rgba(99,102,241,.30) 0%, transparent 70%);
@@ -227,58 +227,288 @@
     .hero-trust span { display: flex; align-items: center; gap: 5px; }
     .hero-trust svg  { opacity: .6; }
 
-    /* ── Stat cards ───────────────────────── */
-    .stat-cards-section {
-      position: relative;
-      z-index:  1;
-      padding:  0 24px;
+    /* ── Spotlight section ───────────────── */
+    .spotlight-section { position: relative; z-index: 1; }
+    .spotlight-item {
+      min-height:  90vh;
+      display:     flex;
+      align-items: center;
+      padding:     80px 48px;
     }
-    .stat-cards {
-      max-width:             900px;
-      margin:                0 auto;
-      display:               grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:                   16px;
-      padding:               40px 0 64px;
+    .spotlight-item:nth-child(even) .spotlight-inner { flex-direction: row-reverse; }
+    .spotlight-inner {
+      max-width:   1060px;
+      margin:      0 auto;
+      display:     flex;
+      align-items: center;
+      gap:         80px;
+      width:       100%;
     }
-    .stat-card {
-      display:        flex;
-      flex-direction: column;
-      align-items:    flex-start;
-      gap:            12px;
-      padding:        22px 20px;
-      background:     var(--card-bg);
-      border:         1px solid var(--border);
-      border-radius:  16px;
-      transition:     border-color .2s, background .2s;
+    .spotlight-text  { flex: 1; }
+    .spotlight-visual { flex: 0 0 400px; max-width: 400px; }
+
+    /* stagger: each child starts hidden and slides up */
+    .spotlight-eyebrow,
+    .spotlight-title,
+    .spotlight-desc,
+    .spotlight-visual,
+    .bar-row,
+    .chat-row,
+    .budget-rows > div,
+    .invest-row,
+    .invest-chart {
+      opacity:    0;
+      transform:  translateY(22px);
+      transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
     }
-    .stat-card:hover {
-      border-color: var(--border-h);
-      background:   rgba(255,255,255,.06);
+    .spotlight-item.is-visible .spotlight-eyebrow { opacity: 1; transform: none; transition-delay: 0s; }
+    .spotlight-item.is-visible .spotlight-title   { opacity: 1; transform: none; transition-delay: .12s; }
+    .spotlight-item.is-visible .spotlight-desc    { opacity: 1; transform: none; transition-delay: .24s; }
+    .spotlight-item.is-visible .spotlight-visual  { opacity: 1; transform: none; transition-delay: .1s; }
+    /* bar rows */
+    .spotlight-item.is-visible .bar-row:nth-child(1) { opacity: 1; transform: none; transition-delay: .28s; }
+    .spotlight-item.is-visible .bar-row:nth-child(2) { opacity: 1; transform: none; transition-delay: .36s; }
+    .spotlight-item.is-visible .bar-row:nth-child(3) { opacity: 1; transform: none; transition-delay: .44s; }
+    .spotlight-item.is-visible .bar-row:nth-child(4) { opacity: 1; transform: none; transition-delay: .52s; }
+    /* chat rows */
+    .spotlight-item.is-visible .chat-row:nth-child(1) { opacity: 1; transform: none; transition-delay: .28s; }
+    .spotlight-item.is-visible .chat-row:nth-child(2) { opacity: 1; transform: none; transition-delay: .44s; }
+    .spotlight-item.is-visible .chat-row:nth-child(3) { opacity: 1; transform: none; transition-delay: .6s; }
+    .spotlight-item.is-visible .chat-row:nth-child(4) { opacity: 1; transform: none; transition-delay: .76s; }
+    /* budget rows */
+    .spotlight-item.is-visible .budget-rows > div:nth-child(1) { opacity: 1; transform: none; transition-delay: .28s; }
+    .spotlight-item.is-visible .budget-rows > div:nth-child(2) { opacity: 1; transform: none; transition-delay: .42s; }
+    .spotlight-item.is-visible .budget-rows > div:nth-child(3) { opacity: 1; transform: none; transition-delay: .56s; }
+    /* invest rows */
+    .spotlight-item.is-visible .invest-chart    { opacity: 1; transform: none; transition-delay: .3s; }
+    .spotlight-item.is-visible .invest-row:nth-child(1) { opacity: 1; transform: none; transition-delay: .5s; }
+    .spotlight-item.is-visible .invest-row:nth-child(2) { opacity: 1; transform: none; transition-delay: .62s; }
+    .spotlight-item.is-visible .invest-row:nth-child(3) { opacity: 1; transform: none; transition-delay: .74s; }
+
+    .spotlight-eyebrow {
+      font-size:      .7rem;
+      font-weight:    700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color:          var(--purple-l);
+      margin-bottom:  14px;
     }
-    .stat-icon {
-      width:         40px;
-      height:        40px;
-      border-radius: 10px;
-      display:       flex;
-      align-items:   center;
-      justify-content: center;
-      flex-shrink:   0;
+    .spotlight-title {
+      font-size:      clamp(1.75rem, 3vw, 2.4rem);
+      font-weight:    800;
+      letter-spacing: -.025em;
+      line-height:    1.2;
+      margin-bottom:  18px;
     }
-    .stat-icon--purple { background: rgba(99,102,241,.15); color: var(--purple-l); }
-    .stat-icon--green  { background: rgba(16,185,129,.12);  color: var(--green); }
-    .stat-value {
-      font-size:   1.55rem;
-      font-weight: 800;
-      color:       var(--text);
-      line-height: 1;
+    .spotlight-desc {
+      font-size:  1rem;
+      color:      var(--text-2);
+      line-height: 1.75;
+      max-width:  420px;
     }
-    .stat-label {
-      font-size:   .79rem;
-      font-weight: 500;
-      color:       var(--text-2);
-      line-height: 1.4;
+
+    /* ── Mockups ─────────────────────────── */
+    .mockup {
+      background:    var(--card-bg);
+      border:        1px solid var(--border);
+      border-radius: 20px;
+      padding:       24px;
+      overflow:      hidden;
     }
+    .mockup-head {
+      display:         flex;
+      justify-content: space-between;
+      align-items:     baseline;
+      margin-bottom:   20px;
+    }
+    .mkp-title { font-size: .9rem; font-weight: 700; }
+    .mkp-sub   { font-size: .76rem; color: var(--text-2); }
+
+    /* bar-chart */
+    .bar-rows { display: flex; flex-direction: column; gap: 10px; }
+    .bar-row  { display: flex; align-items: center; gap: 10px; font-size: .78rem; }
+    .bar-label  { width: 88px; color: var(--text-2); flex-shrink: 0; }
+    .bar-track  { flex: 1; height: 7px; background: rgba(255,255,255,.07); border-radius: 99px; overflow: hidden; }
+    .bar-fill   { height: 100%; border-radius: 99px; width: 0; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+    .spotlight-item.is-visible .bar-fill { width: var(--w); }
+    .bar-amount { width: 52px; text-align: right; color: var(--text-2); font-size: .74rem; flex-shrink: 0; }
+    .bar-fill--purple  { background: var(--purple); }
+    .bar-fill--purple-l { background: var(--purple-l); opacity: .8; }
+    .bar-fill--green   { background: var(--green); }
+    .bar-fill--dim     { background: rgba(255,255,255,.2); }
+    .mkp-total { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); font-size: .82rem; color: var(--text-2); }
+    .mkp-total strong { color: var(--text); font-size: .95rem; }
+
+    /* chat */
+    .ai-label    { font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--purple-l); margin-bottom: 10px; }
+    .chat-rows   { display: flex; flex-direction: column; gap: 10px; }
+    .chat-row    { display: flex; }
+    .chat-row.user { justify-content: flex-end; }
+    .chat-bubble { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: .82rem; line-height: 1.5; }
+    .chat-row.user .chat-bubble { background: var(--purple); color: #fff; border-bottom-right-radius: 4px; }
+    .chat-row.ai   .chat-bubble { background: rgba(255,255,255,.07); color: var(--text); border-bottom-left-radius: 4px; }
+
+    /* budget */
+    .budget-rows     { display: flex; flex-direction: column; gap: 16px; }
+    .budget-row-head { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 6px; }
+    .budget-row-name { font-weight: 600; }
+    .budget-row-val  { color: var(--text-2); }
+    .budget-track    { height: 7px; background: rgba(255,255,255,.07); border-radius: 99px; overflow: hidden; margin-bottom: 5px; }
+    .budget-fill     { height: 100%; border-radius: 99px; width: 0; transition: width 1.1s cubic-bezier(.16,1,.3,1); }
+    .spotlight-item.is-visible .budget-fill { width: var(--w); }
+    .budget-fill--warn  { background: #f59e0b; }
+    .budget-fill--ok    { background: var(--green); }
+    .budget-fill--safe  { background: var(--purple-l); }
+    .budget-note        { font-size: .72rem; font-weight: 500; }
+    .budget-note--warn  { color: #f59e0b; }
+    .budget-note--ok    { color: var(--green); }
+
+    /* devices */
+    .devices-wrap { display: flex; gap: 16px; align-items: flex-end; }
+    .dev-desktop  { flex: 1; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .dev-phone    { width: 62px; flex-shrink: 0; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 10px; padding: 10px 8px; }
+    .dev-bar      { height: 6px; background: rgba(255,255,255,.14); border-radius: 3px; margin-bottom: 8px; }
+    .dev-bar:last-child  { margin-bottom: 0; }
+    .dev-bar--short      { width: 65%; }
+    .dev-bar--xshort     { width: 42%; }
+    .sync-tag {
+      display:     inline-flex;
+      align-items: center;
+      gap:         7px;
+      margin-top:  18px;
+      padding:     5px 14px;
+      background:  rgba(16,185,129,.1);
+      border:      1px solid rgba(16,185,129,.2);
+      border-radius: 99px;
+      font-size:   .73rem;
+      color:       var(--green);
+      font-weight: 600;
+    }
+    .sync-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse-dot 1.5s ease infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%     { transform: scale(1.6); opacity: .5; }
+    }
+
+    /* live badge */
+    .live-badge {
+      display:     inline-flex;
+      align-items: center;
+      gap:         5px;
+      padding:     3px 9px;
+      background:  rgba(16,185,129,.1);
+      border:      1px solid rgba(16,185,129,.22);
+      border-radius: 99px;
+      font-size:   .65rem;
+      font-weight: 700;
+      color:       var(--green);
+      letter-spacing: .06em;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    .live-dot2 {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: live-blink 1.2s ease infinite;
+    }
+    @keyframes live-blink {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%     { opacity: .3; transform: scale(.6); }
+    }
+
+    /* chart tip */
+    .chart-dot, .chart-ring {
+      opacity: 0;
+      transition: opacity .3s ease;
+    }
+    .spotlight-item.is-visible .chart-dot  { opacity: 1; transition-delay: 1.45s; }
+    .spotlight-item.is-visible .chart-ring {
+      opacity: 1;
+      transition-delay: 1.45s;
+      animation: ring-expand 2s ease 1.75s infinite;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    @keyframes ring-expand {
+      0%   { transform: scale(1); opacity: .7; }
+      100% { transform: scale(3.5); opacity: 0; }
+    }
+
+    /* chat cursor */
+    .chat-cursor {
+      display:        inline-block;
+      width:          2px;
+      height:         13px;
+      background:     var(--purple-l);
+      margin-left:    3px;
+      vertical-align: middle;
+      border-radius:  1px;
+      animation:      blink-cur 1s step-end infinite;
+    }
+    @keyframes blink-cur { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+    /* budget warning bar glow */
+    .budget-fill--warn { background: #f59e0b; animation: warn-glow 2.2s ease infinite; }
+    @keyframes warn-glow {
+      0%,100% { box-shadow: none; }
+      50%     { box-shadow: 0 0 8px rgba(245,158,11,.55); }
+    }
+
+    /* ── Invest mockup ───────────────────── */
+    .invest-header { margin-bottom: 18px; }
+    .invest-total  { font-size: 1.5rem; font-weight: 800; letter-spacing: -.02em; }
+    .invest-delta  {
+      display:     inline-flex;
+      align-items: center;
+      gap:         4px;
+      margin-left: 10px;
+      padding:     2px 8px;
+      background:  rgba(16,185,129,.12);
+      border:      1px solid rgba(16,185,129,.2);
+      border-radius: 99px;
+      font-size:   .75rem;
+      font-weight: 700;
+      color:       var(--green);
+    }
+    .invest-chart { margin-bottom: 18px; }
+    .invest-chart svg { display: block; width: 100%; }
+    .chart-area {
+      fill: url(#chartGrad);
+      opacity: .35;
+    }
+    .chart-line-path {
+      fill:              none;
+      stroke:            var(--green);
+      stroke-width:      2;
+      stroke-linecap:    round;
+      stroke-dasharray:  600;
+      stroke-dashoffset: 600;
+      transition:        stroke-dashoffset 1.4s cubic-bezier(.16,1,.3,1);
+    }
+    .spotlight-item.is-visible .chart-line-path { stroke-dashoffset: 0; }
+    .invest-rows { display: flex; flex-direction: column; gap: 10px; }
+    .invest-row  {
+      display:         flex;
+      align-items:     center;
+      justify-content: space-between;
+      padding:         10px 12px;
+      background:      rgba(255,255,255,.04);
+      border:          1px solid var(--border);
+      border-radius:   10px;
+      font-size:       .82rem;
+    }
+    .invest-name  { font-weight: 700; }
+    .invest-code  { font-size: .7rem; color: var(--text-2); margin-top: 2px; }
+    .invest-val   { text-align: right; }
+    .invest-price { font-weight: 700; }
+    .invest-up    { font-size: .72rem; color: var(--green); }
+    .invest-down  { font-size: .72rem; color: #f87171; }
 
     /* ── Section base ─────────────────────── */
     .section {
@@ -314,49 +544,38 @@
       line-height:   1.65;
     }
 
-    /* ── Feature cards ────────────────────── */
-    .features-grid {
-      display:               grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap:                   14px;
-    }
-
-    .feature-card {
-      background:    var(--card-bg);
-      border:        1px solid var(--border);
-      border-radius: 20px;
-      padding:       28px 24px;
-      transition:    all .2s;
-    }
-    .feature-card:hover {
-      border-color: var(--border-h);
-      transform:    translateY(-3px);
-      box-shadow:   0 18px 44px rgba(0,0,0,.3);
-    }
-
-    .feature-icon {
-      width:           46px;
-      height:          46px;
-      border-radius:   13px;
-      background:      rgba(99,102,241,.1);
-      border:          1px solid rgba(99,102,241,.18);
-      display:         flex;
-      align-items:     center;
-      justify-content: center;
-      font-size:       1.35rem;
-      margin-bottom:   16px;
-    }
-    .feature-title { font-size: .98rem; font-weight: 700; margin-bottom: 8px; }
-    .feature-desc  { font-size: .84rem; color: var(--text-2); line-height: 1.6; }
-
     /* ── Steps ────────────────────────────── */
     .steps-grid {
       display:               grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap:                   24px;
+      position:              relative;
     }
+    /* linha conectora que se desenha */
+    .steps-grid::before {
+      content:          '';
+      position:         absolute;
+      top:              42px;
+      left:             calc(100% / 6);
+      width:            calc(100% * 2 / 3);
+      height:           1px;
+      background:       linear-gradient(to right, rgba(99,102,241,.15), rgba(99,102,241,.5), rgba(99,102,241,.15));
+      transform-origin: left;
+      transform:        scaleX(0);
+      transition:       transform 1s cubic-bezier(.16,1,.3,1) .1s;
+    }
+    .steps-section.in-view .steps-grid::before { transform: scaleX(1); }
 
-    .step-card { text-align: center; padding: 20px 12px; }
+    .step-card {
+      text-align: center;
+      padding:    20px 12px;
+      opacity:    0;
+      transform:  translateY(28px);
+      transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1);
+    }
+    .steps-section.in-view .step-card:nth-child(1) { opacity: 1; transform: none; transition-delay: .1s; }
+    .steps-section.in-view .step-card:nth-child(2) { opacity: 1; transform: none; transition-delay: .28s; }
+    .steps-section.in-view .step-card:nth-child(3) { opacity: 1; transform: none; transition-delay: .46s; }
 
     .step-num {
       width:           44px;
@@ -371,7 +590,24 @@
       font-weight:     800;
       color:           var(--purple-l);
       margin:          0 auto 16px;
+      position:        relative;
+      transition:      box-shadow .4s ease, background .4s ease;
     }
+    .step-num::after {
+      content:       '';
+      position:      absolute;
+      inset:         -5px;
+      border-radius: 50%;
+      border:        1px solid rgba(99,102,241,.35);
+      transform:     scale(.6);
+      opacity:       0;
+      transition:    transform .5s cubic-bezier(.16,1,.3,1), opacity .5s ease;
+    }
+    .steps-section.in-view .step-card:nth-child(1) .step-num::after { transform: scale(1); opacity: 1; transition-delay: .4s; }
+    .steps-section.in-view .step-card:nth-child(2) .step-num::after { transform: scale(1); opacity: 1; transition-delay: .58s; }
+    .steps-section.in-view .step-card:nth-child(3) .step-num::after { transform: scale(1); opacity: 1; transition-delay: .76s; }
+    .steps-section.in-view .step-num { box-shadow: 0 0 18px rgba(99,102,241,.2); }
+
     .step-title { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
     .step-desc  { font-size: .82rem; color: var(--text-2); line-height: 1.55; }
 
@@ -405,6 +641,191 @@
     }
     .cta-stack { display: flex; flex-direction: column; gap: 10px; }
 
+
+    /* ── AI Demo ──────────────────────────── */
+    .ai-demo-section {
+      position:   relative;
+      z-index:    1;
+      padding:    80px 24px;
+      max-width:  680px;
+      margin:     0 auto;
+      text-align: center;
+    }
+    .ai-demo-box {
+      background:    var(--card-bg);
+      border:        1px solid var(--border);
+      border-radius: 20px;
+      overflow:      hidden;
+      text-align:    left;
+      margin-top:    32px;
+    }
+    .ai-demo-header {
+      padding:        13px 20px;
+      border-bottom:  1px solid var(--border);
+      font-size:      .72rem;
+      font-weight:    700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color:          var(--purple-l);
+    }
+    .ai-demo-msgs {
+      padding:        20px;
+      min-height:     90px;
+      display:        flex;
+      flex-direction: column;
+      gap:            10px;
+    }
+    .ai-demo-empty { color: var(--text-3); font-size: .88rem; margin: auto 0; }
+    .ai-msg-user {
+      align-self:    flex-end;
+      background:    var(--purple);
+      color:         #fff;
+      padding:       10px 14px;
+      border-radius: 14px 14px 4px 14px;
+      font-size:     .85rem;
+      max-width:     85%;
+      line-height:   1.5;
+    }
+    .ai-msg-bot {
+      align-self:    flex-start;
+      background:    rgba(255,255,255,.07);
+      color:         var(--text);
+      padding:       10px 14px;
+      border-radius: 14px 14px 14px 4px;
+      font-size:     .85rem;
+      max-width:     85%;
+      line-height:   1.55;
+    }
+    .ai-typing {
+      display:     flex;
+      gap:         5px;
+      align-items: center;
+      padding:     4px 0;
+    }
+    .ai-typing span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--text-3);
+      animation: typ-bounce .8s ease infinite;
+    }
+    .ai-typing span:nth-child(2) { animation-delay: .13s; }
+    .ai-typing span:nth-child(3) { animation-delay: .26s; }
+    @keyframes typ-bounce {
+      0%,100% { transform: translateY(0); }
+      40%     { transform: translateY(-7px); }
+    }
+    .ai-demo-input-row {
+      display:      flex;
+      gap:          8px;
+      padding:      14px 20px;
+      border-top:   1px solid var(--border);
+    }
+    .ai-demo-input {
+      flex:        1;
+      background:  rgba(255,255,255,.06);
+      border:      1px solid var(--border);
+      border-radius: 10px;
+      padding:     10px 14px;
+      color:       var(--text);
+      font-family: var(--font);
+      font-size:   .88rem;
+      outline:     none;
+      transition:  border-color .2s;
+    }
+    .ai-demo-input::placeholder { color: var(--text-3); }
+    .ai-demo-input:focus { border-color: var(--border-h); }
+    .ai-demo-send {
+      background:  var(--purple);
+      color:       #fff;
+      border:      none;
+      border-radius: 10px;
+      padding:     10px 18px;
+      font-size:   .88rem;
+      font-weight: 600;
+      cursor:      pointer;
+      font-family: var(--font);
+      transition:  background .2s, transform .15s;
+      flex-shrink: 0;
+    }
+    .ai-demo-send:hover   { background: #5558e8; }
+    .ai-demo-send:active  { transform: scale(.96); }
+    .ai-demo-send:disabled { opacity: .5; cursor: default; }
+    .ai-chips {
+      display:         flex;
+      flex-wrap:       wrap;
+      gap:             8px;
+      justify-content: center;
+      margin-top:      16px;
+    }
+    .ai-chip {
+      padding:     7px 14px;
+      background:  var(--card-bg);
+      border:      1px solid var(--border);
+      border-radius: 99px;
+      font-size:   .8rem;
+      color:       var(--text-2);
+      cursor:      pointer;
+      font-family: var(--font);
+      transition:  border-color .2s, color .2s, background .2s;
+    }
+    .ai-chip:hover { border-color: var(--border-h); color: var(--text); background: rgba(255,255,255,.07); }
+
+    /* ── Facts section ────────────────────── */
+    .facts-section {
+      position:  relative;
+      z-index:   1;
+      padding:   80px 24px;
+      max-width: 960px;
+      margin:    0 auto;
+    }
+    .facts-grid {
+      display:               grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap:                   16px;
+      margin-top:            48px;
+    }
+    .fact-card {
+      background:     var(--card-bg);
+      border:         1px solid var(--border);
+      border-radius:  18px;
+      padding:        28px 22px;
+      display:        flex;
+      flex-direction: column;
+      gap:            14px;
+      opacity:        0;
+      transform:      translateY(24px);
+      transition:     opacity .6s cubic-bezier(.16,1,.3,1),
+                      transform .6s cubic-bezier(.16,1,.3,1),
+                      border-color .25s, box-shadow .25s;
+    }
+    /* stagger on scroll */
+    .facts-section.in-view .fact-card:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0s; }
+    .facts-section.in-view .fact-card:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: .1s; }
+    .facts-section.in-view .fact-card:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: .2s; }
+    .facts-section.in-view .fact-card:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: .3s; }
+    /* hover lift — must come after nth-child rules */
+    .facts-section.in-view .fact-card:hover {
+      transform:    translateY(-5px);
+      border-color: var(--border-h);
+      box-shadow:   0 18px 44px rgba(0,0,0,.28);
+    }
+    .fact-icon {
+      width:           44px;
+      height:          44px;
+      border-radius:   12px;
+      display:         flex;
+      align-items:     center;
+      justify-content: center;
+      flex-shrink:     0;
+      transition:      transform .3s cubic-bezier(.16,1,.3,1), background .3s;
+    }
+    .fact-card:hover .fact-icon        { transform: scale(1.15) rotate(-4deg); }
+    .fact-card:hover .fact-icon--purple { background: rgba(99,102,241,.26); }
+    .fact-card:hover .fact-icon--green  { background: rgba(16,185,129,.22); }
+    .fact-icon--purple { background: rgba(99,102,241,.15); color: var(--purple-l); }
+    .fact-icon--green  { background: rgba(16,185,129,.12);  color: var(--green); }
+    .fact-label  { font-size: 1.1rem; font-weight: 800; color: var(--text); line-height: 1.2; }
+    .fact-detail { font-size: .82rem; color: var(--text-2); line-height: 1.6; }
+
     /* ── Footer ───────────────────────────── */
     footer {
       position:   relative;
@@ -428,101 +849,16 @@
       .hero-ctas { flex-direction: column; max-width: 100%; }
       .hero-ctas .btn { min-width: 0; width: 100%; }
 
-      .stat-cards { grid-template-columns: repeat(2, 1fr); padding: 28px 0 48px; }
+      .spotlight-item { min-height: unset; padding: 60px 20px; }
+      .spotlight-inner { flex-direction: column !important; gap: 36px; }
+      .spotlight-visual { flex: none; max-width: 100%; width: 100%; }
+      .spotlight-desc { max-width: 100%; }
 
       .section { padding: 60px 20px; }
 
       .cta-card { padding: 40px 22px; border-radius: 22px; }
     }
 
-    /* ── Animated SVG Icons ───────────────── */
-    .feature-icon svg { display: block; overflow: visible; }
-
-    /* Bar chart — bars bounce up sequentially */
-    .icon-chart .bar {
-      transform-box: fill-box;
-      transform-origin: bottom center;
-    }
-    .feature-card:hover .icon-chart .bar-1 { animation: bar-bounce .5s ease both; }
-    .feature-card:hover .icon-chart .bar-2 { animation: bar-bounce .5s .07s ease both; }
-    .feature-card:hover .icon-chart .bar-3 { animation: bar-bounce .5s .14s ease both; }
-    @keyframes bar-bounce {
-      0%,100% { transform: scaleY(1); }
-      40%     { transform: scaleY(1.3); }
-      70%     { transform: scaleY(.85); }
-    }
-
-    /* Target — rings pulse outward */
-    .icon-target .ring-outer,
-    .icon-target .ring-mid {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-    .feature-card:hover .icon-target .ring-outer { animation: ring-expand .55s ease both; }
-    .feature-card:hover .icon-target .ring-mid   { animation: ring-expand .55s .1s ease both; }
-    @keyframes ring-expand {
-      0%,100% { transform: scale(1); opacity: 1; }
-      50%     { transform: scale(1.22); opacity: .4; }
-    }
-
-    /* AI robot — eyes blink, antenna glows */
-    .icon-ai .eye {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-    .icon-ai .antenna-dot {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-    .feature-card:hover .icon-ai .eye-l { animation: eye-blink .55s ease both; }
-    .feature-card:hover .icon-ai .eye-r { animation: eye-blink .55s .12s ease both; }
-    .feature-card:hover .icon-ai .antenna-dot { animation: dot-glow .55s ease both; }
-    @keyframes eye-blink {
-      0%,100% { transform: scaleY(1); }
-      25%     { transform: scaleY(.06); }
-      55%     { transform: scaleY(1.15); }
-    }
-    @keyframes dot-glow {
-      0%,100% { transform: scale(1); opacity: 1; }
-      50%     { transform: scale(2.2); opacity: .35; }
-    }
-
-    /* Refresh — full spin */
-    .icon-refresh { transform-origin: center; }
-    .feature-card:hover .icon-refresh { animation: spin-once .6s cubic-bezier(.4,0,.2,1) both; }
-    @keyframes spin-once { to { transform: rotate(360deg); } }
-
-    /* Trend — dots pop one by one */
-    .icon-trend .dot {
-      transform-box: fill-box;
-      transform-origin: center;
-    }
-    .feature-card:hover .icon-trend .d1 { animation: dot-pop .4s ease both; }
-    .feature-card:hover .icon-trend .d2 { animation: dot-pop .4s .09s ease both; }
-    .feature-card:hover .icon-trend .d3 { animation: dot-pop .4s .18s ease both; }
-    .feature-card:hover .icon-trend .d4 { animation: dot-pop .4s .27s ease both; }
-    @keyframes dot-pop {
-      0%,100% { transform: scale(1); }
-      50%     { transform: scale(2.1); }
-    }
-
-    /* Cloud — floats up, arrow rises */
-    .icon-cloud { transform-origin: center; }
-    .feature-card:hover .icon-cloud { animation: cloud-float .5s ease both; }
-    .icon-cloud .up-arrow {
-      transform-box: fill-box;
-      transform-origin: bottom center;
-    }
-    .feature-card:hover .icon-cloud .up-arrow { animation: arrow-rise .5s ease both; }
-    @keyframes cloud-float {
-      0%,100% { transform: translateY(0); }
-      40%     { transform: translateY(-4px); }
-      72%     { transform: translateY(-2px); }
-    }
-    @keyframes arrow-rise {
-      0%,100% { transform: translateY(0); opacity: 1; }
-      50%     { transform: translateY(-3px); opacity: .6; }
-    }
   </style>
 </head>
 <body>
@@ -577,147 +913,253 @@
     </p>
   </section>
 
-  <!-- ═══ STAT CARDS ═════════════════════════════════════════════════════════ -->
-  <section class="stat-cards-section">
-    <div class="stat-cards">
 
-      <div class="stat-card">
-        <div class="stat-icon stat-icon--purple">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
+  <!-- ═══ SPOTLIGHT ═══════════════════════════════════════════════════════════ -->
+  <section class="spotlight-section">
+
+    <!-- 1 — Gastos -->
+    <div class="spotlight-item">
+      <div class="spotlight-inner">
+        <div class="spotlight-visual">
+          <div class="mockup">
+            <div class="mockup-head">
+              <span class="mkp-title">Outubro 2024</span>
+              <span class="mkp-sub">últimos 30 dias</span>
+            </div>
+            <div class="bar-rows">
+              <div class="bar-row">
+                <span class="bar-label">Alimentação</span>
+                <div class="bar-track"><div class="bar-fill bar-fill--purple" style="--w:72%"></div></div>
+                <span class="bar-amount">R$ 1.240</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">Transporte</span>
+                <div class="bar-track"><div class="bar-fill bar-fill--purple-l" style="--w:48%"></div></div>
+                <span class="bar-amount">R$ 820</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">Lazer</span>
+                <div class="bar-track"><div class="bar-fill bar-fill--green" style="--w:34%"></div></div>
+                <span class="bar-amount">R$ 580</span>
+              </div>
+              <div class="bar-row">
+                <span class="bar-label">Outros</span>
+                <div class="bar-track"><div class="bar-fill bar-fill--dim" style="--w:20%"></div></div>
+                <span class="bar-amount">R$ 200</span>
+              </div>
+            </div>
+            <div class="mkp-total">Total gasto: <strong data-count="2840" data-prefix="R$ ">R$ 0</strong></div>
+          </div>
         </div>
-        <div class="stat-value">100%</div>
-        <div class="stat-label">Dados criptografados</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon stat-icon--green">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
-            <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
-          </svg>
+        <div class="spotlight-text">
+          <p class="spotlight-eyebrow">Por que usar</p>
+          <h2 class="spotlight-title">Entenda para onde vai cada real</h2>
+          <p class="spotlight-desc">Visualize seus gastos por categoria em tempo real. Alimentação, transporte, lazer, tudo organizado e claro, sem precisar montar planilha.</p>
         </div>
-        <div class="stat-value">R$ 0</div>
-        <div class="stat-label">Para começar agora</div>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon stat-icon--purple">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4"/>
-            <path d="M2 20c0-4 4-7 10-7s10 3 10 7"/>
-            <path d="M17 11l1.5 1.5L21 10"/>
-          </svg>
-        </div>
-        <div class="stat-value">IA</div>
-        <div class="stat-label">Assistente integrado</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon stat-icon--green">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2"/>
-            <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/>
-          </svg>
-        </div>
-        <div class="stat-value">Mobile</div>
-        <div class="stat-label">Funciona no celular</div>
-      </div>
-
     </div>
+
+    <!-- 2 — IA -->
+    <div class="spotlight-item">
+      <div class="spotlight-inner">
+        <div class="spotlight-text">
+          <p class="spotlight-eyebrow">Inteligência artificial</p>
+          <h2 class="spotlight-title">Pergunte, e a IA responde</h2>
+          <p class="spotlight-desc">"Quanto gastei com delivery esse mês?" O assistente analisa seus dados e responde em segundos, em linguagem natural. Sem fórmulas, sem planilhas.</p>
+        </div>
+        <div class="spotlight-visual">
+          <div class="mockup">
+            <p class="ai-label">✦ Atlas IA</p>
+            <div class="chat-rows">
+              <div class="chat-row user">
+                <div class="chat-bubble">Quanto gastei com delivery esse mês?</div>
+              </div>
+              <div class="chat-row ai">
+                <div class="chat-bubble">Você gastou <strong>R$ 312</strong> em delivery, 24% acima da sua média. Quer ver onde dá pra cortar?</div>
+              </div>
+              <div class="chat-row user">
+                <div class="chat-bubble">Onde posso economizar R$ 200?</div>
+              </div>
+              <div class="chat-row ai">
+                <div class="chat-bubble">Reduza delivery para 3×/semana e economize ~R$ 180. Há também R$ 40 em assinaturas pouco usadas.<span class="chat-cursor"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 — Orçamentos -->
+    <div class="spotlight-item">
+      <div class="spotlight-inner">
+        <div class="spotlight-visual">
+          <div class="mockup">
+            <div class="mockup-head">
+              <span class="mkp-title">Orçamentos</span>
+              <span class="mkp-sub">Novembro</span>
+            </div>
+            <div class="budget-rows">
+              <div>
+                <div class="budget-row-head">
+                  <span class="budget-row-name">Alimentação</span>
+                  <span class="budget-row-val">R$ 650 / R$ 800</span>
+                </div>
+                <div class="budget-track"><div class="budget-fill budget-fill--warn" style="--w:81%"></div></div>
+                <span class="budget-note budget-note--warn">⚠ R$ 150 restando</span>
+              </div>
+              <div>
+                <div class="budget-row-head">
+                  <span class="budget-row-name">Transporte</span>
+                  <span class="budget-row-val">R$ 380 / R$ 600</span>
+                </div>
+                <div class="budget-track"><div class="budget-fill budget-fill--ok" style="--w:63%"></div></div>
+                <span class="budget-note budget-note--ok">✓ Dentro do limite</span>
+              </div>
+              <div>
+                <div class="budget-row-head">
+                  <span class="budget-row-name">Lazer</span>
+                  <span class="budget-row-val">R$ 120 / R$ 400</span>
+                </div>
+                <div class="budget-track"><div class="budget-fill budget-fill--safe" style="--w:30%"></div></div>
+                <span class="budget-note budget-note--ok">✓ R$ 280 disponíveis</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="spotlight-text">
+          <p class="spotlight-eyebrow">Controle real</p>
+          <h2 class="spotlight-title">Saiba antes de estourar o limite</h2>
+          <p class="spotlight-desc">Defina orçamentos por categoria. O Atlas avisa quando você está se aproximando do limite, antes de estourar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 — Sync -->
+    <div class="spotlight-item">
+      <div class="spotlight-inner">
+        <div class="spotlight-text">
+          <p class="spotlight-eyebrow">Sem instalação</p>
+          <h2 class="spotlight-title">No celular, no tablet, no computador</h2>
+          <p class="spotlight-desc">Acesse de qualquer lugar. Tudo sincronizado na nuvem em tempo real, sem instalar nada e sem perder nenhum dado.</p>
+        </div>
+        <div class="spotlight-visual">
+          <div class="mockup">
+            <div class="devices-wrap">
+              <div class="dev-desktop">
+                <div class="dev-bar"></div>
+                <div class="dev-bar dev-bar--short"></div>
+                <div class="dev-bar dev-bar--xshort"></div>
+              </div>
+              <div class="dev-phone">
+                <div class="dev-bar"></div>
+                <div class="dev-bar dev-bar--short"></div>
+              </div>
+            </div>
+            <div class="sync-tag">
+              <span class="sync-dot"></span>
+              Sincronizado agora
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 — Investimentos -->
+    <div class="spotlight-item">
+      <div class="spotlight-inner">
+        <div class="spotlight-text">
+          <p class="spotlight-eyebrow">Investimentos</p>
+          <h2 class="spotlight-title">Sua carteira em um só lugar</h2>
+          <p class="spotlight-desc">Acompanhe ações, fundos e cripto integrados ao seu controle financeiro. Veja o desempenho em tempo real e entenda quanto do seu patrimônio está crescendo.</p>
+        </div>
+        <div class="spotlight-visual">
+          <div class="mockup">
+            <div class="invest-header">
+              <span class="invest-total" data-count="12480" data-prefix="R$ ">R$ 0</span>
+              <span class="live-badge"><span class="live-dot2"></span>AO VIVO</span>
+              <div style="margin-top:6px">
+                <span class="mkp-sub">Patrimônio total</span>
+                <span class="invest-delta">▲ +2,4% hoje</span>
+              </div>
+            </div>
+            <div class="invest-chart">
+              <svg viewBox="0 0 280 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%"   stop-color="#10b981" stop-opacity=".5"/>
+                    <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path class="chart-area" d="M0,55 C30,50 50,46 70,40 S100,32 120,28 S150,20 170,16 S200,12 220,9 S250,6 280,4 L280,70 L0,70 Z"/>
+                <path class="chart-line-path" d="M0,55 C30,50 50,46 70,40 S100,32 120,28 S150,20 170,16 S200,12 220,9 S250,6 280,4"/>
+                <circle class="chart-ring" cx="280" cy="4" r="5" fill="none" stroke="#10b981" stroke-width="1.5"/>
+                <circle class="chart-dot"  cx="280" cy="4" r="3" fill="#10b981"/>
+              </svg>
+            </div>
+            <div class="invest-rows">
+              <div class="invest-row">
+                <div>
+                  <div class="invest-name">IVVB11</div>
+                  <div class="invest-code">ETF S&amp;P 500</div>
+                </div>
+                <div class="invest-val">
+                  <div class="invest-price" data-base="248.50">R$ 248,50</div>
+                  <div class="invest-up">▲ +1,2%</div>
+                </div>
+              </div>
+              <div class="invest-row">
+                <div>
+                  <div class="invest-name">Tesouro Selic</div>
+                  <div class="invest-code">Renda Fixa</div>
+                </div>
+                <div class="invest-val">
+                  <div class="invest-price" data-base="5200">R$ 5.200,00</div>
+                  <div class="invest-up">▲ +0,8%</div>
+                </div>
+              </div>
+              <div class="invest-row">
+                <div>
+                  <div class="invest-name">Bitcoin</div>
+                  <div class="invest-code">Cripto</div>
+                </div>
+                <div class="invest-val">
+                  <div class="invest-price" data-base="3800">R$ 3.800,00</div>
+                  <div class="invest-down">▼ −0,3%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </section>
 
-  <!-- ═══ FEATURES ═══════════════════════════════════════════════════════════ -->
-  <section class="section">
-    <p class="section-eyebrow">Funcionalidades</p>
-    <h2 class="section-title">Tudo que você precisa para<br>organizar as finanças</h2>
-    <p class="section-sub">Simples de usar, mas poderoso onde importa.</p>
-
-    <div class="features-grid">
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-chart" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect class="bar bar-1" x="2"   y="15" width="5" height="7"  rx="1.5" fill="#818cf8"/>
-            <rect class="bar bar-2" x="9.5" y="10" width="5" height="12" rx="1.5" fill="#818cf8"/>
-            <rect class="bar bar-3" x="17"  y="5"  width="5" height="17" rx="1.5" fill="#818cf8" opacity=".85"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Visão clara dos gastos</h3>
-        <p class="feature-desc">Gráficos por categoria em tempo real — alimentação, transporte, lazer e mais. Veja onde o dinheiro realmente vai.</p>
+  <!-- ═══ AI DEMO ═════════════════════════════════════════════════════════════ -->
+  <section class="ai-demo-section">
+    <p class="section-eyebrow">Experimente agora</p>
+    <h2 class="section-title">Pergunte à IA do Atlas</h2>
+    <p style="color:var(--text-2);font-size:.93rem;margin-top:6px">Sem criar conta. Veja como funciona.</p>
+    <div class="ai-demo-box">
+      <div class="ai-demo-header">✦ Atlas IA</div>
+      <div class="ai-demo-msgs" id="demoMsgs">
+        <span class="ai-demo-empty">Escolha uma sugestão ou digite sua pergunta...</span>
       </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-target" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <circle class="ring-outer" cx="12" cy="12" r="10" stroke="#818cf8" stroke-width="1.5"/>
-            <circle class="ring-mid"   cx="12" cy="12" r="6"  stroke="#818cf8" stroke-width="1.5"/>
-            <circle                    cx="12" cy="12" r="2.5" fill="#818cf8"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Orçamentos por categoria</h3>
-        <p class="feature-desc">Defina limites mensais e receba alertas antes de estourar. Sem surpresas no fim do mês.</p>
+      <div class="ai-demo-input-row">
+        <input class="ai-demo-input" id="demoInput" type="text" placeholder="Ex: quanto posso economizar por mês?" maxlength="120">
+        <button class="ai-demo-send" id="demoSend">Enviar</button>
       </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-ai" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="7" width="18" height="13" rx="2.5" stroke="#818cf8" stroke-width="1.5"/>
-            <circle class="eye eye-l" cx="9"  cy="13.5" r="2" fill="#818cf8"/>
-            <circle class="eye eye-r" cx="15" cy="13.5" r="2" fill="#818cf8"/>
-            <line x1="12" y1="7" x2="12" y2="4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/>
-            <circle class="antenna-dot" cx="12" cy="3" r="1.5" fill="#818cf8"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Assistente com IA</h3>
-        <p class="feature-desc">Pergunte em linguagem natural: "Quanto gastei com iFood esse mês?" ou "Onde posso economizar?"</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-refresh" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M23 4v6h-6" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M1 20v-6h6"  stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Gastos fixos automáticos</h3>
-        <p class="feature-desc">Cadastre uma vez. O Atlas projeta aluguel, academia, streaming automaticamente nos próximos meses.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-trend" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <polyline points="2,19 7,14 13,10 22,5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle class="dot d1" cx="2"  cy="19" r="1.8" fill="#818cf8"/>
-            <circle class="dot d2" cx="7"  cy="14" r="1.8" fill="#818cf8"/>
-            <circle class="dot d3" cx="13" cy="10" r="1.8" fill="#818cf8"/>
-            <circle class="dot d4" cx="22" cy="5"  r="1.8" fill="#818cf8"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Histórico anual</h3>
-        <p class="feature-desc">Acompanhe a evolução mês a mês. Veja quando você economizou mais e descubra os padrões dos seus gastos.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg class="icon-cloud" width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="#818cf8" stroke-width="1.5" stroke-linejoin="round"/>
-            <path class="up-arrow" d="M12 17v-5M9.5 14.5 12 12l2.5 2.5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <h3 class="feature-title">Sincronizado na nuvem</h3>
-        <p class="feature-desc">Acesse do celular, tablet ou computador. Seus dados sempre atualizados em qualquer dispositivo.</p>
-      </div>
-
+    </div>
+    <div class="ai-chips">
+      <button class="ai-chip">Quanto posso economizar?</button>
+      <button class="ai-chip">Como reduzir gastos com alimentação?</button>
+      <button class="ai-chip">Qual minha maior despesa?</button>
+      <button class="ai-chip">Como organizar meu orçamento?</button>
     </div>
   </section>
 
   <!-- ═══ HOW IT WORKS ════════════════════════════════════════════════════════ -->
-  <section class="section" style="padding-top: 0">
+  <section class="section steps-section" style="padding-top: 0">
     <p class="section-eyebrow">Como funciona</p>
     <h2 class="section-title">Comece em 3 passos</h2>
     <p class="section-sub">Sem planilhas, sem burocracia.</p>
@@ -738,6 +1180,60 @@
         <h3 class="step-title">Veja os resultados</h3>
         <p class="step-desc">Em minutos você já tem uma visão clara de onde está gastando e o que pode melhorar.</p>
       </div>
+    </div>
+  </section>
+
+  <!-- ═══ FACTS ════════════════════════════════════════════════════════════════ -->
+  <section class="facts-section">
+    <p class="section-eyebrow" style="text-align:center">O produto</p>
+    <h2 class="section-title">Feito para ser simples e honesto</h2>
+    <p class="section-sub">Sem truques, sem cobrança surpresa, sem dado inventado.</p>
+
+    <div class="facts-grid">
+
+      <div class="fact-card">
+        <div class="fact-icon fact-icon--green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="fact-label">100% gratuito para começar</div>
+        <div class="fact-detail">Sem cartão de crédito, sem trial que expira. Você cria uma conta e começa a usar agora.</div>
+      </div>
+
+      <div class="fact-card">
+        <div class="fact-icon fact-icon--purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="fact-label">Sem instalação nenhuma</div>
+        <div class="fact-detail">Funciona direto no navegador, no celular, tablet ou computador. Nada para baixar.</div>
+      </div>
+
+      <div class="fact-card">
+        <div class="fact-icon fact-icon--purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div class="fact-label">IA em português direto</div>
+        <div class="fact-detail">Pergunte do jeito que você fala. Sem fórmulas, sem comandos. O assistente entende linguagem natural.</div>
+      </div>
+
+      <div class="fact-card">
+        <div class="fact-icon fact-icon--green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="fact-label">Seus dados são seus</div>
+        <div class="fact-detail">Tráfego criptografado, armazenamento seguro. Você pode apagar tudo a qualquer momento.</div>
+      </div>
+
     </div>
   </section>
 
@@ -766,6 +1262,197 @@
     </div>
   </footer>
 
+  <script>
+    // ══════════════════════════════════════════════
+    // 1. ORBS PARALLAX
+    // ══════════════════════════════════════════════
+    (function () {
+      const orbs = document.querySelectorAll('.orb');
+      const factors = [[-28, -20], [20, 15], [-14, 22], [24, -16]];
+      let tx = [0,0,0,0], ty = [0,0,0,0];
+      let mx = 0, my = 0;
+
+      document.addEventListener('mousemove', e => {
+        mx = (e.clientX / window.innerWidth  - 0.5);
+        my = (e.clientY / window.innerHeight - 0.5);
+      });
+
+      (function lerp() {
+        orbs.forEach((orb, i) => {
+          tx[i] += (mx * factors[i][0] - tx[i]) * 0.06;
+          ty[i] += (my * factors[i][1] - ty[i]) * 0.06;
+          orb.style.transform = `translate(${tx[i].toFixed(2)}px, ${ty[i].toFixed(2)}px)`;
+        });
+        requestAnimationFrame(lerp);
+      })();
+    })();
+
+
+    // ══════════════════════════════════════════════
+    // 3. AI DEMO
+    // ══════════════════════════════════════════════
+    (function () {
+      const msgsEl  = document.getElementById('demoMsgs');
+      const inputEl = document.getElementById('demoInput');
+      const sendBtn = document.getElementById('demoSend');
+      if (!msgsEl) return;
+
+      const answers = {
+        'economiz':   'Usuários do Atlas economizam em média R$ 340 por mês logo no primeiro mês. A maior oportunidade costuma ser delivery e assinaturas esquecidas, coisas que passam despercebidas sem um controle visual.',
+        'alimenta':   'Alimentação é onde mais se perde dinheiro sem perceber. O Atlas mostra o gasto diário por categoria e avisa quando você está se aproximando do limite que você mesmo definiu.',
+        'despesa':    'Sem seus dados reais eu não consigo calcular, mas o Atlas vai mostrar seu ranking de categorias automaticamente assim que você registrar as primeiras transações.',
+        'orçament':   'A regra do 50-30-20 é um bom ponto de partida: 50% para necessidades, 30% para desejos e 20% para reserva. O Atlas te ajuda a configurar isso e acompanhar em tempo real.',
+        'delivery':   'Delivery é o vilão número 1 das finanças de quem mora sozinho. Usuários que monitoram pelo Atlas reduzem em média 40% esse gasto depois de visualizarem os números.',
+        'investiment':'O Atlas integra sua carteira de investimentos pra você ter visão completa: quanto entra, quanto sai e quanto está crescendo, tudo num só lugar.',
+      };
+      const fallback = 'Boa pergunta! Com o Atlas você teria dados reais para responder isso. Crie uma conta grátis e em menos de 5 minutos já terá respostas personalizadas para as suas finanças.';
+
+      function getAnswer(q) {
+        const lower = q.toLowerCase();
+        for (const [key, val] of Object.entries(answers)) {
+          if (lower.includes(key)) return val;
+        }
+        return fallback;
+      }
+
+      function addMsg(text, cls) {
+        const div = document.createElement('div');
+        div.className = cls;
+        div.textContent = text;
+        msgsEl.appendChild(div);
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+        return div;
+      }
+
+      function typeText(el, text, speed = 22) {
+        let i = 0;
+        el.textContent = '';
+        return new Promise(resolve => {
+          (function tick() {
+            el.textContent += text[i++];
+            msgsEl.scrollTop = msgsEl.scrollHeight;
+            if (i < text.length) setTimeout(tick, speed);
+            else resolve();
+          })();
+        });
+      }
+
+      async function ask(question) {
+        if (!question.trim()) return;
+        sendBtn.disabled = true;
+
+        // clear placeholder
+        const empty = msgsEl.querySelector('.ai-demo-empty');
+        if (empty) empty.remove();
+
+        addMsg(question, 'ai-msg-user');
+        inputEl.value = '';
+
+        // typing indicator
+        const typing = document.createElement('div');
+        typing.className = 'ai-typing';
+        typing.innerHTML = '<span></span><span></span><span></span>';
+        msgsEl.appendChild(typing);
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+
+        await new Promise(r => setTimeout(r, 900));
+        typing.remove();
+
+        const botEl = addMsg('', 'ai-msg-bot');
+        await typeText(botEl, getAnswer(question));
+        sendBtn.disabled = false;
+        inputEl.focus();
+      }
+
+      sendBtn.addEventListener('click', () => ask(inputEl.value));
+      inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') ask(inputEl.value); });
+      document.querySelectorAll('.ai-chip').forEach(chip => {
+        chip.addEventListener('click', () => ask(chip.textContent));
+      });
+    })();
+
+    // ══════════════════════════════════════════════
+    // 4. STEPS + FACTS — scroll reveal bidirecional
+    // ══════════════════════════════════════════════
+    (function () {
+      const sections = document.querySelectorAll('.steps-section, .facts-section');
+      const secObs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) e.target.classList.add('in-view');
+          else e.target.classList.remove('in-view');
+        });
+      }, { threshold: 0.2 });
+      sections.forEach(el => secObs.observe(el));
+    })();
+
+    // ══════════════════════════════════════════════
+    // 5. SPOTLIGHT — replay + count-up + price ticker
+    // ══════════════════════════════════════════════
+    const spotItems = document.querySelectorAll('.spotlight-item');
+    const tickerMap = new Map();
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('is-visible');
+          e.target.querySelectorAll('[data-count]').forEach(countUp);
+          if (e.target.querySelector('.invest-rows') && !tickerMap.has(e.target)) {
+            tickerMap.set(e.target, startTicker(e.target));
+          }
+        } else {
+          e.target.classList.remove('is-visible');
+          e.target.querySelectorAll('[data-count]').forEach(el => {
+            el.textContent = (el.dataset.prefix || '') + '0';
+          });
+          if (tickerMap.has(e.target)) {
+            clearInterval(tickerMap.get(e.target));
+            tickerMap.delete(e.target);
+          }
+        }
+      });
+    }, { threshold: 0.2, rootMargin: '0px 0px -80px 0px' });
+
+    spotItems.forEach(el => obs.observe(el));
+
+    function countUp(el) {
+      const target   = parseFloat(el.dataset.count);
+      const prefix   = el.dataset.prefix || '';
+      const decimals = parseInt(el.dataset.decimals || '0');
+      const t0 = performance.now();
+      (function tick(now) {
+        const p    = Math.min((now - t0) / 1200, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = prefix + (target * ease).toLocaleString('pt-BR', {
+          minimumFractionDigits: decimals, maximumFractionDigits: decimals
+        });
+        if (p < 1) requestAnimationFrame(tick);
+      })(t0);
+    }
+
+    function startTicker(item) {
+      const rows = [...item.querySelectorAll('.invest-row')].map(row => ({
+        priceEl: row.querySelector('.invest-price'),
+        deltaEl: row.querySelector('.invest-up, .invest-down'),
+        val:     parseFloat(row.querySelector('.invest-price').dataset.base),
+        prev:    parseFloat(row.querySelector('.invest-price').dataset.base),
+      }));
+
+      return setInterval(() => {
+        rows.forEach(r => {
+          const change = (Math.random() - 0.45) * r.val * 0.004;
+          r.prev = r.val;
+          r.val += change;
+          r.priceEl.textContent = 'R ' + r.val.toLocaleString('pt-BR', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+          });
+          const pct  = Math.abs(change / r.prev * 100).toFixed(1);
+          const isUp = change >= 0;
+          r.deltaEl.className   = isUp ? 'invest-up' : 'invest-down';
+          r.deltaEl.textContent = (isUp ? '▲ +' : '▼ −') + pct + '%';
+        });
+      }, 2500);
+    }
+  </script>
 
 </body>
 </html>
