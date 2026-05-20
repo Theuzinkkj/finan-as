@@ -892,6 +892,57 @@ function renderAnalysisStats(txs) {
 // =============================================
 //  RENDER — BENEFITS
 // =============================================
+function openBenefitDetail(key) {
+  const bt        = BENEFIT_TYPES[key];
+  const allocated = benefitAllocations[key] || 0;
+  if (!bt || !allocated) return;
+
+  const txs      = txOfMonth();
+  const catTxs   = txs.filter(t => t.type === 'beneficio' && t.benefitType === key)
+                      .sort((a, b) => b.date.localeCompare(a.date));
+  const used     = catTxs.reduce((s, t) => s + t.amount, 0);
+  const pct      = allocated > 0 ? Math.min((used / allocated) * 100, 100) : 0;
+  const over     = used > allocated;
+  const barColor = over ? 'var(--red)' : bt.color;
+  const remaining = allocated - used;
+
+  document.getElementById('bd-icon').textContent  = bt.icon;
+  document.getElementById('bd-name').textContent  = bt.label;
+  document.getElementById('bd-spent').textContent = fmt(used);
+  document.getElementById('bd-limit').textContent = `${fmt(allocated)}/mês`;
+  document.getElementById('bd-pct').textContent   = `${pct.toFixed(0)}%`;
+
+  const fill = document.getElementById('bd-progress-fill');
+  fill.style.width      = `${pct.toFixed(1)}%`;
+  fill.style.background = barColor;
+
+  const msgEl = document.getElementById('bd-remaining-msg');
+  if (over) {
+    msgEl.textContent = `⚠ ${fmt(used - allocated)} acima do saldo`;
+    msgEl.style.color = 'var(--red)';
+  } else {
+    msgEl.textContent = `Saldo restante: ${fmt(remaining)}`;
+    msgEl.style.color = 'var(--text-2)';
+  }
+
+  const listEl = document.getElementById('bd-txs-list');
+  if (catTxs.length === 0) {
+    listEl.innerHTML = '<p class="bd-empty">Nenhum uso registrado este mês.</p>';
+  } else {
+    listEl.innerHTML = catTxs.map(t => `
+      <div class="bd-tx-row">
+        <span class="bd-tx-date">${fmtDate(t.date)}</span>
+        <span class="bd-tx-desc">${t.description || bt.label}</span>
+        <span class="bd-tx-amount">-${fmt(t.amount)}</span>
+      </div>`).join('');
+  }
+
+  const viewAllBtn = document.getElementById('bd-view-all-btn');
+  viewAllBtn.onclick = () => { closeModal('modal-budget-detail'); goToTransactions('beneficio', ''); };
+
+  openModal('modal-budget-detail');
+}
+
 function renderBenefits(txs) {
   const grid     = document.getElementById('benefits-grid');
   const emptyEl  = document.getElementById('benefits-empty');
@@ -913,7 +964,7 @@ function renderBenefits(txs) {
     const remClass   = overBudget ? 'over-budget' : '';
     const remLabel   = overBudget ? 'Estourado' : fmt(remaining);
     return `
-      <div class="benefit-card" onclick="goToTransactions('beneficio')" title="Ver gastos com ${bt.label}">
+      <div class="benefit-card" onclick="openBenefitDetail('${key}')" title="Ver detalhes de ${bt.label}">
         <div class="benefit-card-header">
           <span class="benefit-icon">${getBenefitSVG(key)}</span>
           <span class="benefit-name">${bt.label}</span>
