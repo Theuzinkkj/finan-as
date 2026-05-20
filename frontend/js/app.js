@@ -291,7 +291,7 @@ function renderBudgets(txs) {
           <span class="budget-cat-icon">${cat.icon}</span>
           <span class="budget-cat-name">${cat.label}</span>
           ${overBudget ? '<span class="budget-alert-icon">⚠</span>' : ''}
-          <button class="budget-remove-btn" onclick="event.stopPropagation();removeBudget('${key}')" title="Remover meta">✕</button>
+          <button class="card-dots-btn" onclick="event.stopPropagation();openBudgetMenu(this,'${key}')" title="Opções">⋯</button>
         </div>
         <div class="budget-amounts">
           <span class="budget-spent">${fmt(spent)}</span>
@@ -917,6 +917,7 @@ function renderBenefits(txs) {
         <div class="benefit-card-header">
           <span class="benefit-icon">${getBenefitSVG(key)}</span>
           <span class="benefit-name">${bt.label}</span>
+          <button class="card-dots-btn" onclick="event.stopPropagation();openBenefitMenu(this,'${key}')" title="Opções">⋯</button>
         </div>
         <span class="benefit-allocated">${fmt(allocated)}<span class="benefit-period"> / mês</span></span>
         <div class="benefit-progress-track">
@@ -937,6 +938,60 @@ function renderBenefits(txs) {
 
   grid.innerHTML = cards ? cards + quickAdd : '';
   if (emptyEl) emptyEl.classList.toggle('hidden', !!cards);
+}
+
+function editBenefit(key) {
+  document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
+  document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';
+  openModal('modal-benefits-config');
+  const inputId = key === 'vr' ? 'input-vr-amount' : 'input-vt-amount';
+  setTimeout(() => { const el = document.getElementById(inputId); if (el) { el.focus(); el.select(); } }, 120);
+}
+
+function removeBenefit(key) {
+  benefitAllocations[key] = 0;
+  localStorage.setItem(_benefitKey(), JSON.stringify(benefitAllocations));
+  renderBenefits(txOfMonth());
+  toast(`${BENEFIT_TYPES[key]?.label || 'Benefício'} removido`);
+}
+
+function openCardMenu(btn, items) {
+  closeCardMenu();
+  const menu = document.createElement('div');
+  menu.className = 'card-menu-dropdown';
+  menu.id = 'active-card-menu';
+  items.forEach(({ label, action, danger }) => {
+    const item = document.createElement('button');
+    item.className = 'card-menu-item' + (danger ? ' danger' : '');
+    item.textContent = label;
+    item.onclick = () => { closeCardMenu(); action(); };
+    menu.appendChild(item);
+  });
+  document.body.appendChild(menu);
+  const rect = btn.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.top  = (rect.bottom + 4) + 'px';
+  menu.style.left = Math.max(4, rect.right - 160) + 'px';
+  setTimeout(() => document.addEventListener('click', closeCardMenu, { once: true }), 0);
+}
+
+function closeCardMenu() {
+  const m = document.getElementById('active-card-menu');
+  if (m) m.remove();
+}
+
+function openBenefitMenu(btn, key) {
+  openCardMenu(btn, [
+    { label: 'Alterar valor', action: () => editBenefit(key) },
+    { label: 'Remover', action: () => removeBenefit(key), danger: true }
+  ]);
+}
+
+function openBudgetMenu(btn, key) {
+  openCardMenu(btn, [
+    { label: 'Alterar limite', action: () => openBudgetConfig() },
+    { label: 'Remover meta', action: () => removeBudget(key), danger: true }
+  ]);
 }
 
 function openBenefitQuickAdd() {
@@ -1992,15 +2047,9 @@ function bindEvents() {
 
   // Toggle seção de orçamentos
   document.getElementById('btn-budget-toggle').addEventListener('click', toggleBudgetSection);
-  document.getElementById('btn-budget-config').addEventListener('click', openBudgetConfig);
   document.getElementById('btn-budget-setup').addEventListener('click', openBudgetConfig);
 
   // Configurar benefícios
-  document.getElementById('btn-benefits-config').addEventListener('click', () => {
-    document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
-    document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';
-    openModal('modal-benefits-config');
-  });
   document.getElementById('btn-benefits-setup').addEventListener('click', () => {
     document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
     document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';

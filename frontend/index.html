@@ -280,9 +280,6 @@
             Você recebe VR ou VT?
             <button class="btn-link" id="btn-benefits-setup" style="margin-left:6px">Configure aqui →</button>
           </div>
-          <div class="section-config-footer">
-            <button class="btn-link section-config-link" id="btn-benefits-config">⚙ Configurar benefícios →</button>
-          </div>
         </div>
       </div>
 
@@ -300,9 +297,6 @@
           <div class="benefits-empty hidden" id="budget-empty">
             Defina limites de gasto por categoria
             <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
-          </div>
-          <div class="section-config-footer">
-            <button class="btn-link section-config-link" id="btn-budget-config">⚙ Configurar metas →</button>
           </div>
         </div>
       </div>
@@ -654,72 +648,6 @@
           </div>
         </div>
         <div class="rates-grid" id="rates-grid"></div>
-      </div>
-
-      <!-- Comparativo de bancos -->
-      <div class="card">
-        <div class="card-header">
-          <h3>Comparativo de Bancos — % do CDI</h3>
-        </div>
-        <canvas id="banks-chart"></canvas>
-        <p class="banks-note">* Valores aproximados para conta remunerada / CDB automático. Consulte o banco para condições exatas.</p>
-      </div>
-
-      <!-- Simulador -->
-      <div class="card">
-        <p class="inv-simulator-title">Simulador de Rendimento</p>
-
-        <div class="sim-inputs">
-          <div class="form-group">
-            <label for="sim-amount">Valor inicial (R$)</label>
-            <input type="number" id="sim-amount" min="1" step="100" value="1000" placeholder="1000">
-          </div>
-          <div class="form-group">
-            <label for="sim-months">Prazo (meses)</label>
-            <input type="number" id="sim-months" min="1" max="600" value="12" placeholder="12">
-          </div>
-          <div class="form-group">
-            <label for="sim-cdi-annual">CDI anual (%)</label>
-            <input type="number" id="sim-cdi-annual" min="0.1" max="100" step="0.01" placeholder="—">
-          </div>
-          <div class="form-group">
-            <label>Tipo de investimento</label>
-            <div class="sim-type-toggle">
-              <button class="sim-type-btn active" data-type="cdb">CDB (com IR)</button>
-              <button class="sim-type-btn" data-type="lci">LCI / LCA (isento)</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="sim-chart-wrap">
-          <canvas id="sim-chart"></canvas>
-        </div>
-
-        <div id="sim-results"></div>
-      </div>
-
-      <!-- Comparativo de investimentos -->
-      <div class="card">
-        <p class="inv-simulator-title">Comparativo de Investimentos</p>
-        <div class="sim-inputs">
-          <div class="form-group">
-            <label for="cmp-amount">Valor inicial (R$)</label>
-            <input type="number" id="cmp-amount" min="1" step="1000" value="10000" placeholder="10000">
-          </div>
-          <div class="form-group">
-            <label for="cmp-months">Prazo (meses)</label>
-            <input type="number" id="cmp-months" min="1" max="600" value="24" placeholder="24">
-          </div>
-          <div class="form-group">
-            <label for="cmp-cdi">CDI anual (%)</label>
-            <input type="number" id="cmp-cdi" min="0.1" max="100" step="0.01" placeholder="—">
-          </div>
-          <div class="form-group">
-            <label for="cmp-ipca">IPCA 12m (%)</label>
-            <input type="number" id="cmp-ipca" min="0" max="100" step="0.01" placeholder="—">
-          </div>
-        </div>
-        <div id="cmp-results"></div>
       </div>
 
       <!-- Rodapé -->
