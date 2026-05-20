@@ -204,6 +204,58 @@ function removeBudget(key) {
   toast('Meta removida!');
 }
 
+function openBudgetDetail(key) {
+  const cat   = CATEGORIES[key];
+  const limit = budgets[key] || 0;
+  if (!cat || !limit) return;
+
+  const txs       = txOfMonth();
+  const catTxs    = txs.filter(t => t.type === 'despesa' && t.category === key)
+                       .sort((a, b) => b.date.localeCompare(a.date));
+  const spent     = catTxs.reduce((s, t) => s + t.amount, 0);
+  const pct       = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+  const overBudget = spent > limit;
+  const warning   = !overBudget && spent / limit >= 0.8;
+  const barColor  = overBudget ? 'var(--red)' : warning ? 'var(--yellow)' : 'var(--purple)';
+  const remaining = limit - spent;
+
+  document.getElementById('bd-icon').textContent  = cat.icon;
+  document.getElementById('bd-name').textContent  = cat.label;
+  document.getElementById('bd-spent').textContent = fmt(spent);
+  document.getElementById('bd-limit').textContent = fmt(limit);
+  document.getElementById('bd-pct').textContent   = `${pct.toFixed(0)}%`;
+
+  const fill = document.getElementById('bd-progress-fill');
+  fill.style.width      = `${pct.toFixed(1)}%`;
+  fill.style.background = barColor;
+
+  const msgEl = document.getElementById('bd-remaining-msg');
+  if (overBudget) {
+    msgEl.textContent  = `⚠ ${fmt(spent - limit)} acima do limite`;
+    msgEl.style.color  = 'var(--red)';
+  } else {
+    msgEl.textContent = `Faltam ${fmt(remaining)} para atingir o limite`;
+    msgEl.style.color = warning ? 'var(--yellow)' : 'var(--text-2)';
+  }
+
+  const listEl = document.getElementById('bd-txs-list');
+  if (catTxs.length === 0) {
+    listEl.innerHTML = '<p class="bd-empty">Nenhum gasto nesta categoria este mês.</p>';
+  } else {
+    listEl.innerHTML = catTxs.map(t => `
+      <div class="bd-tx-row">
+        <span class="bd-tx-date">${fmtDate(t.date)}</span>
+        <span class="bd-tx-desc">${t.description || cat.label}</span>
+        <span class="bd-tx-amount">-${fmt(t.amount)}</span>
+      </div>`).join('');
+  }
+
+  const viewAllBtn = document.getElementById('bd-view-all-btn');
+  viewAllBtn.onclick = () => { closeModal('modal-budget-detail'); goToTransactions('despesa', key); };
+
+  openModal('modal-budget-detail');
+}
+
 function renderBudgets(txs) {
   const grid    = document.getElementById('budget-grid');
   const emptyEl = document.getElementById('budget-empty');
@@ -234,7 +286,7 @@ function renderBudgets(txs) {
     const remClass   = overBudget ? 'over-budget' : '';
     const remLabel   = overBudget ? `+${fmt(spent - limit)} acima` : fmt(remaining);
     return `
-      <div class="budget-card" onclick="goToTransactions('despesa','${key}')" title="Ver gastos com ${cat.label}">
+      <div class="budget-card" onclick="openBudgetDetail('${key}')" title="Ver detalhes de ${cat.label}">
         <div class="budget-card-header">
           <span class="budget-cat-icon">${cat.icon}</span>
           <span class="budget-cat-name">${cat.label}</span>

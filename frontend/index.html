@@ -273,13 +273,15 @@
             <span class="section-label">Benefícios</span>
             <span class="benefits-summary" id="benefits-summary"></span>
           </button>
-          <button class="btn-link" id="btn-benefits-config" title="Configurar valores mensais">⚙ Configurar</button>
         </div>
         <div class="benefits-body" id="benefits-body">
           <div class="benefits-grid" id="benefits-grid"></div>
           <div class="benefits-empty hidden" id="benefits-empty">
             Você recebe VR ou VT?
             <button class="btn-link" id="btn-benefits-setup" style="margin-left:6px">Configure aqui →</button>
+          </div>
+          <div class="section-config-footer">
+            <button class="btn-link section-config-link" id="btn-benefits-config">⚙ Configurar benefícios →</button>
           </div>
         </div>
       </div>
@@ -292,13 +294,15 @@
             <span class="section-label">Metas</span>
             <span class="budget-summary" id="budget-summary"></span>
           </button>
-          <button class="btn-link" id="btn-budget-config">⚙ Configurar</button>
         </div>
         <div class="benefits-body" id="budget-body">
           <div class="budget-grid" id="budget-grid"></div>
           <div class="benefits-empty hidden" id="budget-empty">
             Defina limites de gasto por categoria
             <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
+          </div>
+          <div class="section-config-footer">
+            <button class="btn-link section-config-link" id="btn-budget-config">⚙ Configurar metas →</button>
           </div>
         </div>
       </div>
@@ -1351,6 +1355,38 @@
       <div class="form-actions">
         <button class="btn-secondary" data-close="modal-budget-config">Cancelar</button>
         <button class="btn-primary" onclick="saveBudgetConfig()">Salvar metas</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Budget Detail -->
+  <div class="modal-overlay hidden" id="modal-budget-detail">
+    <div class="modal modal-budget-detail" role="dialog" aria-modal="true" aria-labelledby="budget-detail-title">
+      <div class="modal-header">
+        <h2 id="budget-detail-title"><span id="bd-icon"></span> <span id="bd-name"></span></h2>
+        <button class="modal-close" data-close="modal-budget-detail">✕</button>
+      </div>
+      <div class="bd-stats">
+        <div class="bd-amounts">
+          <span class="bd-spent" id="bd-spent"></span>
+          <span class="bd-sep">/</span>
+          <span class="bd-limit" id="bd-limit"></span>
+        </div>
+        <div class="bd-progress-track">
+          <div class="bd-progress-fill" id="bd-progress-fill"></div>
+        </div>
+        <div class="bd-remaining-row">
+          <span id="bd-remaining-msg"></span>
+          <span class="bd-pct" id="bd-pct"></span>
+        </div>
+      </div>
+      <div class="bd-txs-section">
+        <p class="bd-txs-title">Gastos este mês</p>
+        <div id="bd-txs-list" class="bd-txs-list"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-budget-detail">Fechar</button>
+        <button class="btn-primary" id="bd-view-all-btn">Ver todas as transações</button>
       </div>
     </div>
   </div>

@@ -463,18 +463,17 @@ function drawEvolutionChart() {
     const y      = pT + cH - totalH;
     const isNow  = sl.year === now.getFullYear() && sl.month === now.getMonth();
 
-    // Applied (dark green, bottom)
+    // Applied (dark green, main body + rounded bottom)
     ctx.fillStyle = isNow ? '#15803d' : '#166534';
-    ctx.beginPath(); rrect(ctx, x, y + gainH, bW, appH, [0, 0, 3, 3]); ctx.fill();
+    ctx.beginPath(); rrect(ctx, x, y + gainH, bW, appH, gainH > 1 ? 0 : 3); ctx.fill();
 
-    // Gain (light green, top)
+    // Gain (light green, top cap with rounded top)
     if (gainH > 1) {
       ctx.fillStyle = '#86efac';
-      ctx.beginPath(); rrect(ctx, x, y, bW, gainH + 2, [3, 3, 0, 0]); ctx.fill();
-    } else {
-      // Rounded top on applied bar when no gain
+      ctx.beginPath(); rrect(ctx, x, y, bW, gainH + 2, 3); ctx.fill();
+      // Re-draw applied bar without rounded top to mask the overlap
       ctx.fillStyle = isNow ? '#15803d' : '#166534';
-      ctx.beginPath(); rrect(ctx, x, y, bW, Math.min(totalH, 6), [3, 3, 0, 0]); ctx.fill();
+      ctx.fillRect(x, y + gainH + 2, bW, appH - 2);
     }
 
     // Month label
@@ -498,10 +497,10 @@ function drawEvolutionChart() {
 }
 
 // ── Allocation Donut ───────────────────────────
-let _donutSlices = [];
-let _donutHov    = -1;
-let _donutCtx    = null;
-let _donutGeo    = {};
+let _invDonutSlices = [];
+let _invDonutHov    = -1;
+let _invDonutCtx    = null;
+let _invDonutGeo    = {};
 
 function drawAllocationDonut() {
   const canvas = document.getElementById('inv-donut-chart');
@@ -524,26 +523,26 @@ function drawAllocationDonut() {
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, size, size);
-  _donutCtx = ctx;
+  _invDonutCtx = ctx;
 
   const cx = size / 2, cy = size / 2;
   const OR = size * 0.43, IR = size * 0.27;
-  _donutGeo = { cx, cy, OR, IR, size };
+  _invDonutGeo = { cx, cy, OR, IR, size };
 
   let angle = -Math.PI / 2;
-  _donutSlices = sorted.map(([type, val]) => {
+  _invDonutSlices = sorted.map(([type, val]) => {
     const sweep = (val / total) * Math.PI * 2;
     const sa    = angle;
     angle      += sweep;
     return { type, val, pct: (val / total * 100).toFixed(1), sa, ea: angle, color: TYPE_COLORS[type] || '#94a3b8' };
   });
 
-  _donutHov = -1;
+  _invDonutHov = -1;
   _redrawDonut(-1);
 
   const legEl = document.getElementById('inv-donut-legend');
   if (legEl) {
-    legEl.innerHTML = _donutSlices.map((sl, i) => `
+    legEl.innerHTML = _invDonutSlices.map((sl, i) => `
       <div class="inv-donut-leg-item" data-idx="${i}">
         <div class="inv-donut-leg-dot" style="background:${sl.color}"></div>
         <span class="inv-donut-leg-name">${escHtml(TYPE_SHORT[sl.type] || sl.type)}</span>
@@ -552,8 +551,8 @@ function drawAllocationDonut() {
 
     legEl.querySelectorAll('.inv-donut-leg-item').forEach(item => {
       const idx = +item.dataset.idx;
-      item.addEventListener('mouseenter', () => { _donutHov = idx; _redrawDonut(idx); });
-      item.addEventListener('mouseleave', () => { _donutHov = -1; _redrawDonut(-1); });
+      item.addEventListener('mouseenter', () => { _invDonutHov = idx; _redrawDonut(idx); });
+      item.addEventListener('mouseleave', () => { _invDonutHov = -1; _redrawDonut(-1); });
     });
   }
 
@@ -563,27 +562,27 @@ function drawAllocationDonut() {
     const my = (e.clientY - r.top)  * (size / r.height);
     const dist = Math.hypot(mx - cx, my - cy);
     if (dist < IR || dist > OR + 8) {
-      if (_donutHov !== -1) { _donutHov = -1; _redrawDonut(-1); }
+      if (_invDonutHov !== -1) { _invDonutHov = -1; _redrawDonut(-1); }
       return;
     }
     let rel = (Math.atan2(my - cy, mx - cx) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-    const idx = _donutSlices.findIndex(sl => {
+    const idx = _invDonutSlices.findIndex(sl => {
       let sa = (sl.sa + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
       let ea = (sl.ea + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
       return sa <= ea ? rel >= sa && rel <= ea : rel >= sa || rel <= ea;
     });
-    if (idx !== _donutHov) { _donutHov = idx; _redrawDonut(idx); }
+    if (idx !== _invDonutHov) { _invDonutHov = idx; _redrawDonut(idx); }
   };
-  canvas.onmouseleave = () => { _donutHov = -1; _redrawDonut(-1); };
+  canvas.onmouseleave = () => { _invDonutHov = -1; _redrawDonut(-1); };
 }
 
 function _redrawDonut(hovIdx) {
-  if (!_donutCtx || !_donutSlices.length) return;
-  const ctx = _donutCtx;
-  const { cx, cy, OR, IR, size } = _donutGeo;
+  if (!_invDonutCtx || !_invDonutSlices.length) return;
+  const ctx = _invDonutCtx;
+  const { cx, cy, OR, IR, size } = _invDonutGeo;
   ctx.clearRect(0, 0, size, size);
 
-  _donutSlices.forEach((sl, i) => {
+  _invDonutSlices.forEach((sl, i) => {
     const expand = i === hovIdx ? 6 : 0;
     const mid    = sl.sa + (sl.ea - sl.sa) / 2;
     const ox = expand * Math.cos(mid), oy = expand * Math.sin(mid);
@@ -605,12 +604,12 @@ function _redrawDonut(hovIdx) {
 
   const fmt = v => v >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   ctx.fillStyle = chartFg(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (hovIdx >= 0 && _donutSlices[hovIdx]) {
-    const sl = _donutSlices[hovIdx];
+  if (hovIdx >= 0 && _invDonutSlices[hovIdx]) {
+    const sl = _invDonutSlices[hovIdx];
     ctx.font = 'bold 10px Inter'; ctx.fillText(fmt(sl.val), cx, cy - 6);
     ctx.font = '9px Inter'; ctx.fillStyle = chartFg(0.5); ctx.fillText(sl.pct + '%', cx, cy + 7);
   } else {
-    const tot = _donutSlices.reduce((s, sl) => s + sl.val, 0);
+    const tot = _invDonutSlices.reduce((s, sl) => s + sl.val, 0);
     ctx.font = 'bold 10px Inter'; ctx.fillText(fmt(tot), cx, cy);
   }
 }

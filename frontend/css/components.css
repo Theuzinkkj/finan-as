@@ -1522,6 +1522,17 @@
   border-radius: var(--r);
 }
 
+.section-config-footer {
+  text-align:  center;
+  padding:     10px 0 2px;
+  font-size:   .8rem;
+}
+.section-config-link {
+  font-size:  .8rem;
+  opacity:    .55;
+}
+.section-config-link:hover { opacity: 1; }
+
 /* Benefit type selector (modal) */
 .benefit-type-grid {
   display: grid;

@@ -159,6 +159,84 @@
 }
 
 /* =============================================
+   BUDGET DETAIL MODAL
+   ============================================= */
+.modal-budget-detail { max-width: 420px; width: 100%; }
+
+.bd-stats {
+  background:    rgba(255,255,255,.04);
+  border:        1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding:       18px 20px;
+  margin-bottom: 20px;
+}
+
+.bd-amounts {
+  display:       flex;
+  align-items:   baseline;
+  gap:           6px;
+  margin-bottom: 14px;
+}
+.bd-spent   { font-size: 1.8rem; font-weight: 700; }
+.bd-sep     { font-size: 1rem; color: var(--text-3); }
+.bd-limit   { font-size: 1rem; color: var(--text-2); }
+
+.bd-progress-track {
+  width:         100%;
+  height:        8px;
+  background:    rgba(255,255,255,.08);
+  border-radius: 8px;
+  overflow:      hidden;
+  margin-bottom: 12px;
+}
+.bd-progress-fill {
+  height:        100%;
+  border-radius: 8px;
+  transition:    width .4s ease;
+}
+
+.bd-remaining-row {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  font-size:       .82rem;
+}
+.bd-pct { color: var(--text-3); }
+
+.bd-txs-section { margin-bottom: 4px; }
+.bd-txs-title {
+  font-size:     .72rem;
+  font-weight:   600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color:         var(--text-3);
+  margin-bottom: 10px;
+}
+
+.bd-txs-list {
+  display:        flex;
+  flex-direction: column;
+  gap:            2px;
+  max-height:     220px;
+  overflow-y:     auto;
+}
+.bd-tx-row {
+  display:         grid;
+  grid-template-columns: 72px 1fr auto;
+  gap:             8px;
+  align-items:     center;
+  padding:         8px 10px;
+  border-radius:   var(--r-sm);
+  font-size:       .84rem;
+}
+.bd-tx-row:hover { background: rgba(255,255,255,.04); }
+.bd-tx-date   { color: var(--text-3); font-size: .75rem; flex-shrink: 0; }
+.bd-tx-desc   { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bd-tx-amount { color: var(--red); font-weight: 600; flex-shrink: 0; }
+
+.bd-empty { font-size: .84rem; color: var(--text-3); text-align: center; padding: 20px 0; }
+
+/* =============================================
    ANNUAL HISTORY CHART
    ============================================= */
 #annual-history-card {
