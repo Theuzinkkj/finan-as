@@ -138,10 +138,18 @@ function loadPortfolioGoal() {
 }
 
 function renderPortfolioGoal() {
-  const el = document.getElementById('portfolio-goal-section');
+  const el      = document.getElementById('portfolio-goal-section');
+  const emptyEl = document.getElementById('inv-metas-empty');
   if (!el) return;
+
   const buys = _portfolio.filter(e => (e.transaction_type || 'compra') === 'compra');
-  if (!_portfolioGoal || !buys.length) { el.style.display = 'none'; return; }
+  if (!_portfolioGoal) {
+    el.style.display = 'none';
+    emptyEl?.classList.remove('hidden');
+    return;
+  }
+  emptyEl?.classList.add('hidden');
+
   const { name, amount, date } = _portfolioGoal;
   const total      = buys.reduce((s, e) => s + +e.amount, 0);
   const pct        = Math.min((total / amount) * 100, 100);
@@ -163,9 +171,15 @@ function renderPortfolioGoal() {
             <div class="portfolio-goal-sub">Meta: ${fmt(amount)} · ${dateLabel}</div>
           </div>
         </div>
-        <div class="portfolio-goal-pct-wrap">
-          <span class="portfolio-goal-pct">${pct.toFixed(1).replace('.', ',')}%</span>
-          <span class="portfolio-goal-pct-label">atingido</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="portfolio-goal-pct-wrap">
+            <span class="portfolio-goal-pct">${pct.toFixed(1).replace('.', ',')}%</span>
+            <span class="portfolio-goal-pct-label">atingido</span>
+          </div>
+          <button class="btn-pf-action" onclick="openGoalModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
         </div>
       </div>
       <div class="portfolio-goal-bar-bg">
@@ -885,8 +899,9 @@ async function savePortfolioEntry() {
     }
   } catch (err) {
     const msg  = err?.message || 'Erro ao salvar.';
-    const hint = msg.toLowerCase().includes('relation') || msg.toLowerCase().includes('table')
-      ? ' Execute o SQL de migração no Supabase.'
+    const m    = msg.toLowerCase();
+    const hint = (m.includes('relation') || m.includes('table') || m.includes('column') || m.includes('schema'))
+      ? ' Execute portfolio-migration.sql no Supabase SQL Editor.'
       : '';
     toast?.(msg + hint, 'err');
   } finally {
@@ -903,6 +918,17 @@ let _invReady    = false;
 // =============================================
 //  INIT
 // =============================================
+function _switchInvTab(tab) {
+  document.querySelectorAll('.inv-subnav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.inv-subnav-btn[data-inv-tab="${tab}"]`)?.classList.add('active');
+  document.querySelectorAll('.inv-tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`inv-tab-${tab}`)?.classList.add('active');
+  if (tab === 'metas') renderPortfolioGoal();
+  if (tab === 'carteira' && _portfolio.length) {
+    requestAnimationFrame(() => { drawEvolutionChart(); drawAllocationDonut(); });
+  }
+}
+
 async function initInvestments() {
   if (_invReady) {
     renderPortfolio();
@@ -911,8 +937,13 @@ async function initInvestments() {
   _invReady = true;
   loadPortfolioGoal();
 
-  // Goal modal
-  document.getElementById('btn-portfolio-goal')?.addEventListener('click', openGoalModal);
+  // Sub-tab switching
+  document.querySelectorAll('.inv-subnav-btn').forEach(btn => {
+    btn.addEventListener('click', () => _switchInvTab(btn.dataset.invTab));
+  });
+
+  // Goal modal (from Metas tab)
+  document.getElementById('btn-metas-goal-add')?.addEventListener('click', openGoalModal);
   document.getElementById('btn-goal-cancel')?.addEventListener('click', () => closeModal('modal-goal'));
   document.getElementById('btn-goal-save')?.addEventListener('click', saveGoalModal);
   document.getElementById('btn-goal-clear')?.addEventListener('click', clearGoalModal);

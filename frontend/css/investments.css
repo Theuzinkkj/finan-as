@@ -1224,6 +1224,105 @@
    PORTFOLIO — Investidor-style layout
    ============================================= */
 
+/* ── Sub-nav ────────────────────────────────── */
+.inv-subnav {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.inv-subnav::-webkit-scrollbar { display: none; }
+
+.inv-subnav-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: .8rem;
+  font-weight: 500;
+  color: var(--text-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+}
+
+.inv-subnav-btn:hover { background: var(--bg); color: var(--text-2); }
+
+.inv-subnav-btn.active {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.inv-subnav-btn.active svg { opacity: 1; }
+.inv-subnav-btn svg { opacity: .55; transition: opacity .15s; }
+
+/* ── Tab panes ──────────────────────────────── */
+.inv-tab-pane { display: none; }
+.inv-tab-pane.active { display: block; }
+
+/* ── Coming soon ────────────────────────────── */
+.inv-coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 24px;
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.inv-coming-icon { font-size: 3rem; line-height: 1; }
+
+.inv-coming-soon h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.inv-coming-soon p {
+  font-size: .88rem;
+  color: var(--text-3);
+  margin: 0;
+  max-width: 340px;
+}
+
+.inv-coming-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(99,102,241,.12);
+  border: 1px solid rgba(99,102,241,.2);
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #818cf8;
+  letter-spacing: .04em;
+}
+
+/* ── Modal label fix ────────────────────────── */
+.lc-optional {
+  font-size: .7rem;
+  font-weight: 400;
+  color: var(--text-3);
+  margin-left: 3px;
+}
+
 /* ── Top bar ─────────────────────────────── */
 .inv-topbar {
   display: flex;
