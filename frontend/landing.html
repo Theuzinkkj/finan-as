@@ -46,27 +46,42 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Orbs flutuantes ─────────────────── */
-    .orbs-bg {
-      position:       fixed;
-      inset:          0;
-      overflow:       hidden;
-      pointer-events: none;
-      z-index:        0;
+    /* ── Orbs flutuantes (igual ao dashboard) ─ */
+    @property --o1x { syntax: '<percentage>'; inherits: false; initial-value: 12%; }
+    @property --o1y { syntax: '<percentage>'; inherits: false; initial-value: 18%; }
+    @property --o2x { syntax: '<percentage>'; inherits: false; initial-value: 82%; }
+    @property --o2y { syntax: '<percentage>'; inherits: false; initial-value: 72%; }
+    @property --o3x { syntax: '<percentage>'; inherits: false; initial-value: 55%; }
+    @property --o3y { syntax: '<percentage>'; inherits: false; initial-value: 35%; }
+    @property --o4x { syntax: '<percentage>'; inherits: false; initial-value: 28%; }
+    @property --o4y { syntax: '<percentage>'; inherits: false; initial-value: 78%; }
+
+    .orbs-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .orb     { position: absolute; inset: 0; }
+
+    .orb-1 {
+      background: radial-gradient(circle 500px at var(--o1x) var(--o1y), rgba(99,102,241,.30) 0%, transparent 70%);
+      animation: orb1 16s ease-in-out infinite alternate;
     }
-    .orb {
-      position:      absolute;
-      border-radius: 50%;
-      width:         var(--s, 220px);
-      height:        var(--s, 220px);
-      background:    var(--c, rgba(99,102,241,.18));
-      filter:        blur(var(--blur, 75px));
-      animation:     orb-drift var(--dur, 20s) ease-in-out infinite alternate;
+    @keyframes orb1 { from { --o1x:12%; --o1y:18%; } to { --o1x:66%; --o1y:60%; } }
+
+    .orb-2 {
+      background: radial-gradient(circle 400px at var(--o2x) var(--o2y), rgba(129,140,248,.22) 0%, transparent 65%);
+      animation: orb2 22s ease-in-out infinite alternate-reverse;
     }
-    @keyframes orb-drift {
-      from { transform: translate(0, 0) scale(1); }
-      to   { transform: translate(var(--tx, 60px), var(--ty, 40px)) scale(var(--ts, 1.08)); }
+    @keyframes orb2 { from { --o2x:82%; --o2y:72%; } to { --o2x:20%; --o2y:20%; } }
+
+    .orb-3 {
+      background: radial-gradient(circle 320px at var(--o3x) var(--o3y), rgba(99,102,241,.18) 0%, transparent 62%);
+      animation: orb3 13s ease-in-out infinite alternate;
     }
+    @keyframes orb3 { from { --o3x:55%; --o3y:35%; } to { --o3x:22%; --o3y:72%; } }
+
+    .orb-4 {
+      background: radial-gradient(circle 280px at var(--o4x) var(--o4y), rgba(139,92,246,.16) 0%, transparent 60%);
+      animation: orb4 19s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes orb4 { from { --o4x:28%; --o4y:78%; } to { --o4x:78%; --o4y:12%; } }
 
     /* ── Utilitários ──────────────────────── */
     .gradient-text {
@@ -398,15 +413,12 @@
 </head>
 <body>
 
-  <!-- Orbs animados no fundo -->
+  <!-- Orbs flutuantes (igual ao dashboard) -->
   <div class="orbs-bg" aria-hidden="true">
-    <div class="orb" style="--s:360px;--c:rgba(99,102,241,.20);--blur:100px;--dur:18s;--tx:130px;--ty:-70px;--ts:1.1;left:2%;top:10%"></div>
-    <div class="orb" style="--s:220px;--c:rgba(16,185,129,.14);--blur:72px;--dur:24s;--tx:-110px;--ty:90px;right:6%;top:4%"></div>
-    <div class="orb" style="--s:150px;--c:rgba(129,140,248,.18);--blur:52px;--dur:14s;--tx:70px;--ty:-110px;--ts:1.12;left:48%;top:55%"></div>
-    <div class="orb" style="--s:280px;--c:rgba(16,185,129,.10);--blur:90px;--dur:27s;--tx:-90px;--ty:50px;right:3%;bottom:18%"></div>
-    <div class="orb" style="--s:170px;--c:rgba(99,102,241,.16);--blur:58px;--dur:16s;--tx:90px;--ty:75px;left:18%;bottom:25%"></div>
-    <div class="orb" style="--s:110px;--c:rgba(99,102,241,.22);--blur:42px;--dur:11s;--tx:-55px;--ty:-85px;--ts:1.15;right:28%;top:38%"></div>
-    <div class="orb" style="--s:200px;--c:rgba(16,185,129,.12);--blur:65px;--dur:21s;--tx:60px;--ty:-50px;left:35%;top:8%"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
   </div>
 
   <!-- ═══ NAV ═══════════════════════════════════════════════════════════════ -->
@@ -558,6 +570,7 @@
       <a href="/privacidade.html">Privacidade</a>
     </div>
   </footer>
+
 
 </body>
 </html>
