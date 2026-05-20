@@ -55,6 +55,21 @@
   flex: 1;
 }
 .budget-alert-icon { font-size: .85rem; }
+.budget-remove-btn {
+  margin-left: auto;
+  background:  none;
+  border:      none;
+  color:       var(--text-3);
+  font-size:   .75rem;
+  cursor:      pointer;
+  line-height: 1;
+  padding:     2px 4px;
+  border-radius: 4px;
+  opacity:     0;
+  transition:  opacity .15s, color .15s;
+}
+.budget-card:hover .budget-remove-btn { opacity: 1; }
+.budget-remove-btn:hover { color: var(--red); }
 
 .budget-amounts { margin-bottom: 8px; }
 .budget-spent { font-size: 1.1rem; font-weight: 700; }

@@ -192,7 +192,14 @@ function saveBudgetConfig() {
   saveProfile({ budgets });
   closeModal('modal-budget-config');
   renderBudgets(txOfMonth());
-  toast('Orçamentos salvos!');
+  toast('Metas salvas!');
+}
+
+function removeBudget(key) {
+  delete budgets[key];
+  saveProfile({ budgets });
+  renderBudgets(txOfMonth());
+  toast('Meta removida!');
 }
 
 function renderBudgets(txs) {
@@ -230,6 +237,7 @@ function renderBudgets(txs) {
           <span class="budget-cat-icon">${cat.icon}</span>
           <span class="budget-cat-name">${cat.label}</span>
           ${overBudget ? '<span class="budget-alert-icon">⚠</span>' : ''}
+          <button class="budget-remove-btn" onclick="event.stopPropagation();removeBudget('${key}')" title="Remover meta">✕</button>
         </div>
         <div class="budget-amounts">
           <span class="budget-spent">${fmt(spent)}</span>

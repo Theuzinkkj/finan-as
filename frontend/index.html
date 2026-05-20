@@ -289,7 +289,7 @@
         <div class="benefits-header">
           <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="false">
             <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            <span class="section-label">Orçamentos</span>
+            <span class="section-label">Metas</span>
             <span class="budget-summary" id="budget-summary"></span>
           </button>
           <button class="btn-link" id="btn-budget-config">⚙ Configurar</button>
@@ -520,11 +520,13 @@
     <!-- ======= INVESTMENTS ======= -->
     <section class="tab-content" id="tab-investments" role="tabpanel" aria-labelledby="nav-tab-investments">
 
-      <!-- Minha Carteira -->
-      <div class="card" id="portfolio-section">
-        <div class="portfolio-header">
-          <h2>Minha Carteira</h2>
-          <div class="portfolio-header-actions">
+      <!-- Carteira de Investimentos -->
+      <div id="portfolio-section">
+
+        <!-- Top action bar -->
+        <div class="inv-topbar">
+          <div></div>
+          <div class="inv-topbar-actions">
             <button class="btn-pf-action" id="btn-portfolio-goal" title="Definir meta financeira">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               Meta
@@ -533,51 +535,83 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               CSV
             </button>
-            <button class="btn-portfolio-add" id="btn-portfolio-add">
+            <button class="btn-add-lancamento" id="btn-portfolio-add">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Novo aporte
+              Adicionar Lançamento
             </button>
           </div>
         </div>
 
-        <!-- Summary cards -->
-        <div class="portfolio-cards" id="portfolio-cards" style="display:none"></div>
+        <!-- Summary cards (always shown) -->
+        <div class="inv-summary-grid" id="inv-summary-grid"></div>
 
-        <!-- Financial goal -->
+        <!-- Financial goal (optional) -->
         <div id="portfolio-goal-section" style="display:none"></div>
 
-        <!-- Charts: bar + pie -->
-        <div class="portfolio-charts-area" id="portfolio-charts-area" style="display:none">
-          <div class="portfolio-charts-grid">
-            <div class="portfolio-chart-box">
-              <div class="portfolio-chart-title">Aportes mensais</div>
-              <canvas id="portfolio-bar-chart"></canvas>
-            </div>
-            <div class="portfolio-chart-box">
-              <div class="portfolio-chart-title">Diversificação</div>
-              <div class="portfolio-pie-wrap">
-                <canvas id="portfolio-pie-chart"></canvas>
+        <!-- Charts row (shown when has data) -->
+        <div class="inv-charts-row hidden" id="inv-charts-row">
+          <!-- Evolution chart (left) -->
+          <div class="inv-chart-card inv-chart-evolution">
+            <div class="inv-chart-card-header">
+              <h3>Evolução do Patrimônio</h3>
+              <div class="inv-chart-filters">
+                <div class="inv-filter-sel-wrap">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <select class="inv-select" id="inv-period-filter">
+                    <option value="12">12 Meses</option>
+                    <option value="24">24 Meses</option>
+                    <option value="all">Todo período</option>
+                  </select>
+                </div>
+                <div class="inv-filter-sel-wrap">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                  <select class="inv-select" id="inv-type-filter">
+                    <option value="all">Todos os tipos</option>
+                  </select>
+                </div>
               </div>
-              <div class="portfolio-pie-legend" id="portfolio-pie-legend"></div>
+            </div>
+            <div class="inv-chart-legend">
+              <span class="inv-legend-item"><span class="inv-legend-dot" style="background:#1a6b3c"></span>Valor aplicado</span>
+              <span class="inv-legend-item"><span class="inv-legend-dot" style="background:#86efac"></span>Ganho de Capital</span>
+            </div>
+            <canvas id="inv-evolution-chart"></canvas>
+          </div>
+
+          <!-- Allocation donut (right) -->
+          <div class="inv-chart-card inv-chart-allocation">
+            <div class="inv-chart-card-header">
+              <h3>Ativos na Carteira</h3>
+              <div class="inv-filter-sel-wrap">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                <select class="inv-select" id="inv-alloc-filter">
+                  <option value="all">Todos os tipos</option>
+                </select>
+              </div>
+            </div>
+            <div class="inv-donut-area">
+              <canvas id="inv-donut-chart"></canvas>
+              <div class="inv-donut-legend" id="inv-donut-legend"></div>
             </div>
           </div>
         </div>
 
-        <!-- Projection -->
-        <div id="portfolio-projection" style="display:none"></div>
-
-        <!-- Entries area -->
-        <div class="portfolio-entries-area" id="portfolio-entries-area" style="display:none">
-          <div class="portfolio-entries-header">
-            <span class="portfolio-entries-title">Histórico de aportes</span>
+        <!-- My Assets table (shown when has data) -->
+        <div class="inv-assets-section hidden" id="inv-assets-section">
+          <div class="inv-assets-hdr">
+            <h3>Meus Ativos <span class="inv-assets-badge" id="inv-assets-count"></span></h3>
             <input type="text" id="pf-filter-text" class="pf-filter-input" placeholder="Filtrar por ativo..." autocomplete="off">
           </div>
-          <div class="portfolio-entries" id="portfolio-entries"></div>
-          <div class="portfolio-entries-footer" id="portfolio-entries-footer"></div>
+          <div id="inv-assets-table"></div>
+          <div id="inv-assets-footer"></div>
         </div>
 
-        <!-- Empty state (shown when no entries) -->
-        <div class="portfolio-body" id="portfolio-body"></div>
+        <!-- Empty state -->
+        <div class="inv-empty-state" id="inv-empty-state">
+          <span class="inv-empty-icon">📂</span>
+          <p>Você ainda não registrou nenhum lançamento.<br>Clique em <strong>Adicionar Lançamento</strong> para começar.</p>
+        </div>
+
       </div>
 
       <!-- Mercado: ticker + ações -->
@@ -1192,39 +1226,86 @@
     </div>
   </div>
 
-  <!-- Modal: Portfolio entry -->
+  <!-- Modal: Adicionar / Editar Lançamento -->
   <div class="modal-overlay hidden" id="modal-portfolio">
-    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-portfolio-title">
+    <div class="modal modal-lancamento" role="dialog" aria-modal="true" aria-labelledby="modal-portfolio-title">
       <div class="modal-header">
-        <h2 id="modal-portfolio-title">Novo aporte</h2>
+        <h2 id="modal-portfolio-title">Adicionar Lançamento</h2>
         <button class="modal-close" id="btn-pf-close">✕</button>
       </div>
-      <div class="form-group">
-        <label for="pf-date">Data</label>
-        <input type="date" id="pf-date" required>
+
+      <!-- Compra / Venda tabs -->
+      <div class="lc-tabs">
+        <button class="lc-tab active" data-type="compra" id="lc-tab-compra">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          Compra
+        </button>
+        <button class="lc-tab" data-type="venda" id="lc-tab-venda">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7"/><polyline points="16 17 22 17 22 11"/></svg>
+          Venda
+        </button>
       </div>
-      <div class="form-group">
-        <label for="pf-asset">Ativo</label>
-        <div class="asset-picker" id="asset-picker">
-          <div class="asset-picker-field">
-            <span class="asset-picker-icon" id="asset-picker-icon">📊</span>
-            <input type="text" id="pf-asset" placeholder="Buscar ou digitar ativo..." autocomplete="off" required>
-            <span class="asset-picker-chevron" id="asset-picker-chevron">▾</span>
-          </div>
-          <div class="asset-picker-drop hidden" id="asset-picker-drop"></div>
+      <input type="hidden" id="pf-transaction-type" value="compra">
+      <input type="hidden" id="pf-edit-id" value="">
+
+      <!-- Form grid 2 cols -->
+      <div class="lc-form-grid">
+        <div class="form-group">
+          <label for="pf-asset-type">Tipo de ativo</label>
+          <select id="pf-asset-type" class="form-select">
+            <option value="Ações" selected>Ações</option>
+            <option value="FIIs">FIIs</option>
+            <option value="Stock">Stock</option>
+            <option value="Reit">Reit</option>
+            <option value="BDRs">BDRs</option>
+            <option value="ETFs">ETFs</option>
+            <option value="ETFs Internacionais">ETFs Internacionais</option>
+            <option value="Tesouro Direto">Tesouro Direto</option>
+            <option value="Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)">Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)</option>
+            <option value="Outros">Outros</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="pf-asset">Ativo</label>
+          <select id="pf-asset" class="form-select">
+            <option value="">Selecionar</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="pf-date">Data da compra</label>
+          <input type="date" id="pf-date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="pf-quantity">Quantidade</label>
+          <input type="number" id="pf-quantity" min="0.001" step="0.001" value="1" placeholder="1">
+        </div>
+
+        <div class="form-group">
+          <label for="pf-price">Preço em R$</label>
+          <input type="number" id="pf-price" min="0" step="0.01" value="0" placeholder="0,00">
+        </div>
+
+        <div class="form-group">
+          <label for="pf-other-costs">Outros custos <span class="optional">(Opcional)</span></label>
+          <input type="number" id="pf-other-costs" min="0" step="0.01" value="0" placeholder="0,00">
         </div>
       </div>
-      <div class="form-group">
-        <label for="pf-amount">Valor (R$)</label>
-        <input type="number" id="pf-amount" step="0.01" min="0.01" placeholder="0,00" required>
+
+      <!-- Total bar -->
+      <div class="lc-total-bar">
+        <span class="lc-total-label">Valor total</span>
+        <strong class="lc-total-value" id="pf-total-display">R$ 0,00</strong>
       </div>
-      <div class="form-group">
-        <label for="pf-notes">Observação <span class="optional">(opcional)</span></label>
-        <input type="text" id="pf-notes" placeholder="Ex: comprei na queda, aporte mensal...">
-      </div>
+
       <div class="form-actions">
         <button class="btn-secondary" id="btn-pf-cancel">Cancelar</button>
-        <button class="btn-primary" id="btn-pf-save">Salvar</button>
+        <button class="btn-primary" id="btn-pf-save">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Adicionar Lançamento
+        </button>
       </div>
     </div>
   </div>
@@ -1256,49 +1337,20 @@
     </div>
   </div>
 
-  <!-- Modal: Editar aporte -->
-  <div class="modal-overlay hidden" id="modal-edit-entry">
-    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-edit-entry-title">
-      <div class="modal-header">
-        <h2 id="modal-edit-entry-title">Editar aporte</h2>
-        <button class="modal-close" data-close="modal-edit-entry">✕</button>
-      </div>
-      <input type="hidden" id="edit-entry-id">
-      <div class="form-group">
-        <label for="edit-pf-date">Data</label>
-        <input type="date" id="edit-pf-date" required>
-      </div>
-      <div class="form-group">
-        <label for="edit-pf-asset">Ativo</label>
-        <input type="text" id="edit-pf-asset" placeholder="Ativo..." autocomplete="off" required>
-      </div>
-      <div class="form-group">
-        <label for="edit-pf-amount">Valor (R$)</label>
-        <input type="number" id="edit-pf-amount" step="0.01" min="0.01" placeholder="0,00" required>
-      </div>
-      <div class="form-group">
-        <label for="edit-pf-notes">Observação <span class="optional">(opcional)</span></label>
-        <input type="text" id="edit-pf-notes" placeholder="Ex: aporte mensal...">
-      </div>
-      <div class="form-actions">
-        <button class="btn-secondary" id="btn-edit-entry-cancel">Cancelar</button>
-        <button class="btn-primary" id="btn-edit-entry-save">Salvar</button>
-      </div>
-    </div>
-  </div>
+  <!-- modal-edit-entry removed: edit reuses modal-portfolio with pf-edit-id filled -->
 
   <!-- Modal: Budget Config -->
   <div class="modal-overlay hidden" id="modal-budget-config">
     <div class="modal modal-budget" role="dialog" aria-modal="true" aria-labelledby="modal-budget-title">
       <div class="modal-header">
-        <h2 id="modal-budget-title">Configurar Orçamentos</h2>
+        <h2 id="modal-budget-title">Configurar Metas</h2>
         <button class="modal-close" data-close="modal-budget-config">✕</button>
       </div>
       <p class="modal-budget-desc">Defina quanto quer gastar por categoria. Deixe em branco para sem limite.</p>
       <div id="budget-config-body" class="budget-config-body"></div>
       <div class="form-actions">
         <button class="btn-secondary" data-close="modal-budget-config">Cancelar</button>
-        <button class="btn-primary" onclick="saveBudgetConfig()">Salvar orçamentos</button>
+        <button class="btn-primary" onclick="saveBudgetConfig()">Salvar metas</button>
       </div>
     </div>
   </div>
