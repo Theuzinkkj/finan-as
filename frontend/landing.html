@@ -245,13 +245,32 @@
       width:       100%;
     }
     .spotlight-text  { flex: 1; }
-    .spotlight-visual { flex: 0 0 500px; max-width: 500px; }
+    .spotlight-visual { flex: 0 0 520px; max-width: 520px; }
     .mockup-screen {
       display: block;
       width: 100%;
       border-radius: 16px;
       border: 1px solid var(--border);
       box-shadow: 0 24px 60px rgba(0,0,0,.45);
+    }
+
+    /* iframe embed */
+    .frame-wrap {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      position: relative;
+    }
+    .frame-wrap iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 1280px;
+      height: 720px;
+      border: none;
+      display: block;
+      transform-origin: top left;
     }
 
     /* stagger: each child starts hidden and slides up */
@@ -859,6 +878,7 @@
       .spotlight-item { min-height: unset; padding: 60px 20px; }
       .spotlight-inner { flex-direction: column !important; gap: 36px; }
       .spotlight-visual { flex: none; max-width: 100%; width: 100%; }
+      .frame-wrap iframe { width: 390px; height: 844px; }
       .spotlight-desc { max-width: 100%; }
 
       .section { padding: 60px 20px; }
@@ -928,7 +948,9 @@
     <div class="spotlight-item">
       <div class="spotlight-inner">
         <div class="spotlight-visual">
-          <img class="mockup-screen" src="/img/screen-dashboard.png" alt="Dashboard de gastos do Atlas">
+          <div class="frame-wrap">
+            <iframe src="/app?demo=1&tab=dashboard" loading="lazy" title="Dashboard Atlas" scrolling="no"></iframe>
+          </div>
         </div>
         <div class="spotlight-text">
           <p class="spotlight-eyebrow">Por que usar</p>
@@ -947,22 +969,8 @@
           <p class="spotlight-desc">"Quanto gastei com delivery esse mês?" O assistente analisa seus dados e responde em segundos, em linguagem natural. Sem fórmulas, sem planilhas.</p>
         </div>
         <div class="spotlight-visual">
-          <div class="mockup">
-            <p class="ai-label">✦ Atlas IA</p>
-            <div class="chat-rows">
-              <div class="chat-row user">
-                <div class="chat-bubble">Quanto gastei com delivery esse mês?</div>
-              </div>
-              <div class="chat-row ai">
-                <div class="chat-bubble">Você gastou <strong>R$ 312</strong> em delivery, 24% acima da sua média. Quer ver onde dá pra cortar?</div>
-              </div>
-              <div class="chat-row user">
-                <div class="chat-bubble">Onde posso economizar R$ 200?</div>
-              </div>
-              <div class="chat-row ai">
-                <div class="chat-bubble">Reduza delivery para 3×/semana e economize ~R$ 180. Há também R$ 40 em assinaturas pouco usadas.<span class="chat-cursor"></span></div>
-              </div>
-            </div>
+          <div class="frame-wrap">
+            <iframe src="/app?demo=1&tab=analysis" loading="lazy" title="Análise IA Atlas" scrolling="no"></iframe>
           </div>
         </div>
       </div>
@@ -972,7 +980,9 @@
     <div class="spotlight-item">
       <div class="spotlight-inner">
         <div class="spotlight-visual">
-          <img class="mockup-screen" src="/img/screen-transacoes.png" alt="Lista de transações do Atlas">
+          <div class="frame-wrap">
+            <iframe src="/app?demo=1&tab=transactions" loading="lazy" title="Transações Atlas" scrolling="no"></iframe>
+          </div>
         </div>
         <div class="spotlight-text">
           <p class="spotlight-eyebrow">Controle real</p>
@@ -1021,7 +1031,9 @@
           <p class="spotlight-desc">Acompanhe ações, fundos e cripto integrados ao seu controle financeiro. Veja o desempenho em tempo real e entenda quanto do seu patrimônio está crescendo.</p>
         </div>
         <div class="spotlight-visual">
-          <img class="mockup-screen" src="/img/screen-invest.png" alt="Carteira de investimentos no Atlas">
+          <div class="frame-wrap">
+            <iframe src="/app?demo=1&tab=investments" loading="lazy" title="Investimentos Atlas" scrolling="no"></iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -1156,6 +1168,23 @@
   </footer>
 
   <script>
+    // ══════════════════════════════════════════════
+    // 0. IFRAME SCALE
+    // ══════════════════════════════════════════════
+    (function () {
+      const IFRAME_W = 1280, IFRAME_H = 720;
+      function scaleWrap(wrap) {
+        const w = wrap.clientWidth;
+        const scale = w / IFRAME_W;
+        wrap.style.height = (IFRAME_H * scale) + 'px';
+        const iframe = wrap.querySelector('iframe');
+        if (iframe) iframe.style.transform = `scale(${scale})`;
+      }
+      const wraps = document.querySelectorAll('.frame-wrap');
+      const ro = new ResizeObserver(() => wraps.forEach(scaleWrap));
+      wraps.forEach(w => { scaleWrap(w); ro.observe(w); });
+    })();
+
     // ══════════════════════════════════════════════
     // 1. ORBS PARALLAX
     // ══════════════════════════════════════════════

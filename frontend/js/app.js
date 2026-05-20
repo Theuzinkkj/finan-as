@@ -2410,7 +2410,12 @@ async function init() {
     initPasswordToggles();
 
     if (new URLSearchParams(window.location.search).get('demo') === '1') Demo.enter();
-    if (Demo.active) { await startApp(); return; }
+    if (Demo.active) {
+      await startApp();
+      const tabParam = new URLSearchParams(window.location.search).get('tab');
+      if (tabParam) switchTab(tabParam);
+      return;
+    }
 
     const redirect = await handleAuthRedirect();
 
@@ -2460,6 +2465,7 @@ async function init() {
 }
 
 function showDemoBanner() {
+  if (window.self !== window.top) return; // skip when embedded in iframe
   document.getElementById('demo-banner').classList.remove('hidden');
   document.body.classList.add('demo-mode');
 
