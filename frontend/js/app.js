@@ -17,6 +17,8 @@ let appInitialized    = false;
 let activeTxId        = null;
 let activeChangeCat   = null;
 let benefitAllocations = {};
+let budgets           = {};
+let obExpenses        = [];
 
 // =============================================
 //  FOCUS MANAGEMENT
@@ -129,6 +131,292 @@ function saveBenefitsConfig() {
   closeModal('modal-benefits-config');
   renderBenefits(txOfMonth());
   toast('Benefícios configurados!');
+}
+
+// =============================================
+//  BUDGETS
+// =============================================
+function _budgetOpenKey() { return `atlas_budget_open_${Auth.userId || 'anon'}`; }
+
+function loadBudgets() {
+  // Source of truth is the server profile (synced to localStorage by syncProfileFromServer)
+  budgets = loadProfile().budgets || {};
+}
+
+function initBudgetToggle() {
+  const open   = localStorage.getItem(_budgetOpenKey()) === 'true';
+  const body   = document.getElementById('budget-body');
+  const toggle = document.getElementById('btn-budget-toggle');
+  if (!body || !toggle) return;
+  body.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function toggleBudgetSection() {
+  const body   = document.getElementById('budget-body');
+  const toggle = document.getElementById('btn-budget-toggle');
+  if (!body || !toggle) return;
+  const isOpen = body.classList.toggle('open');
+  toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  localStorage.setItem(_budgetOpenKey(), isOpen ? 'true' : 'false');
+}
+
+function openBudgetConfig() {
+  const body = document.getElementById('budget-config-body');
+  if (!body) return;
+  body.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+    <div class="budget-config-row">
+      <label class="budget-config-label">
+        <span class="budget-config-icon">${cat.icon}</span>
+        <span>${cat.label}</span>
+      </label>
+      <div class="budget-config-input-wrap">
+        <span class="budget-config-currency">R$</span>
+        <input type="number" class="budget-config-input" id="budget-input-${key}"
+               step="10" min="0" placeholder="Sem limite"
+               value="${budgets[key] || ''}">
+      </div>
+    </div>`).join('');
+  openModal('modal-budget-config');
+}
+
+function saveBudgetConfig() {
+  const newBudgets = {};
+  Object.keys(CATEGORIES).forEach(key => {
+    const input = document.getElementById(`budget-input-${key}`);
+    if (!input) return;
+    const val = parseFloat(input.value);
+    if (val > 0) newBudgets[key] = val;
+  });
+  budgets = newBudgets;
+  saveProfile({ budgets });
+  closeModal('modal-budget-config');
+  renderBudgets(txOfMonth());
+  toast('Orçamentos salvos!');
+}
+
+function renderBudgets(txs) {
+  const grid    = document.getElementById('budget-grid');
+  const emptyEl = document.getElementById('budget-empty');
+  const summaryEl = document.getElementById('budget-summary');
+  if (!grid) return;
+
+  const expTxs    = txs.filter(t => t.type === 'despesa');
+  const catTotals = {};
+  expTxs.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+
+  const entries = Object.entries(budgets).filter(([, limit]) => limit > 0);
+
+  if (summaryEl) {
+    const over = entries.filter(([key]) => (catTotals[key] || 0) > (budgets[key] || Infinity)).length;
+    summaryEl.textContent = over > 0 ? `⚠ ${over} estourado${over > 1 ? 's' : ''}` : '';
+    summaryEl.style.color = over > 0 ? 'var(--red)' : '';
+  }
+
+  const cards = entries.map(([key, limit]) => {
+    const cat = CATEGORIES[key];
+    if (!cat) return '';
+    const spent      = catTotals[key] || 0;
+    const pct        = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+    const overBudget = spent > limit;
+    const warning    = !overBudget && spent / limit >= 0.8;
+    const barColor   = overBudget ? 'var(--red)' : warning ? 'var(--yellow)' : 'var(--purple)';
+    const remaining  = limit - spent;
+    const remClass   = overBudget ? 'over-budget' : '';
+    const remLabel   = overBudget ? `+${fmt(spent - limit)} acima` : fmt(remaining);
+    return `
+      <div class="budget-card" onclick="goToTransactions('despesa','${key}')" title="Ver gastos com ${cat.label}">
+        <div class="budget-card-header">
+          <span class="budget-cat-icon">${cat.icon}</span>
+          <span class="budget-cat-name">${cat.label}</span>
+          ${overBudget ? '<span class="budget-alert-icon">⚠</span>' : ''}
+        </div>
+        <div class="budget-amounts">
+          <span class="budget-spent">${fmt(spent)}</span>
+          <span class="budget-limit-label"> / ${fmt(limit)}</span>
+        </div>
+        <div class="budget-progress-track">
+          <div class="budget-progress-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+        </div>
+        <div class="budget-footer">
+          <span class="budget-pct" style="color:${overBudget?'var(--red)':warning?'var(--yellow)':'var(--text-2)'}">${pct.toFixed(0)}% usado</span>
+          <span class="budget-remaining ${remClass}">${remLabel}</span>
+        </div>
+      </div>`;
+  }).filter(Boolean).join('');
+
+  const quickAdd = `
+    <button class="budget-card budget-card-add" onclick="openBudgetConfig()" title="Definir limite por categoria">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Definir limite</span>
+    </button>`;
+
+  grid.innerHTML = cards ? cards + quickAdd : '';
+  if (emptyEl) emptyEl.classList.toggle('hidden', !!cards);
+}
+
+// =============================================
+//  RECURRING — AUTO-GENERATION
+// =============================================
+async function autoGenerateRecurring() {
+  if (Demo.active) return;
+  const currentKey = mkKey(new Date());
+
+  const templates = transactions.filter(t => t.fixed && t.date.slice(0, 7) < currentKey);
+  if (!templates.length) return;
+
+  const [ty, tm] = currentKey.split('-').map(Number);
+  const daysInMonth = new Date(ty, tm, 0).getDate();
+  const created = [];
+
+  for (const tpl of templates) {
+    const exists = transactions.some(t => t.recurringId === tpl.id && t.date.startsWith(currentKey));
+    if (exists) continue;
+
+    const day   = Math.min(parseInt(tpl.date.slice(8, 10), 10), daysInMonth);
+    const newTx = {
+      ...tpl,
+      id:          genId(),
+      date:        `${currentKey}-${pad2(day)}`,
+      fixed:       false,
+      recurringId: tpl.id,
+    };
+    try {
+      await DB.put(newTx);
+      transactions.push(newTx);
+      created.push(newTx);
+    } catch { /* ignore */ }
+  }
+
+  if (created.length) {
+    Promise.all(created.map(tx => CloudDB.add(tx))).catch(() => {});
+    const n = created.length;
+    toast(`🔄 ${n} transaç${n === 1 ? 'ão fixa criada' : 'ões fixas criadas'} automaticamente para ${monthLabel(new Date())}!`);
+    renderAll();
+  }
+}
+
+// =============================================
+//  ONBOARDING
+// =============================================
+function shouldShowOnboarding() {
+  if (Demo.active) return false;
+  return !loadProfile().onboarded;
+}
+
+function showOnboarding() {
+  document.getElementById('onboarding-screen').classList.remove('hidden');
+  obGoTo(1);
+}
+
+function obGoTo(step) {
+  document.querySelectorAll('.onboarding-step').forEach((el, i) => {
+    el.classList.toggle('hidden', i + 1 !== step);
+  });
+  document.querySelectorAll('.ob-dot').forEach((dot, i) => {
+    dot.classList.toggle('ob-dot-active', i + 1 === step);
+    dot.classList.toggle('ob-dot-done',   i + 1 < step);
+  });
+}
+
+function obSkip() { completeOnboarding(); }
+function obBack(step) { obGoTo(step); }
+
+function obStep1Next() {
+  const nameInput = document.getElementById('ob-name');
+  const name = nameInput ? nameInput.value.trim() : '';
+  if (name) { saveProfile({ name }); updateProfileUI(); }
+  obGoTo(2);
+}
+
+function obStep2Next() {
+  obGoTo(3);
+  obExpenses = [];
+  renderObExpenses();
+}
+
+function obAddExpenseRow() {
+  obExpenses.push({ desc: '', amount: 0, category: 'moradia' });
+  renderObExpenses();
+}
+
+function obRemoveExpense(i) {
+  obExpenses.splice(i, 1);
+  renderObExpenses();
+}
+
+function renderObExpenses() {
+  const list = document.getElementById('ob-recurring-list');
+  if (!list) return;
+  if (!obExpenses.length) {
+    list.innerHTML = '<p class="ob-no-expenses">Nenhuma adicionada. Pode pular!</p>';
+    return;
+  }
+  list.innerHTML = obExpenses.map((exp, i) => `
+    <div class="ob-expense-row">
+      <input type="text" class="ob-expense-desc" placeholder="Ex: Aluguel"
+             value="${escHtml(exp.desc)}"
+             onchange="obExpenses[${i}].desc=this.value">
+      <select class="ob-expense-cat" onchange="obExpenses[${i}].category=this.value">
+        ${Object.entries(CATEGORIES).map(([k, c]) =>
+          `<option value="${k}"${k === exp.category ? ' selected' : ''}>${c.icon} ${c.label}</option>`
+        ).join('')}
+      </select>
+      <input type="number" class="ob-expense-amount" placeholder="R$"
+             value="${exp.amount || ''}"
+             onchange="obExpenses[${i}].amount=parseFloat(this.value)||0">
+      <button class="ob-expense-remove" onclick="obRemoveExpense(${i})">✕</button>
+    </div>`).join('');
+}
+
+async function obFinish() {
+  const btn = document.getElementById('ob-finish-btn');
+  if (btn) btn.disabled = true;
+
+  const today      = todayLocal();
+  const [y, m]     = today.split('-');
+  const incomeDate = `${y}-${m}-05`;
+  const created    = [];
+
+  const incomeVal  = parseFloat(document.getElementById('ob-income')?.value) || 0;
+  const incomeDesc = (document.getElementById('ob-income-desc')?.value || 'Salário').trim();
+
+  if (incomeVal > 0) {
+    const tx = {
+      id: genId(), type: 'receita', amount: incomeVal,
+      category: 'outros', description: incomeDesc,
+      notes: '', date: incomeDate, fixed: true,
+      paymentMethod: null, invoiceItems: null, benefitType: null,
+    };
+    try { await DB.put(tx); transactions.push(tx); created.push(tx); } catch { /* ignore */ }
+  }
+
+  for (const exp of obExpenses.filter(e => e.desc && e.amount > 0)) {
+    const tx = {
+      id: genId(), type: 'despesa', amount: exp.amount,
+      category: exp.category || 'outros', description: exp.desc,
+      notes: '', date: incomeDate, fixed: true,
+      paymentMethod: null, invoiceItems: null, benefitType: null,
+    };
+    try { await DB.put(tx); transactions.push(tx); created.push(tx); } catch { /* ignore */ }
+  }
+
+  if (created.length && !Demo.active) {
+    Promise.all(created.map(tx => CloudDB.add(tx))).catch(() => {});
+  }
+
+  completeOnboarding();
+  renderAll();
+  if (created.length) {
+    const n = created.length;
+    toast(`Perfeito! ${n} transaç${n === 1 ? 'ão adicionada' : 'ões adicionadas'}! 🎉`);
+  }
+}
+
+function completeOnboarding() {
+  saveProfile({ onboarded: true });
+  const screen = document.getElementById('onboarding-screen');
+  if (screen) screen.classList.add('hidden');
 }
 
 // =============================================
@@ -296,10 +584,13 @@ function txOfMonth(d = currentDate) {
   const [ty, tm] = key.split('-').map(Number);
   const daysInMonth = new Date(ty, tm, 0).getDate();
 
+  // Non-fixed transactions for this month (includes auto-generated recurring copies)
   const regular = transactions.filter(t => !t.fixed && t.date.startsWith(key));
 
+  // Project fixed templates only for those without real generated copies this month
+  const generatedTemplateIds = new Set(regular.filter(t => t.recurringId).map(t => t.recurringId));
   const fixed = transactions
-    .filter(t => t.fixed && t.date.slice(0, 7) <= key)
+    .filter(t => t.fixed && t.date.slice(0, 7) <= key && !generatedTemplateIds.has(t.id))
     .map(t => {
       const day = Math.min(parseInt(t.date.slice(8, 10), 10), daysInMonth);
       return { ...t, date: `${key}-${pad2(day)}` };
@@ -605,6 +896,7 @@ function renderAll() {
   const txs = txOfMonth();
   renderCards(txs);
   renderBenefits(txs);
+  renderBudgets(txs);
   renderRecent(txs);
   renderAllTxs();
   renderAnalysisStats(txs);
@@ -1283,7 +1575,7 @@ function switchTab(tabName) {
     dock.style.display       = '';
     inlineChat.classList.add('hidden');
   }
-  if (tabName === 'analysis')  setTimeout(() => drawAnalysisChart(txOfMonth()), 40);
+  if (tabName === 'analysis')  setTimeout(() => { drawAnalysisChart(txOfMonth()); drawAnnualChart(); _setupAnnualYearNav(); }, 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
 
@@ -1356,6 +1648,10 @@ function bindAuthEvents() {
     if (!email || !password) { showAuthError('Preencha email e senha.'); return; }
     if (isSignup && password.length < 6) { showAuthError('A senha deve ter pelo menos 6 caracteres.'); return; }
     if (isSignup && password !== confirm) { showAuthError('As senhas não coincidem.'); return; }
+    if (isSignup && !document.getElementById('auth-terms-check').checked) {
+      showAuthError('Você precisa aceitar os Termos de Uso e a Política de Privacidade para criar uma conta.');
+      return;
+    }
 
     setAuthLoading(true);
     try {
@@ -1383,6 +1679,8 @@ function setAuthMode(mode) {
   document.getElementById('tab-signin').classList.toggle('active', !isSignup);
   document.getElementById('tab-signup').classList.toggle('active', isSignup);
   document.getElementById('auth-confirm-group').classList.toggle('hidden', !isSignup);
+  document.getElementById('auth-terms-group').classList.toggle('hidden', !isSignup);
+  if (!isSignup) document.getElementById('auth-terms-check').checked = false;
   document.getElementById('auth-submit-text').textContent = isSignup ? 'Cadastrar' : 'Entrar';
   document.getElementById('btn-demo').classList.toggle('hidden', isSignup);
   document.querySelector('.auth-demo-divider').classList.toggle('hidden', isSignup);
@@ -1608,6 +1906,11 @@ function bindEvents() {
 
   // Toggle seção de benefícios
   document.getElementById('btn-benefits-toggle').addEventListener('click', toggleBenefitsSection);
+
+  // Toggle seção de orçamentos
+  document.getElementById('btn-budget-toggle').addEventListener('click', toggleBudgetSection);
+  document.getElementById('btn-budget-config').addEventListener('click', openBudgetConfig);
+  document.getElementById('btn-budget-setup').addEventListener('click', openBudgetConfig);
 
   // Configurar benefícios
   document.getElementById('btn-benefits-config').addEventListener('click', () => {
@@ -1911,7 +2214,7 @@ function bindEvents() {
     if (!active) return;
     const txs = txOfMonth();
     if (active.id === 'tab-dashboard') drawLine(txs);
-    if (active.id === 'tab-analysis')  drawAnalysisChart(txs);
+    if (active.id === 'tab-analysis')  { drawAnalysisChart(txs); drawAnnualChart(); _setupAnnualYearNav(); }
   });
 
   // Escape — fecha modal, painel de perfil, chat ou menu de contexto (nessa ordem)
@@ -2106,6 +2409,7 @@ async function init() {
     initCustomSelects();
     initPasswordToggles();
 
+    if (new URLSearchParams(window.location.search).get('demo') === '1') Demo.enter();
     if (Demo.active) { await startApp(); return; }
 
     const redirect = await handleAuthRedirect();
@@ -2176,13 +2480,21 @@ async function startApp() {
   renderMonthLabel();
   loadCustomCategories();
   loadBenefitAllocations();
+  loadBudgets();
   initBenefitsToggle();
+  initBudgetToggle();
   buildCategoryGrid();
   buildCategoryFilter();
   initCustomSelects();
   setTodayDate();
   updateProfileUI();
-  syncProfileFromServer().then(() => updateProfileUI());
+  // After server profile syncs, refresh profile-dependent state with authoritative data
+  syncProfileFromServer().then(() => {
+    updateProfileUI();
+    loadBudgets();
+    renderBudgets(txOfMonth());
+    if (shouldShowOnboarding()) showOnboarding();
+  });
 
   if (Demo.active) {
     transactions = Demo.transactions();
@@ -2213,7 +2525,10 @@ async function startApp() {
   }
 
   renderAll();
-  syncFromCloud();
+
+  syncFromCloud().then(async () => {
+    await autoGenerateRecurring();
+  });
 
   const dot = document.getElementById('db-status-dot-header');
   if (dot) {

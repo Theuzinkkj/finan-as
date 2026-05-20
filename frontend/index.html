@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Atlas — Controle Financeiro Inteligente</title>
+
+  <!-- SEO & WhatsApp / social preview -->
+  <meta name="description" content="Organize seus gastos, visualize para onde vai seu dinheiro e comece a economizar — de graça.">
+  <meta property="og:type"        content="website">
+  <meta property="og:title"       content="Atlas — Controle Financeiro Inteligente">
+  <meta property="og:description" content="Organize seus gastos, visualize para onde vai seu dinheiro e comece a economizar — de graça.">
+  <meta property="og:image"       content="/og-image.png" />
+  <meta name="twitter:card"        content="summary_large_image">
+  <meta name="twitter:title"       content="Atlas — Controle Financeiro Inteligente">
+  <meta name="twitter:description" content="Organize seus gastos e comece a economizar — de graça.">
+  <meta name="twitter:image"       content="/og-image.png" />
+
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="shortcut icon" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +26,7 @@
   <link rel="stylesheet" href="css/auth.css">
   <link rel="stylesheet" href="css/chat.css">
   <link rel="stylesheet" href="css/investments.css">
+  <link rel="stylesheet" href="css/features.css">
 </head>
 <body>
 
@@ -57,6 +70,15 @@
             </button>
           </div>
         </div>
+        <div class="form-group hidden" id="auth-terms-group">
+          <label class="terms-label">
+            <input type="checkbox" id="auth-terms-check">
+            Li e aceito os
+            <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a>
+            e a
+            <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>
+          </label>
+        </div>
         <div class="auth-feedback hidden" id="auth-error"></div>
         <div class="auth-feedback auth-feedback-ok hidden" id="auth-success"></div>
         <button type="submit" class="btn-primary auth-submit" id="auth-submit">
@@ -66,6 +88,11 @@
       </form>
 
       <p class="auth-hint">Seus dados são salvos com segurança na nuvem.<br>Crie uma conta gratuita para começar.</p>
+      <p class="auth-legal-links">
+        <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a>
+        <span>·</span>
+        <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>
+      </p>
 
       <div class="auth-demo-divider"><span>ou</span></div>
       <button type="button" class="btn-demo" id="btn-demo">Experimentar sem cadastro</button>
@@ -108,6 +135,64 @@
           <span id="reset-pw-submit-loader" class="loader hidden"></span>
         </button>
       </form>
+    </div>
+  </div>
+
+  <!-- ======= ONBOARDING SCREEN ======= -->
+  <div id="onboarding-screen" class="hidden">
+    <div class="onboarding-card">
+      <div class="onboarding-progress">
+        <span class="ob-dot ob-dot-active" id="ob-dot-1"></span>
+        <span class="ob-dot" id="ob-dot-2"></span>
+        <span class="ob-dot" id="ob-dot-3"></span>
+      </div>
+
+      <!-- Step 1: Name -->
+      <div class="onboarding-step" id="ob-step-1">
+        <div class="ob-emoji">👋</div>
+        <h2 class="ob-title">Bem-vindo ao Atlas!</h2>
+        <p class="ob-sub">Vamos configurar tudo rapidinho para você começar com o pé direito.</p>
+        <div class="form-group">
+          <label for="ob-name">Como quer ser chamado?</label>
+          <input type="text" id="ob-name" placeholder="Ex: João, Mari..." maxlength="30" autocomplete="off">
+        </div>
+        <div class="ob-actions">
+          <button type="button" class="ob-skip-btn" onclick="obSkip()">Pular tudo</button>
+          <button type="button" class="btn-primary" onclick="obStep1Next()">Próximo →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Monthly income -->
+      <div class="onboarding-step hidden" id="ob-step-2">
+        <div class="ob-emoji">💰</div>
+        <h2 class="ob-title">Qual a sua receita mensal?</h2>
+        <p class="ob-sub">Vamos registrar seu salário ou renda principal como recorrente todo mês.</p>
+        <div class="form-group">
+          <label for="ob-income-desc">Descrição</label>
+          <input type="text" id="ob-income-desc" value="Salário" placeholder="Ex: Salário, Freelance..." maxlength="40">
+        </div>
+        <div class="form-group">
+          <label for="ob-income">Valor (R$)</label>
+          <input type="number" id="ob-income" step="100" min="0" placeholder="Ex: 3500">
+        </div>
+        <div class="ob-actions">
+          <button type="button" class="btn-secondary" onclick="obBack(1)">← Voltar</button>
+          <button type="button" class="btn-primary" onclick="obStep2Next()">Próximo →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Fixed expenses -->
+      <div class="onboarding-step hidden" id="ob-step-3">
+        <div class="ob-emoji">🏠</div>
+        <h2 class="ob-title">Despesas fixas todo mês?</h2>
+        <p class="ob-sub">Aluguel, internet, academia... serão adicionadas automaticamente todo mês.</p>
+        <div id="ob-recurring-list"></div>
+        <button type="button" class="btn-secondary ob-add-btn" onclick="obAddExpenseRow()">+ Adicionar despesa fixa</button>
+        <div class="ob-actions">
+          <button type="button" class="btn-secondary" onclick="obBack(2)">← Voltar</button>
+          <button type="button" class="btn-primary" id="ob-finish-btn" onclick="obFinish()">Começar! 🚀</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -193,6 +278,25 @@
           <div class="benefits-empty hidden" id="benefits-empty">
             Você recebe VR ou VT?
             <button class="btn-link" id="btn-benefits-setup" style="margin-left:6px">Configure aqui →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget Section -->
+      <div class="benefits-section" id="budget-section">
+        <div class="benefits-header">
+          <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="false">
+            <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span class="section-label">Orçamentos</span>
+            <span class="budget-summary" id="budget-summary"></span>
+          </button>
+          <button class="btn-link" id="btn-budget-config">⚙ Configurar</button>
+        </div>
+        <div class="benefits-body" id="budget-body">
+          <div class="budget-grid" id="budget-grid"></div>
+          <div class="benefits-empty hidden" id="budget-empty">
+            Defina limites de gasto por categoria
+            <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
           </div>
         </div>
       </div>
@@ -344,6 +448,32 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Annual History -->
+      <div class="card" id="annual-history-card">
+        <div class="card-header">
+          <div class="annual-header-left">
+            <h3>Histórico Anual — <span id="annual-year-label"></span></h3>
+            <div class="annual-year-nav">
+              <button class="annual-year-btn" id="btn-annual-prev" title="Ano anterior">‹</button>
+              <button class="annual-year-btn" id="btn-annual-next" title="Próximo ano">›</button>
+            </div>
+          </div>
+          <div class="annual-legend">
+            <span class="annual-legend-item">
+              <span class="annual-dot" style="background:var(--green)"></span>Receitas
+            </span>
+            <span class="annual-legend-item">
+              <span class="annual-dot" style="background:#f87171"></span>Despesas
+            </span>
+          </div>
+        </div>
+        <div class="annual-chart-wrap">
+          <canvas id="annual-chart"></canvas>
+          <div id="annual-tooltip" class="annual-tooltip hidden"></div>
+        </div>
+        <div id="annual-summary" class="annual-summary"></div>
       </div>
 
       <div class="card ai-card">
@@ -1151,6 +1281,22 @@
       <div class="form-actions">
         <button class="btn-secondary" id="btn-edit-entry-cancel">Cancelar</button>
         <button class="btn-primary" id="btn-edit-entry-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Budget Config -->
+  <div class="modal-overlay hidden" id="modal-budget-config">
+    <div class="modal modal-budget" role="dialog" aria-modal="true" aria-labelledby="modal-budget-title">
+      <div class="modal-header">
+        <h2 id="modal-budget-title">Configurar Orçamentos</h2>
+        <button class="modal-close" data-close="modal-budget-config">✕</button>
+      </div>
+      <p class="modal-budget-desc">Defina quanto quer gastar por categoria. Deixe em branco para sem limite.</p>
+      <div id="budget-config-body" class="budget-config-body"></div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-budget-config">Cancelar</button>
+        <button class="btn-primary" onclick="saveBudgetConfig()">Salvar orçamentos</button>
       </div>
     </div>
   </div>

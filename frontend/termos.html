@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termos de Uso — Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --bg-card: rgba(20,24,32,0.9); --border: rgba(255,255,255,0.08);
+      --border-h: rgba(255,255,255,0.16); --purple: #6366f1; --green: #10b981;
+      --text: #f1f5f9; --text-2: #94a3b8; --text-3: #8896aa; --font: 'Inter', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 0 16px 60px; line-height: 1.7;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99,102,241,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 85% 80%, rgba(16,185,129,.10) 0%, transparent 65%);
+    }
+    .page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding-top: 48px; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px; color: var(--text-3);
+      text-decoration: none; font-size: .84rem; font-weight: 500; margin-bottom: 32px;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--purple); }
+    .logo-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .logo-icon { font-size: 1.5rem; }
+    .logo-text { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+    h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 6px; }
+    .meta { font-size: .8rem; color: var(--text-3); margin-bottom: 36px; }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; margin-bottom: 20px;
+      backdrop-filter: blur(12px);
+    }
+    h2 {
+      font-size: 1rem; font-weight: 700; color: var(--purple);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    h2::before {
+      content: ''; display: inline-block; width: 3px; height: 16px;
+      background: var(--purple); border-radius: 2px; flex-shrink: 0;
+    }
+    p { color: var(--text-2); font-size: .9rem; margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+    ul { list-style: none; padding: 0; margin-bottom: 0; }
+    ul li {
+      color: var(--text-2); font-size: .9rem; padding: 5px 0 5px 18px;
+      position: relative;
+    }
+    ul li::before {
+      content: '·'; position: absolute; left: 4px; color: var(--purple); font-weight: 700;
+    }
+    a { color: var(--purple); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer-links {
+      text-align: center; margin-top: 40px; font-size: .8rem; color: var(--text-3);
+    }
+    .footer-links a { color: var(--text-3); margin: 0 8px; }
+    .footer-links a:hover { color: var(--purple); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back-link" href="index.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao app
+    </a>
+
+    <div class="logo-row">
+      <span class="logo-icon">💎</span>
+      <span class="logo-text">Atlas</span>
+    </div>
+    <h1>Termos de Uso</h1>
+    <p class="meta">Última atualização: maio de 2025</p>
+
+    <div class="card">
+      <h2>1. Aceitação dos termos</h2>
+      <p>Ao criar uma conta ou utilizar o Atlas, você concorda com estes Termos de Uso em sua totalidade. Caso não concorde com algum ponto, não utilize o aplicativo.</p>
+      <p>Estes termos se aplicam a todas as funcionalidades do Atlas, incluindo o modo demo, o assistente de IA, o módulo de investimentos e a exportação de dados.</p>
+    </div>
+
+    <div class="card">
+      <h2>2. O que é o Atlas</h2>
+      <p>O Atlas é um aplicativo de controle financeiro pessoal que permite ao usuário registrar receitas, despesas e investimentos, visualizar análises de gastos e conversar com um assistente de inteligência artificial sobre suas finanças.</p>
+      <p>O Atlas <strong>não é</strong> uma instituição financeira, não oferece serviços bancários, de crédito ou de investimento, e não é regulado pela CVM ou pelo Banco Central. Qualquer análise ou sugestão gerada pelo assistente de IA tem caráter meramente informativo.</p>
+    </div>
+
+    <div class="card">
+      <h2>3. Cadastro e conta</h2>
+      <ul>
+        <li>Você deve ter pelo menos 16 anos para criar uma conta.</li>
+        <li>É responsabilidade do usuário manter a senha segura e não compartilhá-la.</li>
+        <li>Cada endereço de e-mail pode estar associado a apenas uma conta.</li>
+        <li>Você pode excluir sua conta a qualquer momento em Configurações → Excluir conta.</li>
+        <li>O Atlas pode suspender contas que violem estes termos.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>4. Modo demo</h2>
+      <p>O Atlas oferece um modo de demonstração sem necessidade de cadastro. Nesse modo, os dados são armazenados apenas localmente no seu dispositivo e não são sincronizados com a nuvem. Ao sair do modo demo, os dados inseridos são descartados.</p>
+    </div>
+
+    <div class="card">
+      <h2>5. Uso do assistente de IA</h2>
+      <p>O assistente financeiro do Atlas é alimentado por modelos de linguagem de inteligência artificial. Ao utilizar essa funcionalidade, você está ciente de que:</p>
+      <ul>
+        <li>As análises e sugestões são geradas automaticamente e podem conter imprecisões.</li>
+        <li>Nenhuma resposta do assistente constitui aconselhamento financeiro, jurídico ou tributário profissional.</li>
+        <li>O resumo dos seus dados financeiros do mês é enviado ao provedor de IA para gerar a análise. Consulte nossa <a href="privacidade.html">Política de Privacidade</a> para mais detalhes.</li>
+        <li>Decisões financeiras são de exclusiva responsabilidade do usuário.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>6. Uso permitido</h2>
+      <p>Você concorda em usar o Atlas somente para fins lícitos e pessoais. É proibido:</p>
+      <ul>
+        <li>Tentar acessar dados de outros usuários.</li>
+        <li>Realizar engenharia reversa ou copiar o código do aplicativo sem autorização.</li>
+        <li>Utilizar o app para atividades ilegais ou fraudulentas.</li>
+        <li>Sobrecarregar intencionalmente a infraestrutura do serviço.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>7. Limitação de responsabilidade</h2>
+      <p>O Atlas é fornecido "como está", sem garantias de disponibilidade contínua ou ausência de erros. Não nos responsabilizamos por:</p>
+      <ul>
+        <li>Perdas financeiras decorrentes de decisões baseadas nas análises do app.</li>
+        <li>Interrupções temporárias do serviço por manutenção ou falhas técnicas.</li>
+        <li>Dados perdidos em caso de exclusão de conta pelo usuário.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>8. Alterações nos termos</h2>
+      <p>Podemos atualizar estes Termos de Uso periodicamente. Notificaremos usuários sobre mudanças relevantes por e-mail ou dentro do próprio aplicativo. O uso continuado após as alterações implica concordância com os novos termos.</p>
+    </div>
+
+    <div class="card">
+      <h2>9. Contato</h2>
+      <p>Dúvidas sobre estes termos? Entre em contato pelo e-mail disponível no perfil do aplicativo ou pela seção de suporte.</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="privacidade.html">Política de Privacidade</a>
+      <a href="index.html">Voltar ao Atlas</a>
+    </div>
+  </div>
+</body>
+</html>

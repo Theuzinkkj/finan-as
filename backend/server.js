@@ -80,6 +80,13 @@ app.use((_req, res, next) => {
   next();
 });
 
+// ── Rotas de navegação ────────────────────────────────────────────────────────
+const fe = f => path.join(__dirname, '..', 'frontend', f);
+
+app.get('/',        (_req, res) => res.redirect('/landing'));
+app.get('/landing', (_req, res) => res.sendFile(fe('landing.html')));
+app.get('/app',     (_req, res) => res.sendFile(fe('index.html')));
+
 // ── Arquivos estáticos ────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 

@@ -1049,3 +1049,230 @@ function drawAnalysisChart(txs, type) {
   else if (_currentAnalysisType === 'radar') drawAnalysisRadar(txs);
   else                                       drawAnalysisBars(txs);
 }
+
+// =============================================
+//  ANNUAL HISTORY CHART
+// =============================================
+let annualDisplayYear = null;
+
+function drawAnnualChart() {
+  const canvas = document.getElementById('annual-chart');
+  if (!canvas) return;
+
+  if (annualDisplayYear === null) annualDisplayYear = currentDate.getFullYear();
+  const year    = annualDisplayYear;
+  const labelEl = document.getElementById('annual-year-label');
+  if (labelEl) labelEl.textContent = year;
+
+  const now      = new Date();
+  const nowYear  = now.getFullYear();
+  const nowMonth = now.getMonth();
+
+  const data = [];
+  for (let m = 0; m < 12; m++) {
+    const d        = new Date(year, m, 1);
+    const monthTxs = txOfMonth(d);
+    const income   = monthTxs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+    const expense  = monthTxs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+    const isFuture = year > nowYear || (year === nowYear && m > nowMonth);
+    data.push({ income, expense, isFuture });
+  }
+
+  // Update summary below chart
+  const totalIncome  = data.reduce((s, d) => s + d.income,  0);
+  const totalExpense = data.reduce((s, d) => s + d.expense, 0);
+  const balance      = totalIncome - totalExpense;
+  const summaryEl    = document.getElementById('annual-summary');
+  if (summaryEl) {
+    const fmt = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+    summaryEl.innerHTML = `
+      <div class="annual-summary-box">
+        <div class="annual-summary-label">Total de Receitas</div>
+        <div class="annual-summary-value" style="color:#10b981">${fmt(totalIncome)}</div>
+      </div>
+      <div class="annual-summary-box">
+        <div class="annual-summary-label">Total de Despesas</div>
+        <div class="annual-summary-value" style="color:#f87171">${fmt(totalExpense)}</div>
+      </div>
+      <div class="annual-summary-box">
+        <div class="annual-summary-label">Saldo do Ano</div>
+        <div class="annual-summary-value" style="color:${balance >= 0 ? '#10b981' : '#f87171'}">${fmt(balance)}</div>
+      </div>`;
+  }
+
+  const dpr  = window.devicePixelRatio || 1;
+  const wrap = canvas.parentElement;
+  const rect = wrap.getBoundingClientRect();
+  const W    = rect.width || 600;
+  const H    = rect.height || 240;
+  canvas.width        = W * dpr;
+  canvas.height       = H * dpr;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const isDark     = document.documentElement.dataset.theme !== 'light';
+  const gridClr    = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)';
+  const textClr    = isDark ? '#94a3b8' : '#78716c';
+  const greenClr   = '#10b981';
+  const redClr     = '#f87171';
+  const highlightW = 'rgba(99,102,241,.08)';
+  const hoverClr   = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)';
+
+  const padL = 54, padR = 12, padT = 14, padB = 26;
+  const cW   = W - padL - padR;
+  const cH   = H - padT - padB;
+
+  const maxVal  = Math.max(...data.map(d => Math.max(d.income, d.expense)), 1);
+  const curM    = (year === nowYear) ? nowMonth : -1;
+  const groupW  = cW / 12;
+  const barW    = Math.max(Math.floor(groupW * 0.28), 4);
+  const gap     = 2;
+
+  // Store layout for hit-test
+  canvas._annualLayout = { padL, padT, cW, cH, groupW, barW, gap, maxVal, data };
+
+  if (curM >= 0) {
+    ctx.fillStyle = highlightW;
+    ctx.fillRect(padL + curM * groupW, padT, groupW, cH);
+  }
+
+  const LINES = 4;
+  ctx.strokeStyle = gridClr;
+  ctx.lineWidth   = 1;
+  for (let i = 0; i <= LINES; i++) {
+    const y = padT + cH - (i / LINES) * cH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y); ctx.stroke();
+    const val   = (i / LINES) * maxVal;
+    const label = val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toFixed(0);
+    ctx.fillStyle = textClr;
+    ctx.font      = `10px Inter, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`R$${label}`, padL - 5, y + 3.5);
+  }
+
+  const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  for (let i = 0; i < 12; i++) {
+    const { income, expense, isFuture } = data[i];
+    const alpha  = isFuture ? 0.28 : 1;
+    const groupX = padL + i * groupW + groupW / 2;
+
+    ctx.globalAlpha = alpha;
+
+    if (income > 0) {
+      const h = (income / maxVal) * cH;
+      const x = groupX - barW - gap / 2;
+      const y = padT + cH - h;
+      ctx.fillStyle = greenClr;
+      ctx.beginPath();
+      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
+      ctx.fill();
+    }
+
+    if (expense > 0) {
+      const h = (expense / maxVal) * cH;
+      const x = groupX + gap / 2;
+      const y = padT + cH - h;
+      ctx.fillStyle = redClr;
+      ctx.beginPath();
+      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = curM === i ? chartFg(.75) : textClr;
+    ctx.font      = curM === i ? `bold 10px Inter, sans-serif` : `10px Inter, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(monthNames[i], groupX, padT + cH + 16);
+  }
+
+  _initAnnualInteractions(canvas, data, monthNames, year);
+}
+
+function _initAnnualInteractions(canvas, data, monthNames, year) {
+  if (canvas._annualListeners) {
+    canvas.removeEventListener('mousemove', canvas._annualListeners.move);
+    canvas.removeEventListener('mouseleave', canvas._annualListeners.leave);
+    canvas.removeEventListener('click', canvas._annualListeners.click);
+  }
+
+  const tooltip    = document.getElementById('annual-tooltip');
+  const fmt        = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const { padL, padT, cW, cH, groupW } = canvas._annualLayout;
+
+  function getMonthIndex(e) {
+    const rect = canvas.getBoundingClientRect();
+    const x    = e.clientX - rect.left;
+    const y    = e.clientY - rect.top;
+    if (x < padL || x > padL + cW || y < padT || y > padT + cH) return -1;
+    return Math.floor((x - padL) / groupW);
+  }
+
+  const onMove = (e) => {
+    const mi = getMonthIndex(e);
+    if (mi < 0 || mi >= 12) { tooltip.classList.add('hidden'); return; }
+    const { income, expense, isFuture } = data[mi];
+    const balance = income - expense;
+    tooltip.innerHTML = `
+      <div class="annual-tooltip-month">${monthNames[mi]} ${year}</div>
+      <div class="annual-tooltip-row">
+        <span class="annual-tooltip-dot" style="background:#10b981"></span>
+        Receitas: <span class="annual-tooltip-val">${fmt(income)}</span>
+      </div>
+      <div class="annual-tooltip-row">
+        <span class="annual-tooltip-dot" style="background:#f87171"></span>
+        Despesas: <span class="annual-tooltip-val">${fmt(expense)}</span>
+      </div>
+      <div class="annual-tooltip-row" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px">
+        <span class="annual-tooltip-dot" style="background:${balance >= 0 ? '#10b981' : '#f87171'}"></span>
+        Saldo: <span class="annual-tooltip-val" style="color:${balance >= 0 ? '#10b981' : '#f87171'}">${fmt(balance)}</span>
+      </div>
+      ${isFuture ? '<div style="font-size:.7rem;color:var(--text-3);margin-top:5px">Mês futuro</div>' : ''}`;
+    tooltip.classList.remove('hidden');
+    const wrap   = canvas.parentElement;
+    const wRect  = wrap.getBoundingClientRect();
+    const cx     = e.clientX - wRect.left;
+    const cy     = e.clientY - wRect.top;
+    const tw     = tooltip.offsetWidth;
+    const left   = Math.min(cx + 12, wRect.width - tw - 8);
+    tooltip.style.left = left + 'px';
+    tooltip.style.top  = Math.max(cy - 10, 4) + 'px';
+  };
+
+  const onLeave = () => { tooltip.classList.add('hidden'); };
+
+  const onClick = (e) => {
+    const mi = getMonthIndex(e);
+    if (mi < 0 || mi >= 12) return;
+    currentDate = new Date(year, mi, 1);
+    renderMonthLabel();
+    renderAll();
+  };
+
+  canvas.addEventListener('mousemove', onMove);
+  canvas.addEventListener('mouseleave', onLeave);
+  canvas.addEventListener('click', onClick);
+  canvas._annualListeners = { move: onMove, leave: onLeave, click: onClick };
+}
+
+function _setupAnnualYearNav() {
+  const btnPrev = document.getElementById('btn-annual-prev');
+  const btnNext = document.getElementById('btn-annual-next');
+  if (!btnPrev || btnPrev._annualNavReady) return;
+  btnPrev._annualNavReady = true;
+  btnPrev.addEventListener('click', () => {
+    if (annualDisplayYear === null) annualDisplayYear = currentDate.getFullYear();
+    annualDisplayYear--;
+    drawAnnualChart();
+  });
+  btnNext.addEventListener('click', () => {
+    if (annualDisplayYear === null) annualDisplayYear = currentDate.getFullYear();
+    annualDisplayYear++;
+    drawAnnualChart();
+  });
+}

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidade — Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --bg-card: rgba(20,24,32,0.9); --border: rgba(255,255,255,0.08);
+      --border-h: rgba(255,255,255,0.16); --purple: #6366f1; --green: #10b981;
+      --text: #f1f5f9; --text-2: #94a3b8; --text-3: #8896aa; --font: 'Inter', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 0 16px 60px; line-height: 1.7;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99,102,241,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 85% 80%, rgba(16,185,129,.10) 0%, transparent 65%);
+    }
+    .page { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding-top: 48px; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px; color: var(--text-3);
+      text-decoration: none; font-size: .84rem; font-weight: 500; margin-bottom: 32px;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--purple); }
+    .logo-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .logo-icon { font-size: 1.5rem; }
+    .logo-text { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+    h1 { font-size: 1.7rem; font-weight: 800; margin-bottom: 6px; }
+    .meta { font-size: .8rem; color: var(--text-3); margin-bottom: 36px; }
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; margin-bottom: 20px;
+      backdrop-filter: blur(12px);
+    }
+    h2 {
+      font-size: 1rem; font-weight: 700; color: var(--purple);
+      margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    h2::before {
+      content: ''; display: inline-block; width: 3px; height: 16px;
+      background: var(--purple); border-radius: 2px; flex-shrink: 0;
+    }
+    p { color: var(--text-2); font-size: .9rem; margin-bottom: 12px; }
+    p:last-child { margin-bottom: 0; }
+    ul { list-style: none; padding: 0; margin-bottom: 0; }
+    ul li {
+      color: var(--text-2); font-size: .9rem; padding: 5px 0 5px 18px;
+      position: relative;
+    }
+    ul li::before {
+      content: '·'; position: absolute; left: 4px; color: var(--purple); font-weight: 700;
+    }
+    a { color: var(--purple); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .highlight-box {
+      background: rgba(99,102,241,.07); border: 1px solid rgba(99,102,241,.2);
+      border-radius: 10px; padding: 16px 20px; margin-bottom: 16px;
+    }
+    .highlight-box p { margin-bottom: 0; }
+    table {
+      width: 100%; border-collapse: collapse; margin-bottom: 0; font-size: .88rem;
+    }
+    th {
+      color: var(--text-3); font-weight: 600; text-align: left;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+    }
+    td {
+      color: var(--text-2); padding: 10px 12px; border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    .footer-links {
+      text-align: center; margin-top: 40px; font-size: .8rem; color: var(--text-3);
+    }
+    .footer-links a { color: var(--text-3); margin: 0 8px; }
+    .footer-links a:hover { color: var(--purple); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a class="back-link" href="index.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao app
+    </a>
+
+    <div class="logo-row">
+      <span class="logo-icon">💎</span>
+      <span class="logo-text">Atlas</span>
+    </div>
+    <h1>Política de Privacidade</h1>
+    <p class="meta">Última atualização: maio de 2025 · Em conformidade com a LGPD (Lei nº 13.709/2018)</p>
+
+    <div class="card">
+      <h2>1. Quem somos</h2>
+      <p>O Atlas é um aplicativo de controle financeiro pessoal. Esta Política de Privacidade explica quais dados coletamos, como os utilizamos e quais são seus direitos como titular dos dados, conforme previsto na Lei Geral de Proteção de Dados (LGPD).</p>
+      <div class="highlight-box">
+        <p>Resumo simples: coletamos apenas o mínimo necessário para o app funcionar. Seus dados financeiros são seus e você pode excluí-los a qualquer momento.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Dados que coletamos</h2>
+      <table>
+        <thead>
+          <tr><th>Dado</th><th>Por quê coletamos</th><th>Base legal (LGPD)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Endereço de e-mail</td>
+            <td>Identificação da conta e recuperação de senha</td>
+            <td>Execução de contrato</td>
+          </tr>
+          <tr>
+            <td>Senha (criptografada)</td>
+            <td>Autenticação segura</td>
+            <td>Execução de contrato</td>
+          </tr>
+          <tr>
+            <td>Transações financeiras (valor, categoria, data, descrição, anotações)</td>
+            <td>Funcionalidade principal do app — controle financeiro</td>
+            <td>Execução de contrato</td>
+          </tr>
+          <tr>
+            <td>Nome de exibição e foto de perfil</td>
+            <td>Personalização da interface</td>
+            <td>Consentimento</td>
+          </tr>
+          <tr>
+            <td>Aportes de investimentos</td>
+            <td>Módulo de carteira de investimentos</td>
+            <td>Execução de contrato</td>
+          </tr>
+          <tr>
+            <td>Preferências (tema, benefícios, categorias personalizadas)</td>
+            <td>Salvar configurações entre sessões</td>
+            <td>Legítimo interesse</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>3. Dados que NÃO coletamos</h2>
+      <ul>
+        <li>Dados bancários, senhas de bancos ou informações de cartão de crédito.</li>
+        <li>Localização geográfica.</li>
+        <li>Dados de uso detalhados ou analytics de comportamento.</li>
+        <li>Informações de dispositivo além das necessárias para o funcionamento do app.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>4. Como armazenamos seus dados</h2>
+      <p>Seus dados são armazenados de forma segura no <strong>Supabase</strong>, plataforma de banco de dados em nuvem com criptografia em trânsito (TLS) e em repouso. O acesso é controlado por políticas de segurança em nível de linha (Row-Level Security), garantindo que cada usuário acesse apenas seus próprios dados.</p>
+      <p>Senhas nunca são armazenadas em texto puro — são processadas com hash seguro pelo sistema de autenticação do Supabase.</p>
+    </div>
+
+    <div class="card">
+      <h2>5. Assistente de IA e dados compartilhados</h2>
+      <p>Quando você utiliza o assistente de IA ou a análise automática de gastos, um resumo dos seus dados financeiros do mês atual (totais por categoria, receitas, despesas) é enviado a um provedor de inteligência artificial para gerar a resposta.</p>
+      <ul>
+        <li>Não são enviados dados de identificação pessoal (e-mail, nome) junto com os dados financeiros.</li>
+        <li>Os dados enviados ao provedor de IA não são utilizados para treinar modelos.</li>
+        <li>A funcionalidade de IA é opcional — você pode usar todo o restante do app sem utilizá-la.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>6. Compartilhamento com terceiros</h2>
+      <p>Não vendemos, alugamos ou comercializamos seus dados pessoais. O compartilhamento ocorre apenas com os seguintes prestadores de serviço essenciais ao funcionamento do app:</p>
+      <ul>
+        <li><strong>Supabase</strong> — banco de dados e autenticação.</li>
+        <li><strong>Provedor de IA</strong> — geração de análises financeiras (somente quando você utiliza essa função).</li>
+      </ul>
+      <p>Todos os prestadores são contratualmente obrigados a tratar os dados conforme as leis aplicáveis.</p>
+    </div>
+
+    <div class="card">
+      <h2>7. Seus direitos (LGPD)</h2>
+      <p>Como titular dos dados, você tem direito a:</p>
+      <ul>
+        <li><strong>Acesso:</strong> saber quais dados temos sobre você.</li>
+        <li><strong>Correção:</strong> atualizar dados incorretos ou desatualizados.</li>
+        <li><strong>Exclusão:</strong> apagar seus dados — disponível diretamente em Configurações → Excluir conta.</li>
+        <li><strong>Portabilidade:</strong> exportar seus dados em formato legível (CSV/Excel disponível no app).</li>
+        <li><strong>Revogação do consentimento:</strong> retirar o consentimento a qualquer momento, sem prejuízo aos dados processados anteriormente.</li>
+        <li><strong>Oposição:</strong> opor-se ao tratamento de dados em casos previstos em lei.</li>
+      </ul>
+      <p>Para exercer qualquer desses direitos, entre em contato pelo e-mail disponível no suporte do app.</p>
+    </div>
+
+    <div class="card">
+      <h2>8. Retenção de dados</h2>
+      <p>Seus dados são mantidos enquanto sua conta estiver ativa. Ao excluir a conta, todos os dados pessoais e transações são removidos permanentemente dos nossos servidores em até 30 dias. Dados anonimizados e agregados podem ser retidos para fins estatísticos.</p>
+    </div>
+
+    <div class="card">
+      <h2>9. Cookies e armazenamento local</h2>
+      <p>O Atlas utiliza o <code style="background:rgba(255,255,255,.07);padding:1px 6px;border-radius:4px;font-size:.85em">localStorage</code> do navegador para salvar preferências como tema, modo demo e categorias personalizadas. Não utilizamos cookies de rastreamento ou publicidade.</p>
+    </div>
+
+    <div class="card">
+      <h2>10. Menores de idade</h2>
+      <p>O Atlas não é destinado a menores de 16 anos. Se identificarmos que coletamos dados de menores sem o devido consentimento dos responsáveis, removeremos os dados imediatamente.</p>
+    </div>
+
+    <div class="card">
+      <h2>11. Alterações nesta política</h2>
+      <p>Esta Política de Privacidade pode ser atualizada periodicamente. Notificaremos os usuários sobre mudanças relevantes por e-mail ou dentro do próprio aplicativo. A versão mais recente estará sempre disponível nesta página.</p>
+    </div>
+
+    <div class="card">
+      <h2>12. Contato</h2>
+      <p>Para dúvidas, solicitações relacionadas aos seus dados ou para exercer seus direitos previstos na LGPD, entre em contato pelo suporte disponível no aplicativo.</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="termos.html">Termos de Uso</a>
+      <a href="index.html">Voltar ao Atlas</a>
+    </div>
+  </div>
+</body>
+</html>
