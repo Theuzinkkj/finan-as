@@ -227,33 +227,58 @@
     .hero-trust span { display: flex; align-items: center; gap: 5px; }
     .hero-trust svg  { opacity: .6; }
 
-    /* ── Trust bar ────────────────────────── */
-    .trust-bar {
-      position:   relative;
-      z-index:    1;
-      padding:    26px 24px;
-      border-top:    1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,.02);
+    /* ── Stat cards ───────────────────────── */
+    .stat-cards-section {
+      position: relative;
+      z-index:  1;
+      padding:  0 24px;
     }
-    .trust-inner {
-      max-width:       900px;
-      margin:          0 auto;
-      display:         flex;
-      align-items:     center;
+    .stat-cards {
+      max-width:             900px;
+      margin:                0 auto;
+      display:               grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:                   16px;
+      padding:               40px 0 64px;
+    }
+    .stat-card {
+      display:        flex;
+      flex-direction: column;
+      align-items:    flex-start;
+      gap:            12px;
+      padding:        22px 20px;
+      background:     var(--card-bg);
+      border:         1px solid var(--border);
+      border-radius:  16px;
+      transition:     border-color .2s, background .2s;
+    }
+    .stat-card:hover {
+      border-color: var(--border-h);
+      background:   rgba(255,255,255,.06);
+    }
+    .stat-icon {
+      width:         40px;
+      height:        40px;
+      border-radius: 10px;
+      display:       flex;
+      align-items:   center;
       justify-content: center;
-      gap:             36px;
-      flex-wrap:       wrap;
+      flex-shrink:   0;
     }
-    .trust-item {
-      display:     flex;
-      align-items: center;
-      gap:         9px;
-      font-size:   .84rem;
+    .stat-icon--purple { background: rgba(99,102,241,.15); color: var(--purple-l); }
+    .stat-icon--green  { background: rgba(16,185,129,.12);  color: var(--green); }
+    .stat-value {
+      font-size:   1.55rem;
+      font-weight: 800;
+      color:       var(--text);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size:   .79rem;
       font-weight: 500;
       color:       var(--text-2);
+      line-height: 1.4;
     }
-    .trust-item em { font-size: 1.1rem; font-style: normal; }
 
     /* ── Section base ─────────────────────── */
     .section {
@@ -403,11 +428,100 @@
       .hero-ctas { flex-direction: column; max-width: 100%; }
       .hero-ctas .btn { min-width: 0; width: 100%; }
 
-      .trust-inner { gap: 18px; }
+      .stat-cards { grid-template-columns: repeat(2, 1fr); padding: 28px 0 48px; }
 
       .section { padding: 60px 20px; }
 
       .cta-card { padding: 40px 22px; border-radius: 22px; }
+    }
+
+    /* ── Animated SVG Icons ───────────────── */
+    .feature-icon svg { display: block; overflow: visible; }
+
+    /* Bar chart — bars bounce up sequentially */
+    .icon-chart .bar {
+      transform-box: fill-box;
+      transform-origin: bottom center;
+    }
+    .feature-card:hover .icon-chart .bar-1 { animation: bar-bounce .5s ease both; }
+    .feature-card:hover .icon-chart .bar-2 { animation: bar-bounce .5s .07s ease both; }
+    .feature-card:hover .icon-chart .bar-3 { animation: bar-bounce .5s .14s ease both; }
+    @keyframes bar-bounce {
+      0%,100% { transform: scaleY(1); }
+      40%     { transform: scaleY(1.3); }
+      70%     { transform: scaleY(.85); }
+    }
+
+    /* Target — rings pulse outward */
+    .icon-target .ring-outer,
+    .icon-target .ring-mid {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .feature-card:hover .icon-target .ring-outer { animation: ring-expand .55s ease both; }
+    .feature-card:hover .icon-target .ring-mid   { animation: ring-expand .55s .1s ease both; }
+    @keyframes ring-expand {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%     { transform: scale(1.22); opacity: .4; }
+    }
+
+    /* AI robot — eyes blink, antenna glows */
+    .icon-ai .eye {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .icon-ai .antenna-dot {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .feature-card:hover .icon-ai .eye-l { animation: eye-blink .55s ease both; }
+    .feature-card:hover .icon-ai .eye-r { animation: eye-blink .55s .12s ease both; }
+    .feature-card:hover .icon-ai .antenna-dot { animation: dot-glow .55s ease both; }
+    @keyframes eye-blink {
+      0%,100% { transform: scaleY(1); }
+      25%     { transform: scaleY(.06); }
+      55%     { transform: scaleY(1.15); }
+    }
+    @keyframes dot-glow {
+      0%,100% { transform: scale(1); opacity: 1; }
+      50%     { transform: scale(2.2); opacity: .35; }
+    }
+
+    /* Refresh — full spin */
+    .icon-refresh { transform-origin: center; }
+    .feature-card:hover .icon-refresh { animation: spin-once .6s cubic-bezier(.4,0,.2,1) both; }
+    @keyframes spin-once { to { transform: rotate(360deg); } }
+
+    /* Trend — dots pop one by one */
+    .icon-trend .dot {
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+    .feature-card:hover .icon-trend .d1 { animation: dot-pop .4s ease both; }
+    .feature-card:hover .icon-trend .d2 { animation: dot-pop .4s .09s ease both; }
+    .feature-card:hover .icon-trend .d3 { animation: dot-pop .4s .18s ease both; }
+    .feature-card:hover .icon-trend .d4 { animation: dot-pop .4s .27s ease both; }
+    @keyframes dot-pop {
+      0%,100% { transform: scale(1); }
+      50%     { transform: scale(2.1); }
+    }
+
+    /* Cloud — floats up, arrow rises */
+    .icon-cloud { transform-origin: center; }
+    .feature-card:hover .icon-cloud { animation: cloud-float .5s ease both; }
+    .icon-cloud .up-arrow {
+      transform-box: fill-box;
+      transform-origin: bottom center;
+    }
+    .feature-card:hover .icon-cloud .up-arrow { animation: arrow-rise .5s ease both; }
+    @keyframes cloud-float {
+      0%,100% { transform: translateY(0); }
+      40%     { transform: translateY(-4px); }
+      72%     { transform: translateY(-2px); }
+    }
+    @keyframes arrow-rise {
+      0%,100% { transform: translateY(0); opacity: 1; }
+      50%     { transform: translateY(-3px); opacity: .6; }
     }
   </style>
 </head>
@@ -463,16 +577,57 @@
     </p>
   </section>
 
-  <!-- ═══ TRUST BAR ══════════════════════════════════════════════════════════ -->
-  <div class="trust-bar">
-    <div class="trust-inner">
-      <div class="trust-item"><em>🔒</em><span>Dados criptografados</span></div>
-      <div class="trust-item"><em>📱</em><span>Funciona no celular</span></div>
-      <div class="trust-item"><em>⚡</em><span>Sem instalação</span></div>
-      <div class="trust-item"><em>🆓</em><span>Comece de graça</span></div>
-      <div class="trust-item"><em>🤖</em><span>IA integrada</span></div>
+  <!-- ═══ STAT CARDS ═════════════════════════════════════════════════════════ -->
+  <section class="stat-cards-section">
+    <div class="stat-cards">
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div class="stat-value">100%</div>
+        <div class="stat-label">Dados criptografados</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="stat-value">R$ 0</div>
+        <div class="stat-label">Para começar agora</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--purple">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4"/>
+            <path d="M2 20c0-4 4-7 10-7s10 3 10 7"/>
+            <path d="M17 11l1.5 1.5L21 10"/>
+          </svg>
+        </div>
+        <div class="stat-value">IA</div>
+        <div class="stat-label">Assistente integrado</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <circle cx="12" cy="18" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <div class="stat-value">Mobile</div>
+        <div class="stat-label">Funciona no celular</div>
+      </div>
+
     </div>
-  </div>
+  </section>
 
   <!-- ═══ FEATURES ═══════════════════════════════════════════════════════════ -->
   <section class="section">
@@ -483,37 +638,77 @@
     <div class="features-grid">
 
       <div class="feature-card">
-        <div class="feature-icon">📊</div>
+        <div class="feature-icon">
+          <svg class="icon-chart" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect class="bar bar-1" x="2"   y="15" width="5" height="7"  rx="1.5" fill="#818cf8"/>
+            <rect class="bar bar-2" x="9.5" y="10" width="5" height="12" rx="1.5" fill="#818cf8"/>
+            <rect class="bar bar-3" x="17"  y="5"  width="5" height="17" rx="1.5" fill="#818cf8" opacity=".85"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Visão clara dos gastos</h3>
         <p class="feature-desc">Gráficos por categoria em tempo real — alimentação, transporte, lazer e mais. Veja onde o dinheiro realmente vai.</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">🎯</div>
+        <div class="feature-icon">
+          <svg class="icon-target" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle class="ring-outer" cx="12" cy="12" r="10" stroke="#818cf8" stroke-width="1.5"/>
+            <circle class="ring-mid"   cx="12" cy="12" r="6"  stroke="#818cf8" stroke-width="1.5"/>
+            <circle                    cx="12" cy="12" r="2.5" fill="#818cf8"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Orçamentos por categoria</h3>
         <p class="feature-desc">Defina limites mensais e receba alertas antes de estourar. Sem surpresas no fim do mês.</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">🤖</div>
+        <div class="feature-icon">
+          <svg class="icon-ai" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="7" width="18" height="13" rx="2.5" stroke="#818cf8" stroke-width="1.5"/>
+            <circle class="eye eye-l" cx="9"  cy="13.5" r="2" fill="#818cf8"/>
+            <circle class="eye eye-r" cx="15" cy="13.5" r="2" fill="#818cf8"/>
+            <line x1="12" y1="7" x2="12" y2="4" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/>
+            <circle class="antenna-dot" cx="12" cy="3" r="1.5" fill="#818cf8"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Assistente com IA</h3>
         <p class="feature-desc">Pergunte em linguagem natural: "Quanto gastei com iFood esse mês?" ou "Onde posso economizar?"</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">🔄</div>
+        <div class="feature-icon">
+          <svg class="icon-refresh" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M23 4v6h-6" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M1 20v-6h6"  stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Gastos fixos automáticos</h3>
         <p class="feature-desc">Cadastre uma vez. O Atlas projeta aluguel, academia, streaming automaticamente nos próximos meses.</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">📈</div>
+        <div class="feature-icon">
+          <svg class="icon-trend" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <polyline points="2,19 7,14 13,10 22,5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="dot d1" cx="2"  cy="19" r="1.8" fill="#818cf8"/>
+            <circle class="dot d2" cx="7"  cy="14" r="1.8" fill="#818cf8"/>
+            <circle class="dot d3" cx="13" cy="10" r="1.8" fill="#818cf8"/>
+            <circle class="dot d4" cx="22" cy="5"  r="1.8" fill="#818cf8"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Histórico anual</h3>
         <p class="feature-desc">Acompanhe a evolução mês a mês. Veja quando você economizou mais e descubra os padrões dos seus gastos.</p>
       </div>
 
       <div class="feature-card">
-        <div class="feature-icon">☁️</div>
+        <div class="feature-icon">
+          <svg class="icon-cloud" width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" stroke="#818cf8" stroke-width="1.5" stroke-linejoin="round"/>
+            <path class="up-arrow" d="M12 17v-5M9.5 14.5 12 12l2.5 2.5" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
         <h3 class="feature-title">Sincronizado na nuvem</h3>
         <p class="feature-desc">Acesse do celular, tablet ou computador. Seus dados sempre atualizados em qualquer dispositivo.</p>
       </div>
