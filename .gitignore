@@ -3,3 +3,5 @@ node_modules/
 backend/.env
 .claude/
 capture*.js
+package.json
+package-lock.json
