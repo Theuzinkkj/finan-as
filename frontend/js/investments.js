@@ -895,53 +895,21 @@ async function savePortfolioEntry() {
 }
 
 // =============================================
-//  STATIC DATA
-// =============================================
-const BANKS = [
-  { name: 'PicPay',          pct: 102, color: '#11c76f' },
-  { name: 'Nubank',          pct: 100, color: '#820ad1' },
-  { name: 'Inter',           pct: 100, color: '#ff6600' },
-  { name: 'C6 Bank',         pct: 100, color: '#7b7b9a' },
-  { name: 'BTG Pactual',     pct: 100, color: '#4080e8' },
-  { name: 'Santander',       pct:  90, color: '#ec0000' },
-  { name: 'Itaú',            pct:  87, color: '#3366bb' },
-  { name: 'Bradesco',        pct:  75, color: '#cc092f' },
-  { name: 'Banco do Brasil', pct:  70, color: '#e8a200' },
-];
-
-// IR regressivo para CDB (dias corridos)
-function irRate(days) {
-  if (days <= 180) return 0.225;
-  if (days <= 360) return 0.20;
-  if (days <= 720) return 0.175;
-  return 0.15;
-}
-
-// =============================================
 //  STATE
 // =============================================
 let _cachedRates = null;
-let _simType     = 'cdb';
 let _invReady    = false;
-let _banksDrawn  = false;
 
 // =============================================
 //  INIT
 // =============================================
 async function initInvestments() {
   if (_invReady) {
-    if (_cachedRates) {
-      drawBanksChart(_cachedRates.cdi.value);
-      runSimulator();
-      runComparison();
-    }
     renderPortfolio();
     return;
   }
   _invReady = true;
   loadPortfolioGoal();
-  setupSimulatorListeners();
-  setupComparisonListeners();
 
   // Goal modal
   document.getElementById('btn-portfolio-goal')?.addEventListener('click', openGoalModal);
@@ -1060,19 +1028,7 @@ async function loadMarketRates() {
 
   _cachedRates = rates;
   renderRateCards(rates);
-  drawBanksChart(rates.cdi.value);
-  // Re-render portfolio summary now that rates are available
   if (_portfolio.length) renderInvSummaryGrid();
-
-  const cdiInput = document.getElementById('sim-cdi-annual');
-  if (cdiInput && !cdiInput.value) cdiInput.value = rates.cdi.value.toFixed(2);
-  runSimulator();
-
-  const cmpCdi  = document.getElementById('cmp-cdi');
-  const cmpIpca = document.getElementById('cmp-ipca');
-  if (cmpCdi  && !cmpCdi.value)  cmpCdi.value  = rates.cdi.value.toFixed(2);
-  if (cmpIpca && !cmpIpca.value) cmpIpca.value = rates.ipca.value.toFixed(2);
-  runComparison();
 }
 
 function renderRateCards(rates) {
@@ -1120,237 +1076,6 @@ function fmtRate(v) {
   return v.toFixed(2).replace('.', ',');
 }
 
-// =============================================
-//  BANKS CHART
-// =============================================
-function drawBanksChart(cdiAnnual) {
-  const canvas = document.getElementById('banks-chart');
-  if (!canvas) return;
-
-  const parent = canvas.parentElement;
-  const cs     = getComputedStyle(parent);
-  const W      = Math.floor(parent.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) || 600;
-  const sorted = [...BANKS].sort((a, b) => b.pct - a.pct);
-  const barH   = 22;
-  const gap    = 13;
-  const pT     = 8, pB = 8;
-  const H      = pT + sorted.length * (barH + gap) - gap + pB;
-
-  canvas.width  = W;
-  canvas.height = H;
-
-  const ctx    = canvas.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-
-  const pL     = 122;
-  const pR     = 120;
-  const trackW = W - pL - pR;
-  const maxPct = Math.max(...sorted.map(b => b.pct));
-
-  sorted.forEach(({ name, pct, color }, i) => {
-    const bW  = (pct / maxPct) * trackW;
-    const y   = pT + i * (barH + gap);
-    const mid = y + barH / 2;
-
-    ctx.fillStyle    = chartFg(0.78);
-    ctx.font         = '12px Inter';
-    ctx.textAlign    = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(name, pL - 10, mid);
-
-    ctx.fillStyle = chartFg(0.06);
-    ctx.beginPath(); rrect(ctx, pL, y, trackW, barH, 5); ctx.fill();
-
-    const g = ctx.createLinearGradient(pL, 0, pL + bW, 0);
-    g.addColorStop(0, color);
-    g.addColorStop(1, color + '99');
-    ctx.fillStyle = g;
-    ctx.beginPath(); rrect(ctx, pL, y, Math.max(bW, 6), barH, 5); ctx.fill();
-
-    const effRate = cdiAnnual * pct / 100;
-    const label   = `${pct}% CDI — ${effRate.toFixed(2).replace('.', ',')}% a.a.`;
-    ctx.fillStyle    = chartFg(0.82);
-    ctx.font         = '11px Inter';
-    ctx.textAlign    = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, pL + bW + 9, mid);
-  });
-
-  _banksDrawn = true;
-}
-
-// =============================================
-//  SIMULATOR
-// =============================================
-function setupSimulatorListeners() {
-  ['sim-amount', 'sim-months', 'sim-cdi-annual'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', runSimulator);
-  });
-
-  document.querySelectorAll('.sim-type-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.sim-type-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      _simType = btn.dataset.type;
-      runSimulator();
-    });
-  });
-}
-
-function runSimulator() {
-  const amount    = parseFloat(document.getElementById('sim-amount')?.value)     || 1000;
-  const months    = parseInt(document.getElementById('sim-months')?.value)        || 12;
-  const cdiAnnual = parseFloat(document.getElementById('sim-cdi-annual')?.value)
-                    || (_cachedRates?.cdi.value ?? 10.5);
-  const exempt    = _simType === 'lci';
-
-  if (amount <= 0 || months <= 0 || months > 600) return;
-
-  const monthly = Math.pow(1 + cdiAnnual / 100, 1 / 12) - 1;
-
-  const pts = [{ m: 0, total: amount, gross: 0, net: 0 }];
-  for (let m = 1; m <= months; m++) {
-    const total = amount * Math.pow(1 + monthly, m);
-    const gross = total - amount;
-    const tax   = exempt ? 0 : irRate(m * 30);
-    const net   = gross * (1 - tax);
-    pts.push({ m, total: amount + net, gross, net, tax });
-  }
-
-  drawSimChart(pts, amount);
-  renderSimResults(pts[pts.length - 1], amount, months, exempt);
-}
-
-function drawSimChart(pts, principal) {
-  const canvas = document.getElementById('sim-chart');
-  if (!canvas) return;
-
-  const W = canvas.parentElement.clientWidth || 500;
-  const H = 200;
-  canvas.width  = W;
-  canvas.height = H;
-
-  const ctx    = canvas.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-
-  const months = pts.length - 1;
-  const maxVal = pts[pts.length - 1].total;
-  const minVal = principal * 0.998;
-  const range  = Math.max(maxVal - minVal, 1);
-
-  const pL = 68, pR = 16, pT = 20, pB = 32;
-  const cW = W - pL - pR;
-  const cH = H - pT - pB;
-
-  const gX = m => pL + (m / Math.max(months, 1)) * cW;
-  const gY = v => pT + cH - ((v - minVal) / range) * cH;
-
-  ctx.strokeStyle = chartFg(0.07);
-  ctx.lineWidth   = 1;
-  ctx.font        = '10px Inter';
-  ctx.fillStyle   = chartFg(0.45);
-  ctx.textAlign   = 'right';
-  ctx.textBaseline = 'middle';
-
-  for (let i = 0; i <= 4; i++) {
-    const y = pT + (cH / 4) * i;
-    const v = maxVal - ((maxVal - principal) * i / 4);
-    ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke();
-    ctx.fillText(v >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : `R$${v.toFixed(0)}`, pL - 5, y);
-  }
-
-  ctx.fillStyle    = chartFg(0.4);
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'top';
-  const step = Math.max(1, Math.ceil(months / 8));
-  for (let m = 0; m <= months; m += step) {
-    ctx.fillText(`${m}m`, gX(m), H - pB + 6);
-  }
-
-  const baseY = gY(principal);
-  ctx.save();
-  ctx.setLineDash([4, 4]);
-  ctx.strokeStyle = chartFg(0.18);
-  ctx.lineWidth   = 1;
-  ctx.beginPath(); ctx.moveTo(pL, baseY); ctx.lineTo(W - pR, baseY); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
-
-  const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
-  grad.addColorStop(0, 'rgba(16,185,129,.32)');
-  grad.addColorStop(1, 'rgba(16,185,129,.01)');
-
-  ctx.beginPath();
-  ctx.moveTo(gX(0), pT + cH);
-  pts.forEach(p => ctx.lineTo(gX(p.m), gY(p.total)));
-  ctx.lineTo(gX(months), pT + cH);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(gX(pts[0].m), gY(pts[0].total));
-  for (let i = 1; i < pts.length; i++) {
-    const prev = pts[i - 1], curr = pts[i];
-    const cpx  = (gX(prev.m) + gX(curr.m)) / 2;
-    ctx.bezierCurveTo(cpx, gY(prev.total), cpx, gY(curr.total), gX(curr.m), gY(curr.total));
-  }
-  ctx.strokeStyle = '#10b981';
-  ctx.lineWidth   = 2.5;
-  ctx.stroke();
-
-  const last = pts[pts.length - 1];
-  ctx.beginPath();
-  ctx.arc(gX(last.m), gY(last.total), 5, 0, Math.PI * 2);
-  ctx.fillStyle   = '#10b981';
-  ctx.fill();
-  ctx.strokeStyle = chartBg();
-  ctx.lineWidth   = 2;
-  ctx.stroke();
-}
-
-function renderSimResults(last, principal, months, exempt) {
-  const el = document.getElementById('sim-results');
-  if (!el) return;
-
-  const fmt    = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const pctFmt = v => (v * 100).toFixed(1).replace('.', ',') + '%';
-  const gross  = last.gross;
-  const ir     = exempt ? 0 : gross - last.net;
-  const net    = last.net;
-  const total  = principal + net;
-  const taxRate = exempt ? 0 : last.tax;
-
-  el.innerHTML = `
-    <div class="sim-result-grid">
-      <div class="sim-result-row">
-        <span class="sim-result-label">Principal investido</span>
-        <span class="sim-result-val">${fmt(principal)}</span>
-      </div>
-      <div class="sim-result-row">
-        <span class="sim-result-label">Rendimento bruto</span>
-        <span class="sim-result-val positive">+ ${fmt(gross)}</span>
-      </div>
-      <div class="sim-result-row">
-        <span class="sim-result-label">Imposto de Renda ${exempt ? '' : `(${pctFmt(taxRate)})`}</span>
-        ${exempt
-          ? '<span class="sim-result-val exempt">Isento — LCI/LCA</span>'
-          : `<span class="sim-result-val negative">− ${fmt(ir)}</span>`
-        }
-      </div>
-      <div class="sim-result-divider"></div>
-      <div class="sim-result-row total">
-        <span class="sim-result-label">Total em ${months} ${months === 1 ? 'mês' : 'meses'}</span>
-        <span class="sim-result-val positive">${fmt(total)}</span>
-      </div>
-    </div>
-    ${!exempt ? `
-    <p class="sim-ir-note">
-      IR regressivo: 22,5% (até 180d) → 20% (até 360d) → 17,5% (até 720d) → 15% (acima de 720d)
-    </p>` : ''}
-  `;
-}
 
 // =============================================
 //  MARKET DATA (IBOVESPA + CÂMBIO + CRYPTO)
@@ -1478,78 +1203,11 @@ function renderStocksTable(stocks, tableEl) {
 }
 
 // =============================================
-//  COMPARISON SIMULATOR
-// =============================================
-function setupComparisonListeners() {
-  ['cmp-amount', 'cmp-months', 'cmp-cdi', 'cmp-ipca'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', runComparison);
-  });
-}
-
-function runComparison() {
-  const amount = parseFloat(document.getElementById('cmp-amount')?.value) || 10000;
-  const months = parseInt(document.getElementById('cmp-months')?.value)   || 24;
-  const cdi    = parseFloat(document.getElementById('cmp-cdi')?.value)    || (_cachedRates?.cdi.value  ?? 10.5);
-  const ipca   = parseFloat(document.getElementById('cmp-ipca')?.value)   || (_cachedRates?.ipca.value ?? 5.0);
-
-  if (amount <= 0 || months <= 0 || months > 600) return;
-
-  const mr = r => Math.pow(1 + r / 100, 1 / 12) - 1;
-  const poupancaAnnual = cdi > 8.5 ? 6.168 : cdi * 0.7;
-
-  const opts = [
-    { name: 'Poupança',         rate: mr(poupancaAnnual), exempt: true,  tag: cdi > 8.5 ? '0,5%/mês' : '70% CDI' },
-    { name: 'CDB 90% CDI',      rate: mr(cdi * 0.9),      exempt: false, tag: '90% CDI' },
-    { name: 'CDB 100% CDI',     rate: mr(cdi),            exempt: false, tag: '100% CDI' },
-    { name: 'LCI/LCA 87% CDI',  rate: mr(cdi * 0.87),     exempt: true,  tag: '87% CDI · isento de IR' },
-    { name: 'LCI/LCA 100% CDI', rate: mr(cdi),            exempt: true,  tag: '100% CDI · isento de IR' },
-    { name: 'Tesouro IPCA+6%',  rate: mr(ipca + 6),       exempt: false, tag: `IPCA (${fmtRate(ipca)}%) + 6% a.a.` },
-  ];
-
-  const results = opts.map(o => {
-    const gross = amount * Math.pow(1 + o.rate, months) - amount;
-    const tax   = o.exempt ? 0 : gross * irRate(months * 30);
-    const net   = gross - tax;
-    return { ...o, gross, net, total: amount + net };
-  }).sort((a, b) => b.net - a.net);
-
-  const best = Math.max(results[0]?.net || 0, 1);
-  const fmt  = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const el   = document.getElementById('cmp-results');
-  if (!el) return;
-
-  el.innerHTML = `
-    <div class="cmp-table">
-      ${results.map((r, i) => {
-        const bar    = ((r.net / best) * 100).toFixed(1);
-        const isBest = i === 0;
-        return `
-          <div class="cmp-row${isBest ? ' cmp-row-best' : ''}">
-            <div class="cmp-row-meta">
-              <span class="cmp-row-name">${r.name}${isBest ? ' <span class="cmp-best-badge">Melhor</span>' : ''}</span>
-              <span class="cmp-row-tag">${r.tag}</span>
-            </div>
-            <div class="cmp-bar-wrap"><div class="cmp-bar-fill" style="width:${bar}%"></div></div>
-            <div class="cmp-row-vals">
-              <span class="cmp-val-total">${fmt(r.total)}</span>
-              <span class="cmp-val-net">+${fmt(r.net)}</span>
-            </div>
-          </div>`;
-      }).join('')}
-    </div>
-    <p class="projection-cdi-note">CDI: ${fmtRate(cdi)}% a.a. · IPCA: ${fmtRate(ipca)}% · Principal: ${fmt(amount)} · ${months} meses</p>`;
-}
-
-// =============================================
 //  REDRAW ON RESIZE
 // =============================================
 window.addEventListener('resize', () => {
   const tab = document.getElementById('tab-investments');
   if (!tab?.classList.contains('active')) return;
-  if (_cachedRates) {
-    drawBanksChart(_cachedRates.cdi.value);
-    runSimulator();
-  }
   if (_portfolio.length) {
     drawEvolutionChart();
     drawAllocationDonut();
