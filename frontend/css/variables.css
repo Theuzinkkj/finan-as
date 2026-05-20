@@ -1,0 +1,131 @@
+/* =============================================
+   DESIGN TOKENS & THEMES
+   ============================================= */
+:root {
+  --bg:        #0d1117;
+  --bg-card:   rgba(13,17,23,0.82);
+  --bg-card-h: rgba(13,17,23,0.92);
+  --border:    rgba(255,255,255,0.08);
+  --border-h:  rgba(255,255,255,0.16);
+
+  --purple:    #6366f1;
+  --purple-l:  #818cf8;
+  --purple-d:  #4338ca;
+  --green:     #10b981;
+  --green-l:   #34d399;
+  --red:       #ef4444;
+  --yellow:    #f59e0b;
+  --blue:      #3b82f6;
+
+  --text:      #f1f5f9;
+  --text-2:    #94a3b8;
+  --text-3:    #8896aa;
+
+  --r:         16px;
+  --r-sm:      10px;
+  --font:      'Inter', sans-serif;
+}
+
+:root[data-theme="light"] {
+  --bg:        #f5f0e8;
+  --bg-card:   rgba(255,252,245,0.88);
+  --bg-card-h: rgba(255,253,248,0.96);
+  --border:    rgba(120,90,50,0.18);
+  --border-h:  rgba(120,90,50,0.35);
+  --text:      #292118;
+  --text-2:    #57534e;
+  --text-3:    #78716c;
+}
+
+/* =============================================
+   LIGHT THEME — ELEMENT OVERRIDES
+   ============================================= */
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 70% 60% at var(--px) var(--py), rgba(245,158,11,.20) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(251,113,133,.14) 0%, transparent 65%);
+}
+[data-theme="light"] .header,
+[data-theme="light"] .header-row { background: rgba(245,240,232,0.92); }
+[data-theme="light"] .modal            { background: #fdf8f0; }
+[data-theme="light"] .dropdown-menu   { background: #fdf8f0; box-shadow: 0 8px 32px rgba(0,0,0,.10); }
+[data-theme="light"] .mobile-nav      { background: rgba(245,240,232,0.96); }
+[data-theme="light"] .card            { box-shadow: 0 1px 4px rgba(120,90,50,.08), 0 0 0 1px rgba(120,90,50,.06); }
+[data-theme="light"] .tx-item         { background: rgba(255,252,245,.85); border-color: var(--border); }
+[data-theme="light"] .tx-item:hover   { background: rgba(255,252,245,1); border-color: var(--border-h); }
+[data-theme="light"] .tx-icon         { background: rgba(120,90,50,.06); }
+[data-theme="light"] .filter-select option { background: #fdf8f0; color: #292118; }
+[data-theme="light"] .filter-select   { background: rgba(99,102,241,.06); border-color: rgba(99,102,241,.22); }
+[data-theme="light"] .cat-btn         { background: rgba(120,90,50,.04); }
+[data-theme="light"] .cat-btn:hover   { background: rgba(120,90,50,.09); }
+[data-theme="light"] .theme-opt       { background: rgba(120,90,50,.05); }
+[data-theme="light"] .btn-export-opt  { background: rgba(120,90,50,.05); }
+[data-theme="light"] .ai-section      { background: rgba(120,90,50,.03); }
+[data-theme="light"] .setup-instructions { background: rgba(120,90,50,.04); }
+[data-theme="light"] .setup-steps code  { background: rgba(120,90,50,.08); }
+[data-theme="light"] .toast           { background: rgba(253,248,240,.96); color: var(--text); }
+[data-theme="light"] .auth-card       { background: rgba(255,252,245,.92); }
+[data-theme="light"] .form-group input,
+[data-theme="light"] .form-group textarea,
+[data-theme="light"] .chat-input-area input { background: rgba(120,90,50,.05); border: 1px solid rgba(120,90,50,0.18); border-radius: var(--r-sm); box-shadow: none; }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb       { background: rgba(0,0,0,.12); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.22); }
+
+/* =============================================
+   SMOOTH TRANSITIONS
+   ============================================= */
+body, .header, .card, .modal, .dropdown-menu,
+.chat-panel, .mobile-nav, .tx-item, .btn-icon,
+.filter-select, .toast {
+  transition: background-color .3s, border-color .3s, color .3s;
+}
+
+/* =============================================
+   RESET
+   ============================================= */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html  { scroll-behavior: smooth; }
+
+/* Foco visível para navegação por teclado */
+:focus-visible {
+  outline:        2px solid var(--purple);
+  outline-offset: 3px;
+  border-radius:  4px;
+}
+
+body {
+  font-family: var(--font);
+  background:  var(--bg);
+  color:       var(--text);
+  min-height:  100vh;
+  overflow-x:  hidden;
+}
+
+@property --px { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
+@property --py { syntax: '<percentage>'; inherits: false; initial-value: 20%; }
+@property --vx { syntax: '<percentage>'; inherits: false; initial-value: 82%; }
+@property --vy { syntax: '<percentage>'; inherits: false; initial-value: 78%; }
+
+@keyframes orb-a {
+  from { --px: 15%; --py: 20%; }
+  to   { --px: 70%; --py: 65%; }
+}
+@keyframes orb-b {
+  from { --vx: 82%; --vy: 78%; }
+  to   { --vx: 20%; --vy: 15%; }
+}
+
+body::before {
+  content:  '';
+  position: fixed;
+  inset:    0;
+  background:
+    radial-gradient(ellipse 70% 60% at var(--px) var(--py), rgba(99,102,241,.30) 0%, transparent 65%),
+    radial-gradient(ellipse 65% 55% at var(--vx) var(--vy), rgba(99,102,241,.22) 0%, transparent 65%);
+  pointer-events: none;
+  z-index:  0;
+  animation:
+    orb-a 12s ease-in-out infinite alternate,
+    orb-b 15s ease-in-out infinite alternate-reverse;
+}

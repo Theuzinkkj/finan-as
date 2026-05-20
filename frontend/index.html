@@ -1,0 +1,1217 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas — Controle Financeiro Inteligente</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="shortcut icon" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/auth.css">
+  <link rel="stylesheet" href="css/chat.css">
+  <link rel="stylesheet" href="css/investments.css">
+</head>
+<body>
+
+  <!-- ======= AUTH SCREEN ======= -->
+  <div id="auth-screen" class="hidden">
+    <div class="auth-bg-glow"></div>
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-icon">💎</span>
+        <span class="logo-text">Atlas</span>
+      </div>
+      <p class="auth-tagline">Controle Financeiro Inteligente</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signin">Entrar</button>
+        <button class="auth-tab" id="tab-signup">Cadastrar</button>
+      </div>
+
+      <form id="auth-form" novalidate>
+        <div class="form-group">
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="seu@email.com" autocomplete="email" required>
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" data-target="auth-password">
+              <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group hidden" id="auth-confirm-group">
+          <label for="auth-confirm">Confirmar senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="auth-confirm" placeholder="••••••••" autocomplete="new-password">
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" data-target="auth-confirm">
+              <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-feedback hidden" id="auth-error"></div>
+        <div class="auth-feedback auth-feedback-ok hidden" id="auth-success"></div>
+        <button type="submit" class="btn-primary auth-submit" id="auth-submit">
+          <span id="auth-submit-text">Entrar</span>
+          <span id="auth-submit-loader" class="loader hidden"></span>
+        </button>
+      </form>
+
+      <p class="auth-hint">Seus dados são salvos com segurança na nuvem.<br>Crie uma conta gratuita para começar.</p>
+
+      <div class="auth-demo-divider"><span>ou</span></div>
+      <button type="button" class="btn-demo" id="btn-demo">Experimentar sem cadastro</button>
+    </div>
+  </div>
+
+  <!-- ======= RESET PASSWORD SCREEN ======= -->
+  <div id="reset-password-screen" class="hidden">
+    <div class="auth-bg-glow"></div>
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-icon">💎</span>
+        <span class="logo-text">Atlas</span>
+      </div>
+      <p class="auth-tagline">Definir nova senha</p>
+      <form id="reset-pw-form" novalidate>
+        <div class="form-group">
+          <label for="reset-pw-new">Nova senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="reset-pw-new" placeholder="••••••••" autocomplete="new-password" required>
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" data-target="reset-pw-new">
+              <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reset-pw-confirm">Confirmar nova senha</label>
+          <div class="password-wrapper">
+            <input type="password" id="reset-pw-confirm" placeholder="••••••••" autocomplete="new-password" required>
+            <button type="button" class="toggle-pw" aria-label="Mostrar senha" data-target="reset-pw-confirm">
+              <svg class="eye-icon eye-open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="eye-icon eye-closed hidden" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="auth-feedback hidden" id="reset-pw-error"></div>
+        <button type="submit" class="btn-primary auth-submit" id="reset-pw-submit">
+          <span id="reset-pw-submit-text">Salvar nova senha</span>
+          <span id="reset-pw-submit-loader" class="loader hidden"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Demo banner -->
+  <div id="demo-banner" class="hidden">
+    <span class="demo-banner-text">Modo demo os dados não são salvos</span>
+    <button class="demo-banner-cta" id="btn-demo-signup">Criar conta grátis</button>
+    <button class="demo-banner-exit" id="btn-demo-exit" title="Sair do demo">✕</button>
+  </div>
+
+  <header class="header">
+    <div class="header-row">
+      <div class="header-left">
+        <div class="logo">
+          <span class="logo-icon">💎</span>
+          <span class="logo-text">Atlas</span>
+        </div>
+      </div>
+      <nav class="nav-tabs" id="nav-tabs" role="tablist" aria-label="Navegação principal">
+        <button class="nav-tab active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" id="nav-tab-dashboard">Dashboard</button>
+        <button class="nav-tab" data-tab="transactions" role="tab" aria-selected="false" aria-controls="tab-transactions" id="nav-tab-transactions">Transações</button>
+        <button class="nav-tab" data-tab="analysis" role="tab" aria-selected="false" aria-controls="tab-analysis" id="nav-tab-analysis">Análise IA</button>
+        <button class="nav-tab" data-tab="investments" role="tab" aria-selected="false" aria-controls="tab-investments" id="nav-tab-investments">Investimentos</button>
+      </nav>
+      <div class="header-right">
+        <span class="db-dot db-offline" id="db-status-dot-header" title="Sem banco de dados"></span>
+        <span class="header-greeting hidden" id="header-greeting">Olá, <strong id="header-greeting-name"></strong></span>
+        <button class="btn-profile" id="btn-profile" title="Meu perfil" aria-label="Abrir perfil">
+          <div class="profile-avatar-mini" id="profile-avatar-mini">
+            <span class="profile-initial-mini" id="profile-initial">?</span>
+          </div>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="month-float">
+    <div class="month-selector">
+      <button class="month-nav" id="prev-month">‹</button>
+      <span id="current-month-label">—</span>
+      <button class="month-nav" id="next-month">›</button>
+    </div>
+  </div>
+
+  <main class="main">
+
+    <!-- ======= DASHBOARD ======= -->
+    <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
+      <div class="summary-grid">
+        <div class="card card-balance">
+          <div class="card-label">Saldo do Mês</div>
+          <div class="card-value" id="balance-value">R$ 0,00</div>
+          <div class="card-sub" id="balance-sub"></div>
+        </div>
+        <div class="card card-income card-clickable" id="card-income" title="Ver receitas" onclick="goToTransactions('receita')">
+          <div class="card-icon-box income-box">↑</div>
+          <div>
+            <div class="card-label">Receitas</div>
+            <div class="card-value" id="income-value">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="card card-expense card-clickable" id="card-expense" title="Ver despesas" onclick="goToTransactions('despesa')">
+          <div class="card-icon-box expense-box">↓</div>
+          <div>
+            <div class="card-label">Despesas</div>
+            <div class="card-value" id="expense-value">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Benefits Section -->
+      <div class="benefits-section" id="benefits-section">
+        <div class="benefits-header">
+          <button class="benefits-toggle" id="btn-benefits-toggle" aria-expanded="false">
+            <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span class="section-label">Benefícios</span>
+            <span class="benefits-summary" id="benefits-summary"></span>
+          </button>
+          <button class="btn-link" id="btn-benefits-config" title="Configurar valores mensais">⚙ Configurar</button>
+        </div>
+        <div class="benefits-body" id="benefits-body">
+          <div class="benefits-grid" id="benefits-grid"></div>
+          <div class="benefits-empty hidden" id="benefits-empty">
+            Você recebe VR ou VT?
+            <button class="btn-link" id="btn-benefits-setup" style="margin-left:6px">Configure aqui →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="card chart-card">
+          <h3 class="chart-title">Gastos por Categoria</h3>
+          <div class="donut-wrapper">
+            <canvas id="donut-chart" width="180" height="180"></canvas>
+            <div class="donut-legend" id="donut-legend"></div>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <h3 class="chart-title">Evolução Diária de Gastos <span class="chart-title-hint">passe o mouse para detalhes</span></h3>
+          <canvas id="line-chart"></canvas>
+          <div id="line-click-info" class="line-click-panel"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Transações Recentes</h3>
+          <button class="btn-link" id="view-all-btn">Ver todas →</button>
+        </div>
+        <div class="transactions-list" id="recent-transactions"></div>
+      </div>
+
+      <!-- Rodapé de página -->
+      <div class="page-footer">
+        <div class="page-footer-brand">
+          <span class="logo-icon">💎</span>
+          <span class="page-footer-logo-text">Atlas</span>
+        </div>
+        <div class="page-footer-actions">
+          <button class="page-footer-btn page-footer-btn-add" onclick="document.getElementById('btn-add').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nova transação
+          </button>
+          <button class="page-footer-btn page-footer-btn-chat" onclick="document.getElementById('btn-chat').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Perguntar à IA
+          </button>
+        </div>
+        <button class="page-footer-totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Voltar ao topo
+        </button>
+      </div>
+    </section>
+
+    <!-- ======= TRANSACTIONS ======= -->
+    <section class="tab-content" id="tab-transactions" role="tabpanel" aria-labelledby="nav-tab-transactions">
+      <div class="filters-bar">
+        <div class="search-wrap">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="filter-search" class="filter-search" placeholder="Buscar..." autocomplete="off" aria-label="Buscar transações">
+        </div>
+        <select id="filter-category" class="filter-select">
+          <option value="">Todas as categorias</option>
+        </select>
+        <select id="filter-type" class="filter-select">
+          <option value="">Todos os tipos</option>
+          <option value="receita">Receitas</option>
+          <option value="despesa">Despesas</option>
+          <option value="beneficio">Benefícios</option>
+        </select>
+        <span class="filter-count" id="filter-count"></span>
+        <button class="btn-add-inline" id="btn-add-inline" title="Nova transação">+</button>
+      </div>
+      <div class="card">
+        <div class="transactions-list" id="all-transactions"></div>
+      </div>
+
+      <!-- Rodapé de página -->
+      <div class="page-footer">
+        <div class="page-footer-brand">
+          <span class="logo-icon">💎</span>
+          <span class="page-footer-logo-text">Atlas</span>
+        </div>
+        <button class="page-footer-totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Voltar ao topo
+        </button>
+      </div>
+    </section>
+
+    <!-- ======= ANALYSIS ======= -->
+    <section class="tab-content" id="tab-analysis" role="tabpanel" aria-labelledby="nav-tab-analysis">
+
+      <div class="card analysis-main-card">
+        <div class="analysis-chart-header">
+          <span class="chart-title-main">Análise de Gastos</span>
+          <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
+            <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/>
+                <rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/>
+                <rect x="1" y="10" width="10" height="2.5" rx="1.2"/>
+              </svg>
+              Barras
+            </button>
+            <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="7" cy="7" r="5.5"/>
+                <path d="M7 7V1.5M7 7L11.7 4.2"/>
+              </svg>
+              Pizza
+            </button>
+            <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,11 4,5 7,8 10,3 13,6"/>
+                <circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/>
+                <circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/>
+              </svg>
+              Linha
+            </button>
+            <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/>
+                <polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/>
+                <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
+              </svg>
+              Radar
+            </button>
+          </div>
+        </div>
+
+        <div class="analysis-body">
+          <div class="analysis-chart-area">
+            <canvas id="analysis-chart"></canvas>
+            <div id="analysis-legend" class="analysis-legend"></div>
+          </div>
+          <div class="analysis-info-panel">
+            <div class="stat-box">
+              <span class="stat-label">Despesas registradas</span>
+              <span class="stat-value" id="stat-count">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Maior gasto único</span>
+              <span class="stat-value" id="stat-max">R$ 0,00</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Média por dia ativo</span>
+              <span class="stat-value" id="stat-avg">R$ 0,00</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Categoria líder</span>
+              <span class="stat-value" id="stat-top-cat">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card ai-card">
+        <div class="ai-header">
+          <div class="ai-title-group">
+            <span class="ai-badge">✨ IA</span>
+            <h3>Análise Financeira Inteligente</h3>
+          </div>
+          <div class="ai-header-actions">
+            <button class="btn-icon-chat hidden" id="btn-chat-inline" title="Perguntar à IA">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button class="btn-primary" id="btn-analyze">
+              <span id="analyze-text">Analisar com IA</span>
+              <span id="analyze-loader" class="loader hidden"></span>
+            </button>
+          </div>
+        </div>
+        <div id="ai-result">
+          <div class="ai-placeholder">
+            <span class="ai-placeholder-icon">🤖</span>
+            <p>Clique em <strong>"Analisar com IA"</strong> para uma análise personalizada dos seus gastos deste mês.</p>
+            <p class="ai-placeholder-sub">A IA lê suas anotações e identifica padrões, gastos desnecessários e onde você pode economizar.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé de página -->
+      <div class="page-footer">
+        <div class="page-footer-brand">
+          <span class="logo-icon">💎</span>
+          <span class="page-footer-logo-text">Atlas</span>
+        </div>
+        <button class="page-footer-totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Voltar ao topo
+        </button>
+      </div>
+    </section>
+
+
+    <!-- ======= INVESTMENTS ======= -->
+    <section class="tab-content" id="tab-investments" role="tabpanel" aria-labelledby="nav-tab-investments">
+
+      <!-- Minha Carteira -->
+      <div class="card" id="portfolio-section">
+        <div class="portfolio-header">
+          <h2>Minha Carteira</h2>
+          <div class="portfolio-header-actions">
+            <button class="btn-pf-action" id="btn-portfolio-goal" title="Definir meta financeira">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+              Meta
+            </button>
+            <button class="btn-pf-action" id="btn-portfolio-export" title="Exportar para CSV">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV
+            </button>
+            <button class="btn-portfolio-add" id="btn-portfolio-add">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo aporte
+            </button>
+          </div>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="portfolio-cards" id="portfolio-cards" style="display:none"></div>
+
+        <!-- Financial goal -->
+        <div id="portfolio-goal-section" style="display:none"></div>
+
+        <!-- Charts: bar + pie -->
+        <div class="portfolio-charts-area" id="portfolio-charts-area" style="display:none">
+          <div class="portfolio-charts-grid">
+            <div class="portfolio-chart-box">
+              <div class="portfolio-chart-title">Aportes mensais</div>
+              <canvas id="portfolio-bar-chart"></canvas>
+            </div>
+            <div class="portfolio-chart-box">
+              <div class="portfolio-chart-title">Diversificação</div>
+              <div class="portfolio-pie-wrap">
+                <canvas id="portfolio-pie-chart"></canvas>
+              </div>
+              <div class="portfolio-pie-legend" id="portfolio-pie-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Projection -->
+        <div id="portfolio-projection" style="display:none"></div>
+
+        <!-- Entries area -->
+        <div class="portfolio-entries-area" id="portfolio-entries-area" style="display:none">
+          <div class="portfolio-entries-header">
+            <span class="portfolio-entries-title">Histórico de aportes</span>
+            <input type="text" id="pf-filter-text" class="pf-filter-input" placeholder="Filtrar por ativo..." autocomplete="off">
+          </div>
+          <div class="portfolio-entries" id="portfolio-entries"></div>
+          <div class="portfolio-entries-footer" id="portfolio-entries-footer"></div>
+        </div>
+
+        <!-- Empty state (shown when no entries) -->
+        <div class="portfolio-body" id="portfolio-body"></div>
+      </div>
+
+      <!-- Mercado: ticker + ações -->
+      <div class="card">
+        <div class="rates-header">
+          <h2>Mercado</h2>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="rates-updated" id="market-updated"></span>
+            <button class="btn-rates-refresh" id="btn-market-refresh" title="Atualizar mercado">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+        <div class="market-ticker" id="market-ticker"></div>
+      </div>
+
+      <!-- Ações B3 -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Ações B3</h3>
+        </div>
+        <div id="stocks-table"></div>
+      </div>
+
+      <!-- Taxas de mercado -->
+      <div class="card">
+        <div class="rates-header">
+          <h2>Taxas do Mercado</h2>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="rates-updated" id="rates-updated"></span>
+            <button class="btn-rates-refresh" id="btn-rates-refresh" title="Atualizar taxas">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+              Atualizar
+            </button>
+          </div>
+        </div>
+        <div class="rates-grid" id="rates-grid"></div>
+      </div>
+
+      <!-- Comparativo de bancos -->
+      <div class="card">
+        <div class="card-header">
+          <h3>Comparativo de Bancos — % do CDI</h3>
+        </div>
+        <canvas id="banks-chart"></canvas>
+        <p class="banks-note">* Valores aproximados para conta remunerada / CDB automático. Consulte o banco para condições exatas.</p>
+      </div>
+
+      <!-- Simulador -->
+      <div class="card">
+        <p class="inv-simulator-title">Simulador de Rendimento</p>
+
+        <div class="sim-inputs">
+          <div class="form-group">
+            <label for="sim-amount">Valor inicial (R$)</label>
+            <input type="number" id="sim-amount" min="1" step="100" value="1000" placeholder="1000">
+          </div>
+          <div class="form-group">
+            <label for="sim-months">Prazo (meses)</label>
+            <input type="number" id="sim-months" min="1" max="600" value="12" placeholder="12">
+          </div>
+          <div class="form-group">
+            <label for="sim-cdi-annual">CDI anual (%)</label>
+            <input type="number" id="sim-cdi-annual" min="0.1" max="100" step="0.01" placeholder="—">
+          </div>
+          <div class="form-group">
+            <label>Tipo de investimento</label>
+            <div class="sim-type-toggle">
+              <button class="sim-type-btn active" data-type="cdb">CDB (com IR)</button>
+              <button class="sim-type-btn" data-type="lci">LCI / LCA (isento)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sim-chart-wrap">
+          <canvas id="sim-chart"></canvas>
+        </div>
+
+        <div id="sim-results"></div>
+      </div>
+
+      <!-- Comparativo de investimentos -->
+      <div class="card">
+        <p class="inv-simulator-title">Comparativo de Investimentos</p>
+        <div class="sim-inputs">
+          <div class="form-group">
+            <label for="cmp-amount">Valor inicial (R$)</label>
+            <input type="number" id="cmp-amount" min="1" step="1000" value="10000" placeholder="10000">
+          </div>
+          <div class="form-group">
+            <label for="cmp-months">Prazo (meses)</label>
+            <input type="number" id="cmp-months" min="1" max="600" value="24" placeholder="24">
+          </div>
+          <div class="form-group">
+            <label for="cmp-cdi">CDI anual (%)</label>
+            <input type="number" id="cmp-cdi" min="0.1" max="100" step="0.01" placeholder="—">
+          </div>
+          <div class="form-group">
+            <label for="cmp-ipca">IPCA 12m (%)</label>
+            <input type="number" id="cmp-ipca" min="0" max="100" step="0.01" placeholder="—">
+          </div>
+        </div>
+        <div id="cmp-results"></div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="page-footer">
+        <div class="page-footer-brand">
+          <span class="logo-icon">💎</span>
+          <span class="page-footer-logo-text">Atlas</span>
+        </div>
+        <button class="page-footer-totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+          Voltar ao topo
+        </button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Floating dock -->
+  <div class="floating-dock">
+    <button class="dock-btn dock-btn-chat" id="btn-chat" title="Perguntar à IA">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="dock-btn dock-btn-add" id="btn-add" title="Nova transação">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </button>
+  </div>
+
+  <!-- Chat panel -->
+  <div class="chat-panel hidden" id="chat-panel">
+    <div class="chat-header">
+      <div class="chat-title">
+        <span class="ai-badge">✨ IA</span>
+        <span>Assistente Financeiro</span>
+      </div>
+      <div class="chat-actions">
+        <button class="chat-action-btn" id="btn-chat-clear" title="Limpar conversa">🗑</button>
+        <button class="chat-action-btn" id="btn-chat-close" title="Fechar">✕</button>
+      </div>
+    </div>
+    <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Conversa com assistente financeiro">
+      <div class="chat-welcome">
+        <div class="chat-welcome-icon">🤖</div>
+        <p>Olá! Sou seu assistente financeiro pessoal. Tenho acesso aos seus dados do mês atual e posso responder dúvidas sobre seus gastos, dar dicas de economia ou ajudar com qualquer questão financeira.</p>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Pergunte algo sobre suas finanças..." autocomplete="off">
+      <button class="btn-send" id="btn-send">
+        <span id="send-icon">↑</span>
+        <span id="send-loader" class="loader hidden"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile bottom nav -->
+  <nav class="mobile-nav" role="tablist" aria-label="Navegação principal">
+    <button class="mobile-nav-btn active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" id="mobile-nav-tab-dashboard">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="transactions" role="tab" aria-selected="false" aria-controls="tab-transactions" id="mobile-nav-tab-transactions">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Transações</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="analysis" role="tab" aria-selected="false" aria-controls="tab-analysis" id="mobile-nav-tab-analysis">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+      <span>IA</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="investments" role="tab" aria-selected="false" aria-controls="tab-investments" id="mobile-nav-tab-investments">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span>Invest.</span>
+    </button>
+  </nav>
+
+  <!-- Context menu: Transaction options -->
+  <div id="tx-context-menu" class="tx-context-menu hidden">
+    <button onclick="openRenameModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Renomear</button>
+    <button onclick="openEditAmountModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Editar valor</button>
+    <button onclick="openChangeCatModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Trocar categoria</button>
+    <button id="btn-menu-fixed" onclick="toggleFixedTx()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg> Repetir todo mês</button>
+    <button class="tx-menu-danger" onclick="txMenuDelete()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir</button>
+  </div>
+
+  <!-- Modal: Rename Transaction -->
+  <div class="modal-overlay hidden" id="modal-rename-tx">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-rename-tx-title">
+      <div class="modal-header">
+        <h2 id="modal-rename-tx-title">Renomear transação</h2>
+        <button class="modal-close" data-close="modal-rename-tx">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="rename-input">Nova descrição</label>
+        <input type="text" id="rename-input" placeholder="Ex: Almoço no restaurante">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-rename-tx">Cancelar</button>
+        <button class="btn-primary" onclick="saveRenameTx()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Edit Amount -->
+  <div class="modal-overlay hidden" id="modal-edit-amount">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-edit-amount-title">
+      <div class="modal-header">
+        <h2 id="modal-edit-amount-title">Editar valor</h2>
+        <button class="modal-close" data-close="modal-edit-amount">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="edit-amount-input">Novo valor (R$)</label>
+        <input type="number" id="edit-amount-input" step="0.01" min="0.01" placeholder="0,00">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-edit-amount">Cancelar</button>
+        <button class="btn-primary" onclick="saveEditAmount()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add to Fatura -->
+  <div class="modal-overlay hidden" id="modal-add-fatura">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-add-fatura-title">
+      <div class="modal-header">
+        <h2 id="modal-add-fatura-title">Adicionar à fatura</h2>
+        <button class="modal-close" data-close="modal-add-fatura">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Novo item</label>
+        <div class="invoice-add-row">
+          <input type="text" id="fatura-edit-desc" placeholder="Ex: Tênis, jantar...">
+          <input type="text" inputmode="decimal" id="fatura-edit-value" placeholder="0,00">
+          <button type="button" class="btn-add-item" id="btn-fatura-edit-add">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Itens na fatura</label>
+        <div id="fatura-edit-list"></div>
+        <div class="invoice-total" id="fatura-edit-total">
+          <span>Total:</span>
+          <span id="fatura-edit-total-value">R$ 0,00</span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-add-fatura">Cancelar</button>
+        <button class="btn-primary" onclick="saveAddToFatura()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: View Fatura -->
+  <div class="modal-overlay hidden" id="modal-view-fatura">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="view-fatura-title">
+      <div class="modal-header">
+        <div>
+          <h2 id="view-fatura-title">Fatura</h2>
+          <span class="view-fatura-date-label" id="view-fatura-date"></span>
+        </div>
+        <button class="modal-close" data-close="modal-view-fatura">✕</button>
+      </div>
+      <div class="form-group">
+        <div id="view-fatura-list"></div>
+        <div class="invoice-total" style="margin-top:10px">
+          <span>Total:</span>
+          <span id="view-fatura-total" style="color:#f87171;font-weight:700"></span>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" onclick="openAddFaturaFromView()">➕ Adicionar item</button>
+        <button class="btn-primary" data-close="modal-view-fatura">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Change Category -->
+  <div class="modal-overlay hidden" id="modal-change-cat">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-change-cat-title">
+      <div class="modal-header">
+        <h2 id="modal-change-cat-title">Trocar categoria</h2>
+        <button class="modal-close" data-close="modal-change-cat">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Selecione a nova categoria</label>
+        <div class="category-grid" id="change-cat-grid"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-change-cat">Cancelar</button>
+        <button class="btn-primary" onclick="saveChangeCat()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Transaction -->
+  <div class="modal-overlay hidden" id="modal-transaction">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-transaction-title">
+      <div class="modal-header">
+        <h2 id="modal-transaction-title">Nova Transação</h2>
+        <button class="modal-close" data-close="modal-transaction">✕</button>
+      </div>
+      <div class="type-toggle">
+        <button class="type-btn active" data-type="despesa">↓ Despesa</button>
+        <button class="type-btn" data-type="receita">↑ Receita</button>
+        <button class="type-btn" data-type="beneficio">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><circle cx="7" cy="15" r="1" fill="currentColor" stroke="none"/></svg>
+          Benefício
+        </button>
+      </div>
+      <form id="transaction-form" novalidate>
+        <div class="form-group" id="amount-group">
+          <label for="input-amount">Valor (R$)</label>
+          <input type="number" id="input-amount" step="0.01" min="0.01" placeholder="0,00">
+          <span id="amount-preview" class="amount-preview"></span>
+        </div>
+        <div class="form-group hidden" id="benefit-type-group">
+          <label>Tipo de Benefício</label>
+          <div class="benefit-type-grid" id="benefit-type-grid">
+            <button type="button" class="benefit-type-btn" data-benefit="vr">
+              <span class="benefit-type-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h1v8"/></svg>
+              </span>
+              <span>Vale Refeição</span>
+            </button>
+            <button type="button" class="benefit-type-btn" data-benefit="vt">
+              <span class="benefit-type-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+              </span>
+              <span>Vale Transporte</span>
+            </button>
+          </div>
+          <span class="field-error hidden" id="benefit-type-error">Selecione o tipo de benefício</span>
+        </div>
+        <div class="form-group" id="payment-group">
+          <label>Forma de Pagamento <span class="optional">(opcional)</span></label>
+          <div class="payment-grid" id="payment-grid">
+            <button type="button" class="payment-btn" data-payment="dinheiro"><span class="payment-icon">💵</span><span>Dinheiro</span></button>
+            <button type="button" class="payment-btn" data-payment="pix"><span class="payment-icon">⚡</span><span>PIX</span></button>
+            <button type="button" class="payment-btn" data-payment="debito"><span class="payment-icon">💳</span><span>Débito</span></button>
+            <button type="button" class="payment-btn" data-payment="credito"><span class="payment-icon">💳</span><span>Crédito</span></button>
+          </div>
+        </div>
+        <div class="form-group hidden" id="invoice-group">
+          <label>Itens da Fatura</label>
+          <div class="invoice-add-row">
+            <input type="text" id="invoice-item-desc" placeholder="Ex: Netflix, gasolina...">
+            <input type="text" inputmode="decimal" id="invoice-item-value" placeholder="0,00">
+            <button type="button" class="btn-add-item" id="btn-add-invoice-item">+</button>
+          </div>
+          <div id="invoice-items-list"></div>
+          <div class="invoice-total hidden" id="invoice-total">
+            <span>Total da fatura:</span>
+            <span id="invoice-total-value">R$ 0,00</span>
+          </div>
+        </div>
+        <div class="form-group" id="category-group">
+          <label>Categoria</label>
+          <div class="category-grid" id="category-grid"></div>
+          <span class="field-error hidden" id="cat-error">Selecione uma categoria</span>
+        </div>
+        <div class="form-group" id="desc-group">
+          <label for="input-description">Descrição</label>
+          <input type="text" id="input-description" placeholder="Ex: Almoço no restaurante" required>
+        </div>
+        <div class="form-group">
+          <label for="input-notes">Anotação <span class="optional">(por que gastou isso?)</span></label>
+          <textarea id="input-notes" placeholder="Ex: Comemoração de aniversário, compra por impulso, mensalidade obrigatória..." rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="input-date">Data</label>
+          <input type="date" id="input-date" required>
+        </div>
+        <div class="form-group">
+          <div class="fixed-row">
+            <div class="fixed-row-text">
+              <span class="fixed-row-label">Repetir todo mês</span>
+              <span class="fixed-row-sub">Aparece automaticamente nos próximos meses</span>
+            </div>
+            <button type="button" id="btn-fixed" class="toggle-switch" aria-pressed="false"></button>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-transaction">Cancelar</button>
+          <button type="submit" class="btn-primary">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Settings -->
+  <div class="modal-overlay hidden" id="modal-settings">
+    <div class="modal modal-settings" role="dialog" aria-modal="true" aria-labelledby="modal-settings-title">
+
+      <div class="modal-header settings-header">
+        <button class="btn-settings-back" id="btn-settings-back" title="Voltar ao perfil">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <h2 id="modal-settings-title">Configurações</h2>
+        <button class="modal-close" data-close="modal-settings">✕</button>
+      </div>
+
+      <!-- Aparência -->
+      <div class="sgroup">
+        <div class="sgroup-label">Aparência</div>
+        <div class="slist">
+          <div class="slist-row">
+            <div class="slist-icon" style="background:rgba(99,102,241,.13);color:rgb(99,102,241)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+            <span class="slist-text">Modo de exibição</span>
+            <div class="theme-btns">
+              <button class="theme-opt" id="theme-btn-dark"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Noturno</button>
+              <button class="theme-opt" id="theme-btn-light"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg> Diurno</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Exportar -->
+      <div class="sgroup">
+        <div class="sgroup-label">Exportar Dados</div>
+        <div class="slist">
+          <button class="slist-btn" id="btn-export-excel">
+            <div class="slist-icon" style="background:rgba(16,185,129,.12);color:rgb(16,185,129)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg></div>
+            <span class="slist-text">Excel (.xlsx)</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="slist-btn" id="btn-export-pdf">
+            <div class="slist-icon" style="background:rgba(59,130,246,.12);color:rgb(59,130,246)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+            <span class="slist-text">PDF</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Conta -->
+      <div class="sgroup" id="auth-user-bar">
+        <div class="sgroup-label">Conta</div>
+        <div class="slist">
+          <button class="slist-btn" id="btn-reset-password">
+            <div class="slist-icon" style="background:rgba(245,158,11,.12);color:rgb(245,158,11)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <span class="slist-text">Redefinir senha</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="slist-btn slist-btn-danger" id="btn-delete-account">
+            <div class="slist-icon" style="background:rgba(239,68,68,.1);color:rgb(239,68,68)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></div>
+            <span class="slist-text">Excluir conta</span>
+            <svg class="slist-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- elementos ocultos mantidos por compatibilidade com JS legado -->
+      <span style="display:none" id="auth-user-email"></span>
+      <div  style="display:none" id="auth-divider"></div>
+      <button style="display:none" id="btn-logout"></button>
+
+    </div>
+  </div>
+
+  <!-- Modal: Confirmar exclusão de conta -->
+  <div class="modal-overlay hidden" id="modal-confirm-delete">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-delete-title">
+      <div class="modal-header">
+        <h2 id="modal-confirm-delete-title">Excluir conta</h2>
+        <button class="modal-close" data-close="modal-confirm-delete">✕</button>
+      </div>
+      <p style="font-size:.88rem;color:var(--text-2);line-height:1.65;margin-bottom:22px">
+        Essa ação é <strong style="color:var(--text)">irreversível</strong>. Todos os seus dados e transações serão excluídos permanentemente.
+      </p>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-confirm-delete">Cancelar</button>
+        <button class="btn-primary" id="btn-confirm-delete" style="background:linear-gradient(135deg,#dc2626,#b91c1c)">
+          <span id="delete-account-text">Excluir permanentemente</span>
+          <span id="delete-account-loader" class="loader hidden"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selection bar -->
+  <div id="selection-bar" class="selection-bar hidden">
+    <div class="sel-info">
+      <span class="sel-count" id="sel-count"></span>
+      <span class="sel-amounts" id="sel-amounts"></span>
+      <span class="sel-net" id="sel-net"></span>
+    </div>
+    <button class="sel-clear" onclick="clearTxSelection()">✕ Limpar</button>
+  </div>
+
+  <!-- Modal: Custom Category -->
+  <div class="modal-overlay hidden" id="modal-custom-cat">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-custom-cat-title">
+      <div class="modal-header">
+        <h2 id="modal-custom-cat-title">Nova Categoria</h2>
+        <button class="modal-close" data-close="modal-custom-cat">✕</button>
+      </div>
+      <form id="form-custom-cat" novalidate>
+        <div class="form-group custom-cat-emoji-row">
+          <div class="custom-cat-name-wrap">
+            <label for="input-cat-label">Nome</label>
+            <input type="text" id="input-cat-label" placeholder="Ex: Academia" maxlength="20" required>
+            <span class="field-error hidden" id="cat-label-error">Digite um nome</span>
+          </div>
+          <div class="custom-cat-emoji-wrap">
+            <label>Emoji</label>
+            <button type="button" id="btn-cat-icon" class="btn-emoji-pick" aria-label="Escolher emoji">🏷️</button>
+            <div id="emoji-picker-panel" class="emoji-picker-panel hidden"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" data-close="modal-custom-cat">Cancelar</button>
+          <button type="submit" class="btn-primary">Criar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Profile Panel (slide from right) -->
+  <div class="profile-panel-overlay hidden" id="profile-panel-overlay">
+    <div class="profile-panel" id="profile-panel" role="dialog" aria-modal="true" aria-label="Meu Perfil">
+
+      <div class="profile-panel-header">
+        <button class="profile-panel-btn" id="btn-profile-close" title="Fechar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <button class="profile-panel-btn" id="btn-profile-to-settings" title="Configurações">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+
+      <div class="profile-avatar-section">
+        <div class="profile-avatar-wrap" id="profile-avatar-wrap" title="Foto de perfil">
+          <div class="profile-avatar-img" id="profile-avatar-img">
+            <span class="profile-avatar-initial" id="profile-avatar-initial">?</span>
+          </div>
+          <div class="profile-avatar-overlay">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <input type="file" id="profile-photo-input" accept="image/*" style="display:none">
+        </div>
+        <div class="avatar-menu" id="avatar-menu">
+          <button class="avatar-menu-item" id="avatar-menu-change">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Alterar foto
+          </button>
+          <button class="avatar-menu-item avatar-menu-remove" id="avatar-menu-remove">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            Remover foto
+          </button>
+        </div>
+      </div>
+
+      <div class="profile-name-section">
+        <div class="profile-greeting">Olá,</div>
+        <div class="profile-name-row">
+          <span class="profile-name" id="profile-name-display">—</span>
+          <button class="profile-name-edit-btn" id="btn-edit-name" title="Editar nome">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+        </div>
+        <div class="profile-email" id="profile-email-display">—</div>
+      </div>
+
+      <div class="profile-divider"></div>
+
+      <button class="profile-logout-btn" id="btn-profile-logout">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair da conta
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Modal: Edit Name -->
+  <div class="modal-overlay hidden" id="modal-edit-name">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-edit-name-title">
+      <div class="modal-header">
+        <h2 id="modal-edit-name-title">Como quer ser chamado?</h2>
+        <button class="modal-close" data-close="modal-edit-name">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="edit-name-input">Seu nome</label>
+        <input type="text" id="edit-name-input" placeholder="Ex: João, Theuzin..." maxlength="30" autocomplete="off">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-edit-name">Cancelar</button>
+        <button class="btn-primary" onclick="saveProfileName()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Benefits Config -->
+  <div class="modal-overlay hidden" id="modal-benefits-config">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-benefits-config-title">
+      <div class="modal-header">
+        <h2 id="modal-benefits-config-title">Configurar Benefícios</h2>
+        <button class="modal-close" data-close="modal-benefits-config">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="input-vr-amount">🍽️ Vale Refeição — valor mensal (R$)</label>
+        <input type="number" id="input-vr-amount" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label for="input-vt-amount">🚌 Vale Transporte — valor mensal (R$)</label>
+        <input type="number" id="input-vt-amount" step="0.01" min="0" placeholder="0,00">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" data-close="modal-benefits-config">Cancelar</button>
+        <button class="btn-primary" onclick="saveBenefitsConfig()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Portfolio entry -->
+  <div class="modal-overlay hidden" id="modal-portfolio">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-portfolio-title">
+      <div class="modal-header">
+        <h2 id="modal-portfolio-title">Novo aporte</h2>
+        <button class="modal-close" id="btn-pf-close">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="pf-date">Data</label>
+        <input type="date" id="pf-date" required>
+      </div>
+      <div class="form-group">
+        <label for="pf-asset">Ativo</label>
+        <div class="asset-picker" id="asset-picker">
+          <div class="asset-picker-field">
+            <span class="asset-picker-icon" id="asset-picker-icon">📊</span>
+            <input type="text" id="pf-asset" placeholder="Buscar ou digitar ativo..." autocomplete="off" required>
+            <span class="asset-picker-chevron" id="asset-picker-chevron">▾</span>
+          </div>
+          <div class="asset-picker-drop hidden" id="asset-picker-drop"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="pf-amount">Valor (R$)</label>
+        <input type="number" id="pf-amount" step="0.01" min="0.01" placeholder="0,00" required>
+      </div>
+      <div class="form-group">
+        <label for="pf-notes">Observação <span class="optional">(opcional)</span></label>
+        <input type="text" id="pf-notes" placeholder="Ex: comprei na queda, aporte mensal...">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btn-pf-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-pf-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Meta financeira -->
+  <div class="modal-overlay hidden" id="modal-goal">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-goal-title">
+      <div class="modal-header">
+        <h2 id="modal-goal-title">Meta Financeira</h2>
+        <button class="modal-close" data-close="modal-goal">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="goal-name">Nome da meta</label>
+        <input type="text" id="goal-name" placeholder="Ex: Aposentadoria, Reserva de emergência...">
+      </div>
+      <div class="form-group">
+        <label for="goal-amount">Valor alvo (R$)</label>
+        <input type="number" id="goal-amount" step="1000" min="1" placeholder="500000">
+      </div>
+      <div class="form-group">
+        <label for="goal-date">Data alvo</label>
+        <input type="date" id="goal-date">
+      </div>
+      <div class="form-actions">
+        <button class="btn-danger btn-sm" id="btn-goal-clear" style="margin-right:auto;display:none">Remover</button>
+        <button class="btn-secondary" id="btn-goal-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-goal-save">Salvar meta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar aporte -->
+  <div class="modal-overlay hidden" id="modal-edit-entry">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-edit-entry-title">
+      <div class="modal-header">
+        <h2 id="modal-edit-entry-title">Editar aporte</h2>
+        <button class="modal-close" data-close="modal-edit-entry">✕</button>
+      </div>
+      <input type="hidden" id="edit-entry-id">
+      <div class="form-group">
+        <label for="edit-pf-date">Data</label>
+        <input type="date" id="edit-pf-date" required>
+      </div>
+      <div class="form-group">
+        <label for="edit-pf-asset">Ativo</label>
+        <input type="text" id="edit-pf-asset" placeholder="Ativo..." autocomplete="off" required>
+      </div>
+      <div class="form-group">
+        <label for="edit-pf-amount">Valor (R$)</label>
+        <input type="number" id="edit-pf-amount" step="0.01" min="0.01" placeholder="0,00" required>
+      </div>
+      <div class="form-group">
+        <label for="edit-pf-notes">Observação <span class="optional">(opcional)</span></label>
+        <input type="text" id="edit-pf-notes" placeholder="Ex: aporte mensal...">
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btn-edit-entry-cancel">Cancelar</button>
+        <button class="btn-primary" id="btn-edit-entry-save">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- App — load order matters (no bundler) -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/investments.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const dock   = document.querySelector('.floating-dock');
+      const footer = document.querySelector('.page-footer');
+      if (!dock || !footer) return;
+
+      /* esconde/mostra dock conforme rodapé entra na viewport */
+      function onScroll() {
+        const r = footer.getBoundingClientRect();
+        const rendered = r.width > 0 || r.height > 0;
+        dock.classList.toggle('dock--hidden', rendered && r.top < window.innerHeight);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      /* sincroniza stats do rodapé com os valores reais do app */
+      function syncFooter() {
+        const get = id => document.getElementById(id);
+        const set = (id, val) => { const el = get(id); if (el) el.textContent = val; };
+
+        const incomeEl  = get('income-value');
+        const expenseEl = get('expense-value');
+        const balanceEl = get('balance-value');
+        const monthEl   = get('current-month-label');
+
+        if (incomeEl)  set('footer-income',  incomeEl.textContent);
+        if (expenseEl) set('footer-expense', expenseEl.textContent);
+        if (balanceEl) {
+          set('footer-balance', balanceEl.textContent);
+          const balStat = document.querySelector('.footer-stat-balance');
+          if (balStat) balStat.classList.toggle('negative', balanceEl.textContent.includes('-'));
+        }
+        if (monthEl) set('footer-month-label', monthEl.textContent);
+      }
+
+      /* observa mudanças nos valores para atualizar o rodapé automaticamente */
+      const obs = new MutationObserver(syncFooter);
+      ['income-value','expense-value','balance-value','current-month-label'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) obs.observe(el, { childList: true, characterData: true, subtree: true });
+      });
+      syncFooter();
+    })();
+  </script>
+</body>
+</html>
