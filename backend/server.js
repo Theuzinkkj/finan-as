@@ -569,11 +569,22 @@ app.get('/api/portfolio', requireAuth, async (req, res, next) => {
 
 app.post('/api/portfolio', requireAuth, async (req, res, next) => {
   try {
-    const { date, asset, amount, notes } = req.body || {};
+    const { date, asset, amount, notes, asset_type, transaction_type, quantity, price, other_costs } = req.body || {};
     if (!date || !asset || !amount) return res.status(400).json({ message: 'date, asset e amount são obrigatórios.' });
     if (isNaN(amount) || +amount <= 0) return res.status(400).json({ message: 'Valor inválido.' });
 
-    const body = { date, asset: asset.trim(), amount: +amount, notes: notes?.trim() || null, user_id: req.userId };
+    const body = {
+      date,
+      asset: asset.trim(),
+      amount: +amount,
+      notes: notes?.trim() || null,
+      asset_type: asset_type || null,
+      transaction_type: transaction_type || 'compra',
+      quantity: quantity != null ? +quantity : null,
+      price: price != null ? +price : null,
+      other_costs: other_costs != null ? +other_costs : null,
+      user_id: req.userId,
+    };
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/rest/v1/portfolio_entries`, {
       method:  'POST',
       headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
@@ -581,6 +592,33 @@ app.post('/api/portfolio', requireAuth, async (req, res, next) => {
     });
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
     res.status(201).json(Array.isArray(data) ? data[0] : data);
+  } catch (err) { next(err); }
+});
+
+app.patch('/api/portfolio/:id', requireAuth, async (req, res, next) => {
+  try {
+    const { date, asset, amount, notes, asset_type, transaction_type, quantity, price, other_costs } = req.body || {};
+    const updates = {};
+    if (date)             updates.date             = date;
+    if (asset)            updates.asset            = asset.trim();
+    if (amount != null)   updates.amount           = +amount;
+    if (notes !== undefined) updates.notes         = notes?.trim() || null;
+    if (asset_type !== undefined)       updates.asset_type       = asset_type || null;
+    if (transaction_type !== undefined) updates.transaction_type = transaction_type || 'compra';
+    if (quantity != null) updates.quantity   = +quantity;
+    if (price    != null) updates.price      = +price;
+    if (other_costs != null) updates.other_costs = +other_costs;
+
+    const url = `${SUPA_URL}/rest/v1/portfolio_entries`
+              + `?id=eq.${encodeURIComponent(req.params.id)}`
+              + `&user_id=eq.${encodeURIComponent(req.userId)}`;
+    const { ok, status, data } = await proxyFetch(url, {
+      method:  'PATCH',
+      headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
+      body:    JSON.stringify(updates),
+    });
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.json(Array.isArray(data) ? data[0] : data);
   } catch (err) { next(err); }
 });
 

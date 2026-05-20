@@ -16,6 +16,8 @@ let chatHistory       = [];
 let appInitialized    = false;
 let activeTxId        = null;
 let activeChangeCat   = null;
+let customCatSource   = 'add';
+let _refreshChangeCatGrid = null;
 let benefitAllocations = {};
 let budgets           = {};
 let obExpenses        = [];
@@ -1196,11 +1198,26 @@ function openChangeCatModal() {
         ${key.startsWith('custom_') ? `<span class="cat-btn-delete" data-delete-cat="${key}" title="Apagar categoria">✕</span>` : ''}
         <span class="cat-icon">${cat.icon}</span>
         <span>${cat.label}</span>
-      </button>`).join('');
+      </button>`).join('') + `
+    <button type="button" class="cat-btn cat-btn-add" id="btn-add-cat-change">
+      <span class="cat-icon">+</span>
+      <span>Nova</span>
+    </button>`;
   };
+  _refreshChangeCatGrid = renderChangeCatGrid;
   renderChangeCatGrid();
 
   grid.onclick = e => {
+    if (e.target.closest('#btn-add-cat-change')) {
+      customCatSource = 'change';
+      document.getElementById('btn-cat-icon').textContent = '🏷️';
+      document.getElementById('btn-cat-icon').dataset.emoji = '';
+      document.getElementById('input-cat-label').value = '';
+      document.getElementById('cat-label-error').classList.add('hidden');
+      document.getElementById('emoji-picker-panel').classList.add('hidden');
+      openModal('modal-custom-cat');
+      return;
+    }
     const delBtn = e.target.closest('.cat-btn-delete');
     if (delBtn) {
       e.stopPropagation();
@@ -1211,7 +1228,7 @@ function openChangeCatModal() {
       return;
     }
     const btn = e.target.closest('.cat-btn');
-    if (!btn) return;
+    if (!btn || btn.id === 'btn-add-cat-change') return;
     grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     activeChangeCat = btn.dataset.cat;
@@ -1364,6 +1381,7 @@ function buildCategoryGrid() {
   const grid = document.getElementById('category-grid');
   grid.addEventListener('click', e => {
     if (e.target.closest('#btn-add-cat')) {
+      customCatSource = 'add';
       document.getElementById('btn-cat-icon').textContent = '🏷️';
       document.getElementById('btn-cat-icon').dataset.emoji = '';
       document.getElementById('input-cat-label').value = '';
@@ -1804,15 +1822,20 @@ function bindEvents() {
     const color  = colors[Object.keys(CATEGORIES).length % colors.length];
     const key    = 'custom_' + Date.now();
     saveCustomCategory(key, { label, icon, color });
-    renderCategoryGrid();
-    const grid = document.getElementById('category-grid');
-    grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
-    const newBtn = grid.querySelector(`[data-cat="${key}"]`);
-    if (newBtn) { newBtn.classList.add('selected'); selectedCat = key; }
-    document.getElementById('cat-error').classList.add('hidden');
     buildCategoryFilter();
     closeModal('modal-custom-cat');
     toast(`Categoria "${label}" criada!`);
+    if (customCatSource === 'change') {
+      activeChangeCat = key;
+      if (_refreshChangeCatGrid) _refreshChangeCatGrid();
+    } else {
+      renderCategoryGrid();
+      const grid = document.getElementById('category-grid');
+      grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      const newBtn = grid.querySelector(`[data-cat="${key}"]`);
+      if (newBtn) { newBtn.classList.add('selected'); selectedCat = key; }
+      document.getElementById('cat-error').classList.add('hidden');
+    }
   });
 
   // Emoji picker

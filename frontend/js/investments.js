@@ -1,21 +1,86 @@
 'use strict';
 
 // =============================================
-//  PORTFOLIO
+//  PORTFOLIO — DATA MODEL & CRUD
 // =============================================
 let _portfolio     = [];
 let _portfolioGoal = null;
 let _pfFilter      = '';
 let _pfShowAll     = false;
 
-const ASSET_COLORS = [
-  '#6366f1','#10b981','#f59e0b','#3b82f6','#ec4899',
-  '#8b5cf6','#14b8a6','#f97316','#84cc16','#06b6d4',
-];
-
-function _portfolioKey() { return `atlas_pf_demo`; }
+function _portfolioKey() { return 'atlas_pf_demo'; }
 function _goalKey()      { return 'atlas_goal_demo'; }
 
+const ASSET_OPTIONS_BY_TYPE = {
+  'Ações': [
+    'ABEV3','AZUL4','B3SA3','BBAS3','BBDC4','BEEF3','BPAC11','BRAP4',
+    'BRFS3','CSAN3','CSNA3','EGIE3','EQTL3','FLRY3','GOLL4','HAPV3',
+    'ITSA4','ITUB4','KLBN11','LREN3','MGLU3','MRFG3','MRVE3','MULT3',
+    'PETR3','PETR4','PETZ3','QUAL3','RADL3','RAIL3','RDOR3','RENT3',
+    'SBSP3','SLCE3','STBP3','SUZB3','TAEE11','TIMS3','TOTS3','UGPA3',
+    'USIM5','VALE3','VIVT3','WEGE3','YDUQ3',
+  ],
+  'FIIs': [
+    'BCFF11','BRCO11','BTLG11','CPTS11','HGBS11','HGLG11','HGRU11',
+    'HSML11','KNRI11','MXRF11','RBRF11','RECR11','RVBI11','TGAR11',
+    'URPR11','VISC11','VGIP11','VILG11','XPLG11','XPML11',
+  ],
+  'Stock': [
+    'AAPL','ABBV','AMZN','BAC','BRK.B','C','CVX','DIS','GOOGL',
+    'JNJ','JPM','KO','META','MSFT','NFLX','NVDA','PEP','PFE',
+    'TSLA','UNH','V','WMT','XOM',
+  ],
+  'Reit': ['AMT','AVB','DLR','EQR','O','PLD','PSA','SPG','VNQ','WPC'],
+  'BDRs': [
+    'AAPL34','AMZO34','GOGL34','MSFT34','MVBI11','NVDC34','TSLA34',
+  ],
+  'ETFs': [
+    'BOVA11','BRAX11','DIVO11','HASH11','IFIX11','IVVB11','PIBB11',
+    'SMAL11','SMLL11','SPXI11',
+  ],
+  'ETFs Internacionais': [
+    'IAU','IEF','IVV','QQQ','SCHD','SPY','VEA','VNQ','VTI','VOO',
+  ],
+  'Tesouro Direto': [
+    'Tesouro Prefixado 2026','Tesouro Prefixado 2029','Tesouro Prefixado 2031',
+    'Tesouro IPCA+ 2029','Tesouro IPCA+ 2035','Tesouro IPCA+ 2045',
+    'Tesouro Selic 2027','Tesouro Selic 2029','Tesouro Selic 2031',
+    'Tesouro RendA+ 2030','Tesouro RendA+ 2035',
+    'Tesouro Educa+ 2030','Tesouro Educa+ 2040',
+  ],
+  'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': [
+    'CDB','LCI','LCA','LC','LF','RDB',
+  ],
+  'Outros': [],
+};
+
+const TYPE_COLORS = {
+  'Ações':      '#3b82f6',
+  'FIIs':       '#06b6d4',
+  'Stock':      '#8b5cf6',
+  'Reit':       '#ec4899',
+  'BDRs':       '#f97316',
+  'ETFs':       '#10b981',
+  'ETFs Internacionais': '#6366f1',
+  'Tesouro Direto': '#f59e0b',
+  'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': '#14b8a6',
+  'Outros':     '#94a3b8',
+};
+
+const TYPE_SHORT = {
+  'Ações':      'Ações',
+  'FIIs':       'FIIs',
+  'Stock':      'Stock',
+  'Reit':       'Reit',
+  'BDRs':       'BDRs',
+  'ETFs':       'ETFs',
+  'ETFs Internacionais': 'ETFs Int.',
+  'Tesouro Direto': 'Tesouro',
+  'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': 'Renda Fixa',
+  'Outros':     'Outros',
+};
+
+// ── CRUD ──────────────────────────────────────
 async function loadPortfolio() {
   if (typeof Demo !== 'undefined' && Demo.active) {
     _portfolio = JSON.parse(localStorage.getItem(_portfolioKey()) || '[]');
@@ -55,7 +120,7 @@ async function deletePortfolioEntry(id) {
 async function updatePortfolioEntry(id, updates) {
   if (typeof Demo !== 'undefined' && Demo.active) {
     const idx = _portfolio.findIndex(e => e.id === id);
-    if (idx < 0) throw new Error('Aporte não encontrado.');
+    if (idx < 0) throw new Error('Lançamento não encontrado.');
     _portfolio[idx] = { ..._portfolio[idx], ...updates };
     localStorage.setItem(_portfolioKey(), JSON.stringify(_portfolio));
     renderPortfolio();
@@ -75,10 +140,10 @@ function loadPortfolioGoal() {
 function renderPortfolioGoal() {
   const el = document.getElementById('portfolio-goal-section');
   if (!el) return;
-  if (!_portfolioGoal || !_portfolio.length) { el.style.display = 'none'; return; }
-
+  const buys = _portfolio.filter(e => (e.transaction_type || 'compra') === 'compra');
+  if (!_portfolioGoal || !buys.length) { el.style.display = 'none'; return; }
   const { name, amount, date } = _portfolioGoal;
-  const total      = _portfolio.reduce((s, e) => s + +e.amount, 0);
+  const total      = buys.reduce((s, e) => s + +e.amount, 0);
   const pct        = Math.min((total / amount) * 100, 100);
   const remaining  = Math.max(amount - total, 0);
   const fmt        = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -87,7 +152,6 @@ function renderPortfolioGoal() {
   const monthsLeft = Math.max((target.getFullYear() - now.getFullYear()) * 12 + (target.getMonth() - now.getMonth()), 1);
   const monthlyNeeded = remaining > 0 ? remaining / monthsLeft : 0;
   const dateLabel  = target.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
-
   el.style.display = '';
   el.innerHTML = `
     <div class="portfolio-goal">
@@ -150,15 +214,19 @@ function clearGoalModal() {
   toast?.('Meta removida.');
 }
 
-// ── Export CSV ────────────────────────────────
+// ── Export CSV ─────────────────────────────────
 function exportPortfolioCSV() {
-  if (!_portfolio.length) return toast?.('Nenhum aporte para exportar.', 'err');
-  const headers = ['Data', 'Ativo', 'Valor (R$)', 'Observação'];
+  if (!_portfolio.length) return toast?.('Nenhum lançamento para exportar.', 'err');
+  const headers = ['Data','Tipo','Ativo','Tipo de Ativo','Qtd','Preço','Outros Custos','Total'];
   const rows = _portfolio.map(e => [
     e.date,
+    e.transaction_type || 'compra',
     e.asset,
+    e.asset_type || '',
+    e.quantity   != null ? +e.quantity   : '',
+    e.price      != null ? +e.price      : '',
+    e.other_costs != null ? +e.other_costs : '',
     (+e.amount).toFixed(2).replace('.', ','),
-    e.notes || '',
   ]);
   const csv = [headers, ...rows]
     .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
@@ -171,263 +239,365 @@ function exportPortfolioCSV() {
   toast?.('CSV exportado!');
 }
 
+// =============================================
+//  PORTFOLIO RENDER
+// =============================================
 function renderPortfolio() {
-  const section = document.getElementById('portfolio-section');
-  if (!section) return;
-
-  const cards   = document.getElementById('portfolio-cards');
-  const charts  = document.getElementById('portfolio-charts-area');
-  const proj    = document.getElementById('portfolio-projection');
-  const entries = document.getElementById('portfolio-entries-area');
-  const goal    = document.getElementById('portfolio-goal-section');
-  const body    = document.getElementById('portfolio-body');
-
-  if (!_portfolio.length) {
-    if (cards)   cards.style.display   = 'none';
-    if (charts)  charts.style.display  = 'none';
-    if (proj)    proj.style.display    = 'none';
-    if (entries) entries.style.display = 'none';
-    if (goal)    goal.style.display    = 'none';
-    if (body) body.innerHTML = `
-      <div class="portfolio-empty">
-        <span class="portfolio-empty-icon">📂</span>
-        <p>Você ainda não registrou nenhum aporte.<br>Clique em <strong>Novo aporte</strong> para começar.</p>
-      </div>`;
-    return;
-  }
-
-  if (body) body.innerHTML = '';
-  renderPortfolioCards();
+  renderInvSummaryGrid();
   renderPortfolioGoal();
-  renderPortfolioCharts();
-  renderPortfolioEntries();
+
+  const hasData       = _portfolio.length > 0;
+  const chartsRow     = document.getElementById('inv-charts-row');
+  const assetsSection = document.getElementById('inv-assets-section');
+  const emptyState    = document.getElementById('inv-empty-state');
+
+  if (hasData) {
+    chartsRow?.classList.remove('hidden');
+    assetsSection?.classList.remove('hidden');
+    emptyState?.classList.add('hidden');
+    populateTypeFilters();
+    drawEvolutionChart();
+    drawAllocationDonut();
+    renderAssetsTable();
+  } else {
+    chartsRow?.classList.add('hidden');
+    assetsSection?.classList.add('hidden');
+    emptyState?.classList.remove('hidden');
+  }
 }
 
-// ── Summary cards ──────────────────────────────
-function renderPortfolioCards() {
-  const el = document.getElementById('portfolio-cards');
-  if (!el) return;
+// ── Summary Cards ──────────────────────────────
+function _portfolioStats() {
+  const now  = new Date();
+  const buys  = _portfolio.filter(e => (e.transaction_type || 'compra') === 'compra');
+  const sells = _portfolio.filter(e => e.transaction_type === 'venda');
+  const buy_total  = buys.reduce((s, e) => s + +e.amount, 0);
+  const sell_total = sells.reduce((s, e) => s + +e.amount, 0);
+  const net_invested = buy_total - sell_total;
 
-  const total     = _portfolio.reduce((s, e) => s + +e.amount, 0);
-  const now       = new Date();
-  const thisMonth = _portfolio.filter(e => {
-    const d = new Date(e.date + 'T12:00:00');
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-  });
-  const monthTotal = thisMonth.reduce((s, e) => s + +e.amount, 0);
-  const noAlert    = monthTotal === 0;
-
-  const months = new Map();
-  _portfolio.forEach(e => {
-    const d = new Date(e.date + 'T12:00:00');
-    const key = `${d.getFullYear()}-${d.getMonth()}`;
-    months.set(key, (months.get(key) || 0) + +e.amount);
-  });
-  const avgMonthly   = months.size ? [...months.values()].reduce((s, v) => s + v, 0) / months.size : 0;
-  const uniqueAssets = new Set(_portfolio.map(e => e.asset)).size;
-  const fmt          = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
-  // Estimated portfolio value using CDI
-  let estCard = '';
-  if (_cachedRates) {
+  let cdi_gain = 0;
+  if (_cachedRates && net_invested > 0) {
     const cdiMonthly = Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1;
-    const estValue   = _portfolio.reduce((sum, e) => {
+    cdi_gain = buys.reduce((sum, e) => {
       const d = new Date(e.date + 'T12:00:00');
       const m = Math.max((now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()), 0);
-      return sum + +e.amount * Math.pow(1 + cdiMonthly, m);
+      return sum + +e.amount * (Math.pow(1 + cdiMonthly, m) - 1);
     }, 0);
-    const estGain  = estValue - total;
-    const estPct   = total > 0 ? ((estGain / total) * 100).toFixed(1).replace('.', ',') : '0,0';
-    estCard = `
-    <div class="portfolio-card">
-      <div class="portfolio-card-label">Rendimento est. CDI</div>
-      <div class="portfolio-card-value" style="color:var(--green)">${fmt(estValue)}</div>
-      <div class="portfolio-card-sub">+ ${fmt(estGain)} (${estPct}%)</div>
-    </div>`;
   }
 
+  const patrimonio         = net_invested + cdi_gain;
+  const variation_pct      = buy_total > 0 ? (cdi_gain / buy_total) * 100 : 0;
+  const rentabilidade_pct  = buy_total > 0 ? (cdi_gain / buy_total) * 100 : 0;
+
+  return { buy_total, sell_total, net_invested, cdi_gain, patrimonio, variation_pct, rentabilidade_pct };
+}
+
+function renderInvSummaryGrid() {
+  const el = document.getElementById('inv-summary-grid');
+  if (!el) return;
+  const fmt    = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const { buy_total, net_invested, cdi_gain, patrimonio, variation_pct } = _portfolioStats();
+  const varDir   = variation_pct >= 0 ? 'up' : 'down';
+  const varArrow = variation_pct >= 0 ? '▲' : '▼';
+
   el.innerHTML = `
-    <div class="portfolio-card">
-      <div class="portfolio-card-label">Total investido</div>
-      <div class="portfolio-card-value accent">${fmt(total)}</div>
-      <div class="portfolio-card-sub">${_portfolio.length} aportes registrados</div>
+    <div class="inv-scard">
+      <div class="inv-scard-top">
+        <div class="inv-scard-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M6 20V10l6-6 6 6v10"/><path d="M10 20v-5h4v5"/></svg>
+        </div>
+        <span class="inv-scard-label">Patrimônio total</span>
+      </div>
+      <div class="inv-scard-value">${fmt(patrimonio)}</div>
+      <div class="inv-scard-sub">
+        <span class="inv-scard-badge ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</span>
+      </div>
+      <div class="inv-scard-footer">Valor Investido <span>${fmt(net_invested)}</span></div>
     </div>
-    <div class="portfolio-card${noAlert ? ' portfolio-card-alert' : ''}">
-      <div class="portfolio-card-label">Este mês${noAlert ? ' ⚠' : ''}</div>
-      <div class="portfolio-card-value month">${fmt(monthTotal)}</div>
-      <div class="portfolio-card-sub">${noAlert ? 'Sem aportes este mês' : `${thisMonth.length} aporte${thisMonth.length !== 1 ? 's' : ''} no período`}</div>
+
+    <div class="inv-scard">
+      <div class="inv-scard-top">
+        <div class="inv-scard-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <span class="inv-scard-label">Lucro total</span>
+      </div>
+      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${fmt(cdi_gain)}</div>
+      <div class="inv-scard-split">
+        <div class="inv-scard-split-item">
+          <span class="inv-scard-split-label">Ganho de Capital</span>
+          <span class="inv-scard-split-val">${fmt(cdi_gain)}</span>
+        </div>
+        <div class="inv-scard-split-item">
+          <span class="inv-scard-split-label">Dividendos Recebidos</span>
+          <span class="inv-scard-split-val">${fmt(0)}</span>
+        </div>
+      </div>
     </div>
-    ${estCard}
-    <div class="portfolio-card">
-      <div class="portfolio-card-label">Média mensal</div>
-      <div class="portfolio-card-value">${fmt(avgMonthly)}</div>
-      <div class="portfolio-card-sub">base: ${months.size} ${months.size !== 1 ? 'meses' : 'mês'}</div>
+
+    <div class="inv-scard">
+      <div class="inv-scard-top">
+        <div class="inv-scard-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
+        <span class="inv-scard-label">Proventos Recebidos (12M)</span>
+      </div>
+      <div class="inv-scard-value">${fmt(0)}</div>
+      <div class="inv-scard-footer">Total <span>${fmt(0)}</span></div>
     </div>
-    <div class="portfolio-card">
-      <div class="portfolio-card-label">Ativos</div>
-      <div class="portfolio-card-value">${uniqueAssets}</div>
-      <div class="portfolio-card-sub">tipo${uniqueAssets !== 1 ? 's' : ''} de investimento</div>
-    </div>`;
+
+    <div class="inv-scard inv-scard-double">
+      <div class="inv-scard-half">
+        <div class="inv-scard-top">
+          <div class="inv-scard-icon-wrap small">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
+          </div>
+          <span class="inv-scard-label">Variação</span>
+        </div>
+        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</div>
+        <div class="inv-scard-footer">${fmt(cdi_gain)}</div>
+      </div>
+      <div class="inv-scard-divider"></div>
+      <div class="inv-scard-half">
+        <div class="inv-scard-top">
+          <span class="inv-scard-label">Rentabilidade</span>
+        </div>
+        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</div>
+        <div class="inv-scard-footer inv-scard-footer-sub">CDI estimado</div>
+      </div>
+    </div>
+  `;
 }
 
-// ── Charts ─────────────────────────────────────
-function renderPortfolioCharts() {
-  drawPortfolioBarChart();
-  drawPortfolioPieChart();
-  renderProjectionTable();
+// ── Evolution Bar Chart ────────────────────────
+let _invPeriod     = '12';
+let _invTypeFilter = 'all';
+
+function populateTypeFilters() {
+  const types = [...new Set(_portfolio.map(e => e.asset_type).filter(Boolean))];
+  ['inv-type-filter', 'inv-alloc-filter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">Todos os tipos</option>' +
+      types.map(t => `<option value="${escHtml(t)}"${t === cur ? ' selected' : ''}>${escHtml(t)}</option>`).join('');
+  });
 }
 
-// Monthly bars: how much invested each month
-function drawPortfolioBarChart() {
-  const canvas = document.getElementById('portfolio-bar-chart');
+function drawEvolutionChart() {
+  const canvas = document.getElementById('inv-evolution-chart');
   if (!canvas) return;
 
-  // Build month buckets (last 12 months)
-  const buckets = new Map();
-  _portfolio.forEach(e => {
-    const d   = new Date(e.date + 'T12:00:00');
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    buckets.set(key, (buckets.get(key) || 0) + +e.amount);
-  });
+  const periodMonths = _invPeriod === 'all' ? 9999 : parseInt(_invPeriod);
+  const now = new Date();
 
-  const sorted = [...buckets.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-12);
-  if (!sorted.length) return;
+  // Build month slots (last N months)
+  const numSlots = Math.min(periodMonths, 24);
+  let slots = [];
+  for (let i = numSlots - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    slots.push({ year: d.getFullYear(), month: d.getMonth() });
+  }
 
-  const W    = canvas.parentElement.clientWidth || 400;
-  const H    = 160;
+  // When "all": derive slots from actual data
+  if (_invPeriod === 'all') {
+    const keySet = new Set();
+    _portfolio.forEach(e => {
+      if (_invTypeFilter !== 'all' && e.asset_type !== _invTypeFilter) return;
+      if ((e.transaction_type || 'compra') !== 'compra') return;
+      const d = new Date(e.date + 'T12:00:00');
+      keySet.add(`${d.getFullYear()}-${d.getMonth()}`);
+    });
+    if (keySet.size > 0) {
+      slots = [...keySet].sort().slice(-24).map(k => {
+        const [yr, mo] = k.split('-');
+        return { year: +yr, month: +mo };
+      });
+    }
+  }
+
+  const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
+
+  const slotData = slots.map(sl => {
+    const slotEnd = new Date(sl.year, sl.month + 1, 0);
+    const entries = _portfolio.filter(e => {
+      if ((e.transaction_type || 'compra') !== 'compra') return false;
+      if (_invTypeFilter !== 'all' && e.asset_type !== _invTypeFilter) return false;
+      const d = new Date(e.date + 'T12:00:00');
+      return d <= slotEnd;
+    });
+    const applied = entries.reduce((s, e) => s + +e.amount, 0);
+    const gain = _cachedRates ? entries.reduce((s, e) => {
+      const d = new Date(e.date + 'T12:00:00');
+      const m = Math.max(
+        (slotEnd.getFullYear() - d.getFullYear()) * 12 + (slotEnd.getMonth() - d.getMonth()),
+        0
+      );
+      return s + +e.amount * (Math.pow(1 + cdiMonthly, m) - 1);
+    }, 0) : 0;
+    return { ...sl, applied, gain };
+  }).filter(s => s.applied > 0);
+
+  if (!slotData.length) return;
+
+  const W = canvas.parentElement?.clientWidth || 500;
+  const H = 220;
   canvas.width  = W;
   canvas.height = H;
-
-  const ctx  = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const maxVal = Math.max(...sorted.map(s => s[1]), 1);
-  const pL = 6, pR = 6, pT = 10, pB = 28;
-  const n   = sorted.length;
-  const bW  = Math.floor((W - pL - pR) / n) - 4;
-  const cH  = H - pT - pB;
+  const maxVal = Math.max(...slotData.map(s => s.applied + s.gain), 1);
+  const n      = slotData.length;
+  const pL = 10, pR = 10, pT = 16, pB = 28;
+  const cH     = H - pT - pB;
+  const slotW  = (W - pL - pR) / n;
+  const bW     = Math.max(slotW * 0.62, 4);
+  const bGap   = (slotW - bW) / 2;
 
-  const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const fmt = v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0);
+  slotData.forEach((sl, i) => {
+    const x      = pL + i * slotW + bGap;
+    const totalH = Math.max(((sl.applied + sl.gain) / maxVal) * cH, 3);
+    const gainH  = sl.applied > 0 ? Math.min((sl.gain / (sl.applied + sl.gain)) * totalH, totalH * 0.4) : 0;
+    const appH   = totalH - gainH;
+    const y      = pT + cH - totalH;
+    const isNow  = sl.year === now.getFullYear() && sl.month === now.getMonth();
 
-  sorted.forEach(([key, val], i) => {
-    const x   = pL + i * ((W - pL - pR) / n);
-    const bH  = Math.max((val / maxVal) * cH, 3);
-    const y   = pT + cH - bH;
-    const [yr, mo] = key.split('-');
-    const isNow = key === `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    // Applied (dark green, bottom)
+    ctx.fillStyle = isNow ? '#15803d' : '#166534';
+    ctx.beginPath(); rrect(ctx, x, y + gainH, bW, appH, [0, 0, 3, 3]); ctx.fill();
 
-    const g = ctx.createLinearGradient(0, y, 0, y + bH);
-    g.addColorStop(0, isNow ? '#6366f1' : '#7c3aed');
-    g.addColorStop(1, isNow ? '#818cf8' : '#a78bfa');
-    ctx.fillStyle = g;
-    ctx.beginPath(); rrect(ctx, x + 2, y, bW, bH, 4); ctx.fill();
+    // Gain (light green, top)
+    if (gainH > 1) {
+      ctx.fillStyle = '#86efac';
+      ctx.beginPath(); rrect(ctx, x, y, bW, gainH + 2, [3, 3, 0, 0]); ctx.fill();
+    } else {
+      // Rounded top on applied bar when no gain
+      ctx.fillStyle = isNow ? '#15803d' : '#166534';
+      ctx.beginPath(); rrect(ctx, x, y, bW, Math.min(totalH, 6), [3, 3, 0, 0]); ctx.fill();
+    }
 
-    // Label above bar
-    ctx.fillStyle    = chartFg(0.65);
-    ctx.font         = '9px Inter';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(fmt(val), x + 2 + bW / 2, y - 2);
-
-    // Month label below
-    ctx.fillStyle    = chartFg(isNow ? 0.9 : 0.4);
+    // Month label
+    ctx.fillStyle    = chartFg(isNow ? 0.85 : 0.4);
     ctx.font         = isNow ? 'bold 9px Inter' : '9px Inter';
+    ctx.textAlign    = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText(MONTHS[+mo - 1], x + 2 + bW / 2, H - pB + 4);
+    const mo = String(sl.month + 1).padStart(2, '0');
+    const yr = String(sl.year).slice(2);
+    ctx.fillText(`${mo}/${yr}`, x + bW / 2, H - pB + 4);
+
+    // Value label (only when bars are wide enough)
+    if (bW >= 20 && sl.applied >= 100) {
+      const fmtV = v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0);
+      ctx.fillStyle    = chartFg(0.45);
+      ctx.font         = '8px Inter';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(fmtV(sl.applied + sl.gain), x + bW / 2, y - 2);
+    }
   });
 }
 
-// Pie chart: % per asset
-let _pieSlices   = [];
-let _pieHov      = -1;
-let _pieCtx      = null;
-let _pieGeo      = {};
+// ── Allocation Donut ───────────────────────────
+let _donutSlices = [];
+let _donutHov    = -1;
+let _donutCtx    = null;
+let _donutGeo    = {};
 
-function drawPortfolioPieChart() {
-  const canvas = document.getElementById('portfolio-pie-chart');
+function drawAllocationDonut() {
+  const canvas = document.getElementById('inv-donut-chart');
   if (!canvas) return;
 
+  const filter = document.getElementById('inv-alloc-filter')?.value || 'all';
   const totals = {};
-  _portfolio.forEach(e => { totals[e.asset] = (totals[e.asset] || 0) + +e.amount; });
-  const total  = Object.values(totals).reduce((s, v) => s + v, 0);
+  _portfolio.forEach(e => {
+    if ((e.transaction_type || 'compra') !== 'compra') return;
+    if (filter !== 'all' && e.asset_type !== filter) return;
+    const key = e.asset_type || 'Outros';
+    totals[key] = (totals[key] || 0) + +e.amount;
+  });
+
+  const total = Object.values(totals).reduce((s, v) => s + v, 0);
+  if (total === 0) { canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height); return; }
   const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
 
-  const size = Math.min(canvas.parentElement.clientWidth || 200, 180);
+  const size = Math.min(canvas.parentElement?.clientWidth || 160, 160);
   canvas.width = size; canvas.height = size;
-
-  const ctx  = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, size, size);
-  _pieCtx = ctx;
+  _donutCtx = ctx;
 
   const cx = size / 2, cy = size / 2;
-  const OR = size * 0.42, IR = size * 0.26;
-  _pieGeo = { cx, cy, OR, IR, size };
+  const OR = size * 0.43, IR = size * 0.27;
+  _donutGeo = { cx, cy, OR, IR, size };
 
   let angle = -Math.PI / 2;
-  _pieSlices = sorted.map(([asset, val], i) => {
+  _donutSlices = sorted.map(([type, val]) => {
     const sweep = (val / total) * Math.PI * 2;
     const sa    = angle;
     angle      += sweep;
-    return { asset, val, pct: (val / total * 100).toFixed(1), sa, ea: angle, color: ASSET_COLORS[i % ASSET_COLORS.length] };
+    return { type, val, pct: (val / total * 100).toFixed(1), sa, ea: angle, color: TYPE_COLORS[type] || '#94a3b8' };
   });
 
-  _pieHov = -1;
-  _redrawPie(-1);
+  _donutHov = -1;
+  _redrawDonut(-1);
 
-  // Legend
-  const legEl = document.getElementById('portfolio-pie-legend');
+  const legEl = document.getElementById('inv-donut-legend');
   if (legEl) {
-    legEl.innerHTML = _pieSlices.map((sl, i) => `
-      <div class="pie-legend-item" data-pie-idx="${i}">
-        <div class="pie-legend-dot" style="background:${sl.color}"></div>
-        <span class="pie-legend-name">${escHtml(sl.asset)}</span>
-        <span class="pie-legend-pct">${sl.pct}%</span>
+    legEl.innerHTML = _donutSlices.map((sl, i) => `
+      <div class="inv-donut-leg-item" data-idx="${i}">
+        <div class="inv-donut-leg-dot" style="background:${sl.color}"></div>
+        <span class="inv-donut-leg-name">${escHtml(TYPE_SHORT[sl.type] || sl.type)}</span>
+        <span class="inv-donut-leg-pct">${sl.pct}%</span>
       </div>`).join('');
 
-    legEl.querySelectorAll('.pie-legend-item').forEach(item => {
-      const idx = +item.dataset.pieIdx;
-      item.addEventListener('mouseenter', () => { _pieHov = idx; _redrawPie(idx); });
-      item.addEventListener('mouseleave', () => { _pieHov = -1; _redrawPie(-1); });
+    legEl.querySelectorAll('.inv-donut-leg-item').forEach(item => {
+      const idx = +item.dataset.idx;
+      item.addEventListener('mouseenter', () => { _donutHov = idx; _redrawDonut(idx); });
+      item.addEventListener('mouseleave', () => { _donutHov = -1; _redrawDonut(-1); });
     });
   }
 
   canvas.onmousemove = e => {
-    const r   = canvas.getBoundingClientRect();
-    const mx  = (e.clientX - r.left) * (size / r.width);
-    const my  = (e.clientY - r.top)  * (size / r.height);
+    const r = canvas.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (size / r.width);
+    const my = (e.clientY - r.top)  * (size / r.height);
     const dist = Math.hypot(mx - cx, my - cy);
-    if (dist < IR || dist > OR + 8) { if (_pieHov !== -1) { _pieHov = -1; _redrawPie(-1); } canvas.style.cursor = 'default'; return; }
+    if (dist < IR || dist > OR + 8) {
+      if (_donutHov !== -1) { _donutHov = -1; _redrawDonut(-1); }
+      return;
+    }
     let rel = (Math.atan2(my - cy, mx - cx) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
-    const idx = _pieSlices.findIndex(sl => {
+    const idx = _donutSlices.findIndex(sl => {
       let sa = (sl.sa + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
       let ea = (sl.ea + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
       return sa <= ea ? rel >= sa && rel <= ea : rel >= sa || rel <= ea;
     });
-    canvas.style.cursor = idx >= 0 ? 'default' : 'default';
-    if (idx !== _pieHov) { _pieHov = idx; _redrawPie(idx); }
+    if (idx !== _donutHov) { _donutHov = idx; _redrawDonut(idx); }
   };
-  canvas.onmouseleave = () => { _pieHov = -1; _redrawPie(-1); canvas.style.cursor = 'default'; };
+  canvas.onmouseleave = () => { _donutHov = -1; _redrawDonut(-1); };
 }
 
-function _redrawPie(hovIdx) {
-  if (!_pieCtx || !_pieSlices.length) return;
-  const ctx = _pieCtx;
-  const { cx, cy, OR, IR, size } = _pieGeo;
+function _redrawDonut(hovIdx) {
+  if (!_donutCtx || !_donutSlices.length) return;
+  const ctx = _donutCtx;
+  const { cx, cy, OR, IR, size } = _donutGeo;
   ctx.clearRect(0, 0, size, size);
 
-  _pieSlices.forEach((sl, i) => {
-    const expand = i === hovIdx ? 7 : 0;
+  _donutSlices.forEach((sl, i) => {
+    const expand = i === hovIdx ? 6 : 0;
     const mid    = sl.sa + (sl.ea - sl.sa) / 2;
-    const ox     = expand * Math.cos(mid), oy = expand * Math.sin(mid);
+    const ox = expand * Math.cos(mid), oy = expand * Math.sin(mid);
     ctx.beginPath();
     ctx.moveTo(cx + ox, cy + oy);
     ctx.arc(cx + ox, cy + oy, OR + (i === hovIdx ? 3 : 0), sl.sa, sl.ea);
     ctx.closePath();
     ctx.fillStyle   = sl.color;
-    ctx.globalAlpha = (hovIdx >= 0 && i !== hovIdx) ? 0.35 : 1;
-    ctx.fill(); ctx.globalAlpha = 1;
-    ctx.strokeStyle = chartBg(); ctx.lineWidth = 2; ctx.stroke();
+    ctx.globalAlpha = (hovIdx >= 0 && i !== hovIdx) ? 0.3 : 1;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = chartBg();
+    ctx.lineWidth   = 2;
+    ctx.stroke();
   });
 
   ctx.beginPath(); ctx.arc(cx, cy, IR, 0, Math.PI * 2);
@@ -435,384 +605,293 @@ function _redrawPie(hovIdx) {
 
   const fmt = v => v >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   ctx.fillStyle = chartFg(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (hovIdx >= 0) {
-    const sl = _pieSlices[hovIdx];
-    ctx.font = 'bold 11px Inter'; ctx.fillText(fmt(sl.val), cx, cy - 7);
-    ctx.font = '9px Inter'; ctx.fillStyle = chartFg(0.55); ctx.fillText(sl.pct + '%', cx, cy + 8);
+  if (hovIdx >= 0 && _donutSlices[hovIdx]) {
+    const sl = _donutSlices[hovIdx];
+    ctx.font = 'bold 10px Inter'; ctx.fillText(fmt(sl.val), cx, cy - 6);
+    ctx.font = '9px Inter'; ctx.fillStyle = chartFg(0.5); ctx.fillText(sl.pct + '%', cx, cy + 7);
   } else {
-    const tot = _pieSlices.reduce((s, sl) => s + sl.val, 0);
+    const tot = _donutSlices.reduce((s, sl) => s + sl.val, 0);
     ctx.font = 'bold 10px Inter'; ctx.fillText(fmt(tot), cx, cy);
   }
 }
 
-// ── Projection table ───────────────────────────
-function renderProjectionTable() {
-  const el = document.getElementById('portfolio-projection');
-  if (!el) return;
+// ── Assets Table ───────────────────────────────
+function renderAssetsTable() {
+  const tableEl  = document.getElementById('inv-assets-table');
+  const countEl  = document.getElementById('inv-assets-count');
+  const footerEl = document.getElementById('inv-assets-footer');
+  if (!tableEl) return;
 
-  const cdiAnnual  = _cachedRates?.cdi.value ?? 10.5;
-  const cdiMonthly = Math.pow(1 + cdiAnnual / 100, 1 / 12) - 1;
-
-  // Monthly average contribution
-  const months = new Map();
-  _portfolio.forEach(e => {
-    const d   = new Date(e.date + 'T12:00:00');
-    const key = `${d.getFullYear()}-${d.getMonth()}`;
-    months.set(key, (months.get(key) || 0) + +e.amount);
-  });
-  const pmt = months.size ? [...months.values()].reduce((s, v) => s + v, 0) / months.size : 0;
-  const pv  = _portfolio.reduce((s, e) => s + +e.amount, 0);
-
-  const fv = n => pv * Math.pow(1 + cdiMonthly, n) + (pmt * (Math.pow(1 + cdiMonthly, n) - 1) / cdiMonthly);
-  const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-  const periods = [
-    { label: '1 ano',    n: 12  },
-    { label: '3 anos',   n: 36  },
-    { label: '5 anos',   n: 60  },
-    { label: '10 anos',  n: 120 },
-    { label: '20 anos',  n: 240 },
-  ];
-
-  el.innerHTML = `
-    <table class="projection-table">
-      <thead>
-        <tr>
-          <th>Prazo</th>
-          <th>Total aportado</th>
-          <th>Com rendimento</th>
-          <th>Ganho estimado</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${periods.map(({ label, n }) => {
-          const invested = pv + pmt * n;
-          const total    = fv(n);
-          const yield_   = total - invested;
-          return `<tr>
-            <td>${label}</td>
-            <td>${fmt(invested)}</td>
-            <td>${fmt(total)}</td>
-            <td class="yield-val">+ ${fmt(yield_)}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-    <p class="projection-cdi-note">
-      CDI usado: ${cdiAnnual.toFixed(2).replace('.', ',')}% a.a. · Aporte mensal médio: ${fmt(pmt)}
-    </p>`;
-}
-
-// ── Entries list ───────────────────────────────
-function renderPortfolioEntries() {
-  const fmt     = v => (+v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const fmtDate = d => new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: '2-digit' });
-
-  const cards   = document.getElementById('portfolio-cards');
-  const charts  = document.getElementById('portfolio-charts-area');
-  const entries = document.getElementById('portfolio-entries-area');
-  const proj    = document.getElementById('portfolio-projection');
-
-  if (cards)   cards.style.display   = '';
-  if (charts)  charts.style.display  = '';
-  if (proj)    proj.style.display    = '';
-  if (entries) entries.style.display = '';
-
-  document.getElementById('portfolio-empty-state')?.remove();
-
-  const entEl    = document.getElementById('portfolio-entries');
-  const footerEl = document.getElementById('portfolio-entries-footer');
-  if (!entEl) return;
-
-  // Wire filter input
   const filterInput = document.getElementById('pf-filter-text');
   if (filterInput && !filterInput._wired) {
     filterInput._wired = true;
     filterInput.addEventListener('input', e => {
       _pfFilter  = e.target.value.trim().toLowerCase();
       _pfShowAll = false;
-      renderPortfolioEntries();
+      renderAssetsTable();
     });
   }
   if (filterInput) filterInput.value = _pfFilter;
 
-  let filtered = _pfFilter
-    ? _portfolio.filter(e => e.asset.toLowerCase().includes(_pfFilter))
-    : _portfolio;
+  const fmt     = v => (+v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const limit   = _pfShowAll ? filtered.length : 20;
-  const visible = filtered.slice(0, limit);
+  // Group by asset name
+  const grouped = new Map();
+  _portfolio.forEach(e => {
+    const key = e.asset;
+    if (!grouped.has(key)) grouped.set(key, { asset: e.asset, asset_type: e.asset_type || 'Outros', entries: [] });
+    grouped.get(key).entries.push(e);
+  });
 
-  entEl.innerHTML = visible.map(e => `
-    <div class="portfolio-entry-row">
-      <span class="portfolio-entry-date">${fmtDate(e.date)}</span>
-      <span class="portfolio-entry-asset">${escHtml(e.asset)}</span>
-      <span class="portfolio-entry-amount">${fmt(e.amount)}</span>
-      <button class="btn-entry-edit"   data-id="${e.id}" title="Editar aporte">✏</button>
-      <button class="btn-entry-delete" data-id="${e.id}" title="Remover aporte">✕</button>
-    </div>`).join('');
+  let items = [...grouped.values()];
+  if (_pfFilter) items = items.filter(it => it.asset.toLowerCase().includes(_pfFilter) || (it.asset_type || '').toLowerCase().includes(_pfFilter));
+
+  if (countEl) countEl.textContent = `(${items.length})`;
+
+  const limit   = _pfShowAll ? items.length : 15;
+  const visible = items.slice(0, limit);
+
+  const now        = new Date();
+  const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
+
+  tableEl.innerHTML = `
+    <div class="inv-assets-head">
+      <span>Ativo</span>
+      <span>Tipo</span>
+      <span>Qtd / Lançamentos</span>
+      <span>Total Investido</span>
+      <span>Estimativa</span>
+      <span></span>
+    </div>
+    ${visible.map(it => {
+      const buys  = it.entries.filter(e => (e.transaction_type || 'compra') === 'compra');
+      const sells = it.entries.filter(e => e.transaction_type === 'venda');
+      const totalBuy  = buys.reduce((s, e) => s + +e.amount, 0);
+      const totalSell = sells.reduce((s, e) => s + +e.amount, 0);
+      const netTotal  = totalBuy - totalSell;
+      const totalQty  = buys.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0)
+                      - sells.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0);
+      const hasQty = buys.some(e => e.quantity != null && +e.quantity > 0);
+
+      const estVal = _cachedRates ? buys.reduce((sum, e) => {
+        const d = new Date(e.date + 'T12:00:00');
+        const m = Math.max((now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()), 0);
+        return sum + +e.amount * Math.pow(1 + cdiMonthly, m);
+      }, 0) - totalSell : netTotal;
+
+      const gain    = estVal - netTotal;
+      const gainPct = netTotal > 0 ? ((gain / netTotal) * 100).toFixed(2).replace('.', ',') : '0,00';
+      const gainDir = gain >= 0 ? 'up' : 'down';
+      const color   = TYPE_COLORS[it.asset_type] || '#94a3b8';
+      const shortType = TYPE_SHORT[it.asset_type] || it.asset_type;
+
+      return `
+        <div class="inv-asset-row">
+          <div class="inv-asset-info">
+            <span class="inv-asset-ticker">${escHtml(it.asset)}</span>
+          </div>
+          <div>
+            <span class="inv-asset-type-badge" style="background:${color}20;color:${color};border:1px solid ${color}40">${escHtml(shortType)}</span>
+          </div>
+          <div class="inv-asset-qty">
+            ${hasQty && totalQty > 0
+              ? `<span>${totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} un</span>`
+              : `<span>${it.entries.length} lançamento${it.entries.length !== 1 ? 's' : ''}</span>`
+            }
+          </div>
+          <div class="inv-asset-invested">${fmt(netTotal)}</div>
+          <div class="inv-asset-est">
+            <span class="inv-asset-est-val">${fmt(estVal)}</span>
+            <span class="inv-asset-gain ${gainDir}">${gain >= 0 ? '+' : ''}${fmt(gain)} (${gain >= 0 ? '+' : ''}${gainPct}%)</span>
+          </div>
+          <div class="inv-asset-actions">
+            <button class="btn-asset-edit" data-id="${escHtml(it.entries[0]?.id || '')}" data-asset="${escHtml(it.asset)}" title="Editar último lançamento">✏</button>
+            <button class="btn-entry-delete" data-asset="${escHtml(it.asset)}" title="Remover lançamentos">✕</button>
+          </div>
+        </div>`;
+    }).join('')}
+  `;
 
   if (footerEl) {
-    if (!_pfShowAll && filtered.length > 20) {
-      footerEl.innerHTML = `<div class="portfolio-entries-more">Mostrando ${visible.length} de ${filtered.length} · <button class="btn-link" id="btn-pf-showall">Ver todos</button></div>`;
-      footerEl.querySelector('#btn-pf-showall')?.addEventListener('click', () => { _pfShowAll = true; renderPortfolioEntries(); });
-    } else if (_pfShowAll && filtered.length > 20) {
-      footerEl.innerHTML = `<div class="portfolio-entries-more">${filtered.length} aportes · <button class="btn-link" id="btn-pf-hideall">Mostrar menos</button></div>`;
-      footerEl.querySelector('#btn-pf-hideall')?.addEventListener('click', () => { _pfShowAll = false; renderPortfolioEntries(); });
+    if (!_pfShowAll && items.length > 15) {
+      footerEl.innerHTML = `<div class="portfolio-entries-more">Mostrando ${visible.length} de ${items.length} · <button class="btn-link" id="btn-pf-showall">Ver todos</button></div>`;
+      footerEl.querySelector('#btn-pf-showall')?.addEventListener('click', () => { _pfShowAll = true; renderAssetsTable(); });
+    } else if (_pfShowAll && items.length > 15) {
+      footerEl.innerHTML = `<div class="portfolio-entries-more">${items.length} ativos · <button class="btn-link" id="btn-pf-hideall">Mostrar menos</button></div>`;
+      footerEl.querySelector('#btn-pf-hideall')?.addEventListener('click', () => { _pfShowAll = false; renderAssetsTable(); });
     } else {
-      footerEl.innerHTML = _pfFilter && filtered.length !== _portfolio.length
-        ? `<div class="portfolio-entries-more">${filtered.length} resultado${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''}</div>`
-        : '';
+      footerEl.innerHTML = '';
     }
   }
 
-  entEl.querySelectorAll('.btn-entry-edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditEntryModal(btn.dataset.id));
+  tableEl.querySelectorAll('.btn-asset-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const asset = btn.dataset.asset;
+      const entries = _portfolio.filter(e => e.asset === asset);
+      if (entries.length === 1) {
+        openPortfolioModal(entries[0].id);
+      } else if (entries.length > 1) {
+        openPortfolioModal(entries[0].id);
+      }
+    });
   });
-  entEl.querySelectorAll('.btn-entry-delete').forEach(btn => {
+
+  tableEl.querySelectorAll('.btn-entry-delete').forEach(btn => {
     btn.addEventListener('click', async () => {
-      if (!confirm('Remover este aporte?')) return;
-      try { await deletePortfolioEntry(btn.dataset.id); }
-      catch { toast?.('Erro ao remover aporte.', 'err'); }
+      const asset = btn.dataset.asset;
+      const toDelete = _portfolio.filter(e => e.asset === asset);
+      const msg = toDelete.length === 1
+        ? `Remover o lançamento de "${asset}"?`
+        : `Remover todos os ${toDelete.length} lançamentos de "${asset}"?`;
+      if (!confirm(msg)) return;
+      try {
+        for (const e of toDelete) await deletePortfolioEntry(e.id);
+      } catch { toast?.('Erro ao remover.', 'err'); }
     });
   });
 }
 
-// ── Asset Picker ───────────────────────────────
-const ASSET_GROUPS = [
-  {
-    label: '📈 Ações',
-    badge: 'purple',
-    items: [
-      { value: 'PETR4',  name: 'Petrobras PN'      },
-      { value: 'VALE3',  name: 'Vale'               },
-      { value: 'ITUB4',  name: 'Itaú Unibanco PN'  },
-      { value: 'ABEV3',  name: 'Ambev'              },
-      { value: 'BBDC4',  name: 'Bradesco PN'        },
-    ],
-  },
-  {
-    label: '🏛️ Renda Fixa',
-    badge: 'green',
-    items: [
-      { value: 'Tesouro Selic',  name: 'Baixo risco · liquidez diária' },
-      { value: 'Tesouro IPCA+', name: 'Indexado à inflação'            },
-      { value: 'CDB',            name: 'Certificado de Depósito'       },
-      { value: 'LCI',            name: 'Isento de IR'                  },
-      { value: 'LCA',            name: 'Isento de IR'                  },
-      { value: 'Fundo DI',       name: 'Rende próximo ao CDI'          },
-    ],
-  },
-  {
-    label: '₿ Cripto',
-    badge: 'yellow',
-    items: [
-      { value: 'Bitcoin',   name: 'BTC' },
-      { value: 'Ethereum',  name: 'ETH' },
-      { value: 'Cripto',    name: 'Outras criptomoedas' },
-    ],
-  },
-  {
-    label: '🏢 FIIs',
-    badge: 'orange',
-    items: [
-      { value: 'MXRF11', name: 'Maxi Renda — papel'       },
-      { value: 'XPML11', name: 'XP Malls — shoppings'     },
-      { value: 'HGLG11', name: 'CSHG Log — logística'     },
-      { value: 'KNRI11', name: 'Kinea Renda — híbrido'    },
-      { value: 'VISC11', name: 'Vinci Shopping — shoppings' },
-      { value: 'BCFF11', name: 'BTG Fundo de Fundos'      },
-    ],
-  },
-];
-
-const ICON_MAP = {
-  purple: '📈', green: '🏛️', yellow: '₿', orange: '🏢',
-};
-
-function initAssetPicker() {
-  const picker   = document.getElementById('asset-picker');
-  const input    = document.getElementById('pf-asset');
-  const drop     = document.getElementById('asset-picker-drop');
-  const iconEl   = document.getElementById('asset-picker-icon');
-  if (!picker || !input || !drop) return;
-
-  let focusedIdx = -1;
-  let allOptions = [];
-
-  function buildOptions(filter) {
-    drop.innerHTML = '';
-    allOptions = [];
-    focusedIdx = -1;
-    const q = filter.toLowerCase();
-
-    ASSET_GROUPS.forEach(group => {
-      const matches = group.items.filter(
-        it => it.value.toLowerCase().includes(q) || it.name.toLowerCase().includes(q)
-      );
-      if (!matches.length) return;
-
-      const grpEl = document.createElement('div');
-      grpEl.className = 'asset-group';
-      grpEl.innerHTML = `<div class="asset-group-label">${group.label}</div>`;
-
-      matches.forEach(item => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'asset-option';
-        btn.dataset.value = item.value;
-        btn.dataset.badge = group.badge;
-        btn.innerHTML = `
-          <span class="asset-opt-badge ${group.badge}">${item.value}</span>
-          <span class="asset-opt-name">${item.name}</span>`;
-        btn.addEventListener('mousedown', e => {
-          e.preventDefault();
-          selectOption(item.value, group.badge);
-        });
-        grpEl.appendChild(btn);
-        allOptions.push(btn);
-      });
-
-      drop.appendChild(grpEl);
-    });
-
-    if (!allOptions.length) {
-      drop.innerHTML = `<div class="asset-picker-empty">Nenhum ativo encontrado — será salvo como digitado</div>`;
-    }
-  }
-
-  function selectOption(value, badge) {
-    input.value = value;
-    if (iconEl) iconEl.textContent = badge === 'green' ? '🏛️' : badge === 'yellow' ? '₿' : badge === 'orange' ? '🏢' : '📈';
-    closeDrop();
-    input.focus();
-  }
-
-  function openDrop() {
-    buildOptions(input.value);
-    drop.classList.remove('hidden');
-    picker.classList.add('open');
-  }
-
-  function closeDrop() {
-    drop.classList.add('hidden');
-    picker.classList.remove('open');
-    focusedIdx = -1;
-  }
-
-  function moveFocus(dir) {
-    if (drop.classList.contains('hidden')) { openDrop(); return; }
-    const opts = drop.querySelectorAll('.asset-option');
-    if (!opts.length) return;
-    opts[focusedIdx]?.classList.remove('focused');
-    focusedIdx = (focusedIdx + dir + opts.length) % opts.length;
-    opts[focusedIdx].classList.add('focused');
-    opts[focusedIdx].scrollIntoView({ block: 'nearest' });
-  }
-
-  input.addEventListener('focus', () => openDrop());
-  input.addEventListener('input', () => {
-    if (iconEl) iconEl.textContent = '📊';
-    buildOptions(input.value);
-    if (drop.classList.contains('hidden')) drop.classList.remove('hidden');
-    picker.classList.add('open');
-  });
-  input.addEventListener('keydown', e => {
-    if (e.key === 'ArrowDown')  { e.preventDefault(); moveFocus(1); }
-    if (e.key === 'ArrowUp')    { e.preventDefault(); moveFocus(-1); }
-    if (e.key === 'Enter') {
-      const focused = drop.querySelector('.asset-option.focused');
-      if (focused) { e.preventDefault(); selectOption(focused.dataset.value, focused.dataset.badge); }
-    }
-    if (e.key === 'Escape') closeDrop();
-  });
-  input.addEventListener('blur', () => setTimeout(closeDrop, 150));
-
-  picker.querySelector('.asset-picker-field').addEventListener('click', () => {
-    if (drop.classList.contains('hidden')) openDrop();
-    input.focus();
-  });
-}
-
-// ── Modal ──────────────────────────────────────
-function openPortfolioModal() {
+// =============================================
+//  MODAL — ADICIONAR / EDITAR LANÇAMENTO
+// =============================================
+function openPortfolioModal(editId) {
   const modal = document.getElementById('modal-portfolio');
   if (!modal) return;
-  document.getElementById('pf-date').value   = new Date().toISOString().slice(0, 10);
-  document.getElementById('pf-asset').value  = '';
-  document.getElementById('pf-amount').value = '';
-  document.getElementById('pf-notes').value  = '';
-  const iconEl = document.getElementById('asset-picker-icon');
-  if (iconEl) iconEl.textContent = '📊';
-  modal.classList.remove('hidden');
-  initAssetPicker();
-  document.getElementById('pf-asset').focus();
+
+  const isEdit = Boolean(editId);
+  document.getElementById('modal-portfolio-title').textContent = isEdit ? 'Editar Lançamento' : 'Adicionar Lançamento';
+  document.getElementById('btn-pf-save').innerHTML = isEdit
+    ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Salvar alterações'
+    : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar Lançamento';
+
+  document.getElementById('pf-edit-id').value = editId || '';
+
+  if (isEdit) {
+    const entry = _portfolio.find(e => e.id === editId);
+    if (!entry) return;
+    _setLcTab(entry.transaction_type || 'compra');
+    const assetType = entry.asset_type || 'Ações';
+    document.getElementById('pf-asset-type').value = assetType;
+    populateAssetOptions(assetType, entry.asset);
+    document.getElementById('pf-date').value        = entry.date;
+    document.getElementById('pf-quantity').value    = entry.quantity   ?? 1;
+    document.getElementById('pf-price').value       = entry.price      ?? entry.amount;
+    document.getElementById('pf-other-costs').value = entry.other_costs ?? 0;
+  } else {
+    _setLcTab('compra');
+    document.getElementById('pf-asset-type').value = 'Ações';
+    populateAssetOptions('Ações');
+    document.getElementById('pf-date').value        = new Date().toISOString().slice(0, 10);
+    document.getElementById('pf-quantity').value    = '1';
+    document.getElementById('pf-price').value       = '0';
+    document.getElementById('pf-other-costs').value = '0';
+  }
+
+  _updateTotalDisplay();
+  openModal('modal-portfolio');
 }
 
 function closePortfolioModal() {
-  document.getElementById('modal-portfolio')?.classList.add('hidden');
+  closeModal('modal-portfolio');
+}
+
+function _setLcTab(type) {
+  document.getElementById('pf-transaction-type').value = type;
+  document.querySelectorAll('.lc-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.type === type);
+  });
+  const dateLabel = document.querySelector('label[for="pf-date"]');
+  if (dateLabel) dateLabel.textContent = type === 'venda' ? 'Data da venda' : 'Data da compra';
+}
+
+function populateAssetOptions(type, selectedVal) {
+  const oldEl = document.getElementById('pf-asset');
+  if (!oldEl) return;
+  const opts = ASSET_OPTIONS_BY_TYPE[type] || [];
+
+  if (type === 'Outros' || opts.length === 0) {
+    if (oldEl.tagName !== 'INPUT') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id   = 'pf-asset';
+      input.className = 'form-select';
+      input.placeholder = 'Ex: XPTO3, CDB XYZ...';
+      input.value = selectedVal || '';
+      input.autocomplete = 'off';
+      input.addEventListener('input', _updateTotalDisplay);
+      oldEl.replaceWith(input);
+    } else {
+      oldEl.value = selectedVal || '';
+    }
+    return;
+  }
+
+  let selEl = oldEl;
+  if (oldEl.tagName === 'INPUT') {
+    const select = document.createElement('select');
+    select.id = 'pf-asset';
+    select.className = 'form-select';
+    select.addEventListener('change', _updateTotalDisplay);
+    oldEl.replaceWith(select);
+    selEl = document.getElementById('pf-asset');
+  }
+  selEl.innerHTML = '<option value="">Selecionar</option>' +
+    opts.map(o => `<option value="${escHtml(o)}"${o === selectedVal ? ' selected' : ''}>${escHtml(o)}</option>`).join('');
+}
+
+function _updateTotalDisplay() {
+  const qty   = parseFloat(document.getElementById('pf-quantity')?.value)    || 0;
+  const price = parseFloat(document.getElementById('pf-price')?.value)        || 0;
+  const other = parseFloat(document.getElementById('pf-other-costs')?.value) || 0;
+  const total = qty * price + other;
+  const dispEl = document.getElementById('pf-total-display');
+  if (dispEl) dispEl.textContent = total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 async function savePortfolioEntry() {
-  const date   = document.getElementById('pf-date').value;
-  const asset  = document.getElementById('pf-asset').value.trim();
-  const amount = parseFloat(document.getElementById('pf-amount').value);
-  const notes  = document.getElementById('pf-notes').value.trim();
+  const editId    = document.getElementById('pf-edit-id').value;
+  const type      = document.getElementById('pf-transaction-type').value;
+  const assetType = document.getElementById('pf-asset-type').value;
+  const assetEl   = document.getElementById('pf-asset');
+  const asset     = (assetEl?.value || '').trim();
+  const date      = document.getElementById('pf-date').value;
+  const quantity  = parseFloat(document.getElementById('pf-quantity').value);
+  const price     = parseFloat(document.getElementById('pf-price').value) || 0;
+  const other     = parseFloat(document.getElementById('pf-other-costs').value) || 0;
+  const amount    = quantity * price + other;
 
-  if (!date || !asset)       return toast?.('Preencha data e ativo.', 'err');
-  if (!amount || amount <= 0) return toast?.('Valor inválido.', 'err');
+  if (!date)                        return toast?.('Preencha a data.', 'err');
+  if (!asset)                       return toast?.('Selecione ou informe o ativo.', 'err');
+  if (!quantity || quantity <= 0)   return toast?.('Quantidade inválida.', 'err');
+  if (amount <= 0)                  return toast?.('Valor total deve ser maior que zero.', 'err');
+
+  const entry = {
+    date, asset, asset_type: assetType,
+    transaction_type: type,
+    quantity, price, other_costs: other, amount,
+  };
 
   const btn = document.getElementById('btn-pf-save');
-  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
+  if (btn) btn.disabled = true;
 
   try {
-    await addPortfolioEntry({ date, asset, amount, notes: notes || null });
-    closePortfolioModal();
-    toast('Aporte registrado!');
+    if (editId) {
+      await updatePortfolioEntry(editId, entry);
+      closePortfolioModal();
+      toast?.('Lançamento atualizado!');
+    } else {
+      await addPortfolioEntry(entry);
+      closePortfolioModal();
+      toast?.('Lançamento registrado!');
+    }
   } catch (err) {
-    console.error('[Portfolio] save error:', err);
-    const msg = err?.message || 'Erro ao salvar.';
+    const msg  = err?.message || 'Erro ao salvar.';
     const hint = msg.toLowerCase().includes('relation') || msg.toLowerCase().includes('table')
       ? ' Execute o SQL de migração no Supabase.'
       : '';
-    toast(msg + hint, 'err');
+    toast?.(msg + hint, 'err');
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Salvar'; }
-  }
-}
-
-// ── Edit entry modal ──────────────────────────
-function openEditEntryModal(id) {
-  const entry = _portfolio.find(e => e.id === id);
-  if (!entry) return;
-  document.getElementById('edit-entry-id').value    = entry.id;
-  document.getElementById('edit-pf-date').value     = entry.date;
-  document.getElementById('edit-pf-asset').value    = entry.asset;
-  document.getElementById('edit-pf-amount').value   = entry.amount;
-  document.getElementById('edit-pf-notes').value    = entry.notes || '';
-  openModal('modal-edit-entry');
-  document.getElementById('edit-pf-asset').focus();
-}
-
-function closeEditEntryModal() { closeModal('modal-edit-entry'); }
-
-async function saveEditEntry() {
-  const id     = document.getElementById('edit-entry-id').value;
-  const date   = document.getElementById('edit-pf-date').value;
-  const asset  = document.getElementById('edit-pf-asset').value.trim();
-  const amount = parseFloat(document.getElementById('edit-pf-amount').value);
-  const notes  = document.getElementById('edit-pf-notes').value.trim();
-  if (!date || !asset)        return toast?.('Preencha data e ativo.', 'err');
-  if (!amount || amount <= 0) return toast?.('Valor inválido.', 'err');
-  const btn = document.getElementById('btn-edit-entry-save');
-  if (btn) { btn.disabled = true; btn.textContent = 'Salvando…'; }
-  try {
-    await updatePortfolioEntry(id, { date, asset, amount, notes: notes || null });
-    closeEditEntryModal();
-    toast?.('Aporte atualizado!');
-  } catch (err) {
-    toast?.(err?.message || 'Erro ao atualizar.', 'err');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Salvar'; }
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -842,10 +921,10 @@ function irRate(days) {
 // =============================================
 //  STATE
 // =============================================
-let _cachedRates    = null;
-let _simType        = 'cdb';
-let _invReady       = false;
-let _banksDrawn     = false;
+let _cachedRates = null;
+let _simType     = 'cdb';
+let _invReady    = false;
+let _banksDrawn  = false;
 
 // =============================================
 //  INIT
@@ -874,11 +953,48 @@ async function initInvestments() {
   // Export CSV
   document.getElementById('btn-portfolio-export')?.addEventListener('click', exportPortfolioCSV);
 
-  // Edit entry modal
-  document.getElementById('btn-edit-entry-cancel')?.addEventListener('click', closeEditEntryModal);
-  document.getElementById('btn-edit-entry-save')?.addEventListener('click', saveEditEntry);
+  // Open add-lancamento modal
+  document.getElementById('btn-portfolio-add')?.addEventListener('click', () => openPortfolioModal());
 
-  // Load in parallel — market data, rates, and portfolio are independent
+  // Modal close/cancel
+  document.getElementById('btn-pf-close')?.addEventListener('click', closePortfolioModal);
+  document.getElementById('btn-pf-cancel')?.addEventListener('click', closePortfolioModal);
+
+  // Modal save
+  document.getElementById('btn-pf-save')?.addEventListener('click', savePortfolioEntry);
+
+  // Compra/Venda tab switching
+  document.querySelectorAll('.lc-tab').forEach(btn => {
+    btn.addEventListener('click', () => _setLcTab(btn.dataset.type));
+  });
+
+  // Asset type change → repopulate asset list
+  document.getElementById('pf-asset-type')?.addEventListener('change', e => {
+    populateAssetOptions(e.target.value);
+    _updateTotalDisplay();
+  });
+
+  // Price/qty/costs → recalculate total
+  document.addEventListener('input', e => {
+    if (['pf-quantity', 'pf-price', 'pf-other-costs'].includes(e.target.id)) {
+      _updateTotalDisplay();
+    }
+  });
+
+  // Evolution chart period/type filters
+  document.getElementById('inv-period-filter')?.addEventListener('change', e => {
+    _invPeriod = e.target.value;
+    drawEvolutionChart();
+  });
+  document.getElementById('inv-type-filter')?.addEventListener('change', e => {
+    _invTypeFilter = e.target.value;
+    drawEvolutionChart();
+  });
+
+  // Donut alloc filter
+  document.getElementById('inv-alloc-filter')?.addEventListener('change', () => drawAllocationDonut());
+
+  // Load everything in parallel
   await Promise.all([loadMarketRates(), loadMarketData(), loadPortfolio()]);
   renderPortfolio();
 }
@@ -887,7 +1003,6 @@ async function initInvestments() {
 //  MARKET RATES — BCB API (direto do browser)
 // =============================================
 
-// Valores de referência usados como fallback quando a BCB está inacessível
 const RATES_FALLBACK = {
   selic: { value: 14.75, date: 'referência', unit: '% a.a.', fallback: true },
   cdi:   { value: 14.65, date: 'referência', unit: '% a.a.', fallback: true },
@@ -919,15 +1034,14 @@ async function loadMarketRates() {
 
   let rates;
   try {
-    // Séries: 4390 = SELIC acum. mês (% a.m.), 4391 = CDI acum. mês (% a.m.), 13522 = IPCA 12m (%)
     const [selicData, cdiData, ipcaData] = await Promise.all([
       bcbFetch(4390),
       bcbFetch(4391),
       bcbFetch(13522),
     ]);
 
-    const parseVal = arr => parseFloat((arr?.[0]?.valor || '0').replace(',', '.'));
-    const dateOf   = arr => arr?.[0]?.data || '';
+    const parseVal  = arr => parseFloat((arr?.[0]?.valor || '0').replace(',', '.'));
+    const dateOf    = arr => arr?.[0]?.data || '';
     const annualize = monthly => +((Math.pow(1 + monthly / 100, 12) - 1) * 100).toFixed(2);
 
     rates = {
@@ -936,7 +1050,6 @@ async function loadMarketRates() {
       ipca:  { value: parseVal(ipcaData),             date: dateOf(ipcaData),  unit: '% 12m'  },
     };
   } catch {
-    // Tenta o proxy do backend como segunda tentativa
     try {
       const res = await fetch('/api/market-rates');
       if (!res.ok) throw new Error('backend_fail');
@@ -949,6 +1062,9 @@ async function loadMarketRates() {
   _cachedRates = rates;
   renderRateCards(rates);
   drawBanksChart(rates.cdi.value);
+  // Re-render portfolio summary now that rates are available
+  if (_portfolio.length) renderInvSummaryGrid();
+
   const cdiInput = document.getElementById('sim-cdi-annual');
   if (cdiInput && !cdiInput.value) cdiInput.value = rates.cdi.value.toFixed(2);
   runSimulator();
@@ -980,40 +1096,10 @@ function renderRateCards(rates) {
   const realPrefix = realYield >= 0 ? '+' : '';
 
   const cards = [
-    {
-      accent: '#6366f1',
-      icon:   '🏛️',
-      label:  'SELIC Meta',
-      value:  rates.selic.value,
-      period: '% a.a.',
-      note:   'Taxa básica definida pelo COPOM — piso de todos os juros da economia',
-    },
-    {
-      accent: '#10b981',
-      icon:   '💰',
-      label:  'CDI',
-      value:  rates.cdi.value,
-      period: '% a.a.',
-      note:   'Referência para CDB, LCI, LCA e fundos DI — acompanha a SELIC',
-    },
-    {
-      accent: '#f59e0b',
-      icon:   '📊',
-      label:  'IPCA 12m',
-      value:  rates.ipca.value,
-      period: '% 12m',
-      note:   'Inflação oficial acumulada nos últimos 12 meses',
-    },
-    {
-      accent: realColor,
-      icon:   realIcon,
-      label:  'Juro Real',
-      value:  realYield,
-      period: '% a.a.',
-      prefix: realPrefix,
-      valueColor: realColor,
-      note:   `SELIC − IPCA: seu dinheiro ${realYield >= 0 ? 'cresce acima' : 'perde para'} da inflação`,
-    },
+    { accent: '#6366f1', icon: '🏛️', label: 'SELIC Meta',  value: rates.selic.value, period: '% a.a.', note: 'Taxa básica definida pelo COPOM — piso de todos os juros da economia' },
+    { accent: '#10b981', icon: '💰', label: 'CDI',          value: rates.cdi.value,   period: '% a.a.', note: 'Referência para CDB, LCI, LCA e fundos DI — acompanha a SELIC' },
+    { accent: '#f59e0b', icon: '📊', label: 'IPCA 12m',     value: rates.ipca.value,  period: '% 12m',  note: 'Inflação oficial acumulada nos últimos 12 meses' },
+    { accent: realColor, icon: realIcon, label: 'Juro Real', value: realYield, period: '% a.a.', prefix: realPrefix, valueColor: realColor, note: `SELIC − IPCA: seu dinheiro ${realYield >= 0 ? 'cresce acima' : 'perde para'} da inflação` },
   ];
 
   grid.innerHTML = cards.map(c => `
@@ -1067,25 +1153,21 @@ function drawBanksChart(cdiAnnual) {
     const y   = pT + i * (barH + gap);
     const mid = y + barH / 2;
 
-    // Bank name
     ctx.fillStyle    = chartFg(0.78);
     ctx.font         = '12px Inter';
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillText(name, pL - 10, mid);
 
-    // Track background
     ctx.fillStyle = chartFg(0.06);
     ctx.beginPath(); rrect(ctx, pL, y, trackW, barH, 5); ctx.fill();
 
-    // Gradient bar
     const g = ctx.createLinearGradient(pL, 0, pL + bW, 0);
     g.addColorStop(0, color);
     g.addColorStop(1, color + '99');
     ctx.fillStyle = g;
     ctx.beginPath(); rrect(ctx, pL, y, Math.max(bW, 6), barH, 5); ctx.fill();
 
-    // Label: "100% CDI — 14,50% a.a."
     const effRate = cdiAnnual * pct / 100;
     const label   = `${pct}% CDI — ${effRate.toFixed(2).replace('.', ',')}% a.a.`;
     ctx.fillStyle    = chartFg(0.82);
@@ -1130,10 +1212,10 @@ function runSimulator() {
 
   const pts = [{ m: 0, total: amount, gross: 0, net: 0 }];
   for (let m = 1; m <= months; m++) {
-    const total     = amount * Math.pow(1 + monthly, m);
-    const gross     = total - amount;
-    const tax       = exempt ? 0 : irRate(m * 30);
-    const net       = gross * (1 - tax);
+    const total = amount * Math.pow(1 + monthly, m);
+    const gross = total - amount;
+    const tax   = exempt ? 0 : irRate(m * 30);
+    const net   = gross * (1 - tax);
     pts.push({ m, total: amount + net, gross, net, tax });
   }
 
@@ -1150,13 +1232,13 @@ function drawSimChart(pts, principal) {
   canvas.width  = W;
   canvas.height = H;
 
-  const ctx     = canvas.getContext('2d');
+  const ctx    = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const months  = pts.length - 1;
-  const maxVal  = pts[pts.length - 1].total;
-  const minVal  = principal * 0.998;
-  const range   = Math.max(maxVal - minVal, 1);
+  const months = pts.length - 1;
+  const maxVal = pts[pts.length - 1].total;
+  const minVal = principal * 0.998;
+  const range  = Math.max(maxVal - minVal, 1);
 
   const pL = 68, pR = 16, pT = 20, pB = 32;
   const cW = W - pL - pR;
@@ -1165,7 +1247,6 @@ function drawSimChart(pts, principal) {
   const gX = m => pL + (m / Math.max(months, 1)) * cW;
   const gY = v => pT + cH - ((v - minVal) / range) * cH;
 
-  // Grid lines & Y labels
   ctx.strokeStyle = chartFg(0.07);
   ctx.lineWidth   = 1;
   ctx.font        = '10px Inter';
@@ -1180,16 +1261,14 @@ function drawSimChart(pts, principal) {
     ctx.fillText(v >= 1000 ? `R$${(v / 1000).toFixed(1)}k` : `R$${v.toFixed(0)}`, pL - 5, y);
   }
 
-  // X labels (months)
-  ctx.fillStyle   = chartFg(0.4);
-  ctx.textAlign   = 'center';
+  ctx.fillStyle    = chartFg(0.4);
+  ctx.textAlign    = 'center';
   ctx.textBaseline = 'top';
   const step = Math.max(1, Math.ceil(months / 8));
   for (let m = 0; m <= months; m += step) {
     ctx.fillText(`${m}m`, gX(m), H - pB + 6);
   }
 
-  // Principal dashed baseline
   const baseY = gY(principal);
   ctx.save();
   ctx.setLineDash([4, 4]);
@@ -1199,7 +1278,6 @@ function drawSimChart(pts, principal) {
   ctx.setLineDash([]);
   ctx.restore();
 
-  // Filled gradient area
   const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
   grad.addColorStop(0, 'rgba(16,185,129,.32)');
   grad.addColorStop(1, 'rgba(16,185,129,.01)');
@@ -1212,7 +1290,6 @@ function drawSimChart(pts, principal) {
   ctx.fillStyle = grad;
   ctx.fill();
 
-  // Line
   ctx.beginPath();
   ctx.moveTo(gX(pts[0].m), gY(pts[0].total));
   for (let i = 1; i < pts.length; i++) {
@@ -1224,7 +1301,6 @@ function drawSimChart(pts, principal) {
   ctx.lineWidth   = 2.5;
   ctx.stroke();
 
-  // End dot
   const last = pts[pts.length - 1];
   ctx.beginPath();
   ctx.arc(gX(last.m), gY(last.total), 5, 0, Math.PI * 2);
@@ -1239,12 +1315,12 @@ function renderSimResults(last, principal, months, exempt) {
   const el = document.getElementById('sim-results');
   if (!el) return;
 
-  const fmt     = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const pctFmt  = v => (v * 100).toFixed(1).replace('.', ',') + '%';
-  const gross   = last.gross;
-  const ir      = exempt ? 0 : gross - last.net;
-  const net     = last.net;
-  const total   = principal + net;
+  const fmt    = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const pctFmt = v => (v * 100).toFixed(1).replace('.', ',') + '%';
+  const gross  = last.gross;
+  const ir     = exempt ? 0 : gross - last.net;
+  const net    = last.net;
+  const total  = principal + net;
   const taxRate = exempt ? 0 : last.tax;
 
   el.innerHTML = `
@@ -1294,31 +1370,24 @@ async function loadMarketData() {
   const tableEl  = document.getElementById('stocks-table');
   if (!tickerEl) return;
 
-  // Loading skeletons
   tickerEl.innerHTML = Array(5).fill('<div class="ticker-skeleton"></div>').join('');
   if (tableEl) tableEl.innerHTML = '<div class="stocks-error">Carregando...</div>';
 
-  // Fetch câmbio/crypto (awesomeapi — CORS aberto) e ações (backend)
   const [ibovResult, currencyResult] = await Promise.allSettled([
     fetch('/api/market-stocks').then(r => r.ok ? r.json() : Promise.reject()),
     fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL,ETH-BRL')
       .then(r => r.ok ? r.json() : Promise.reject()),
   ]);
 
-  // ── Ticker ──────────────────────────────────────
   const tickerItems = [];
 
-  // IBOVESPA from stocks result
   if (ibovResult.status === 'fulfilled') {
     const ibov = ibovResult.value.find(q => q.symbol === '^BVSP');
-    if (ibov) {
-      tickerItems.push({ key: '^BVSP', value: ibov.price, pct: ibov.pct, change: ibov.change });
-    }
+    if (ibov) tickerItems.push({ key: '^BVSP', value: ibov.price, pct: ibov.pct, change: ibov.change });
   }
 
-  // Câmbio / crypto
   if (currencyResult.status === 'fulfilled') {
-    const d = currencyResult.value;
+    const d   = currencyResult.value;
     const map = [
       { key: 'USD', raw: d.USDBRL },
       { key: 'EUR', raw: d.EURBRL },
@@ -1327,12 +1396,7 @@ async function loadMarketData() {
     ];
     map.forEach(({ key, raw }) => {
       if (!raw) return;
-      tickerItems.push({
-        key,
-        value:  +raw.bid,
-        pct:    +raw.pctChange,
-        change: +raw.varBid,
-      });
+      tickerItems.push({ key, value: +raw.bid, pct: +raw.pctChange, change: +raw.varBid });
     });
   }
 
@@ -1342,14 +1406,12 @@ async function loadMarketData() {
     renderMarketTicker(tickerItems);
   }
 
-  // Update timestamp
   const updEl = document.getElementById('market-updated');
   if (updEl) {
     const now = new Date();
     updEl.textContent = `Atualizado às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
   }
 
-  // ── Stocks table ────────────────────────────────
   if (!tableEl) return;
   if (ibovResult.status === 'fulfilled') {
     const stocks = ibovResult.value.filter(q => q.symbol !== '^BVSP');
@@ -1364,10 +1426,10 @@ function renderMarketTicker(items) {
   if (!el) return;
 
   el.innerHTML = items.map(({ key, value, pct, change }) => {
-    const meta    = TICKER_META[key] || { label: key, icon: '📊', color: '#6366f1' };
-    const dir     = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
-    const arrow   = pct > 0 ? '▲' : pct < 0 ? '▼' : '—';
-    const pctFmt  = pct != null ? `${pct > 0 ? '+' : ''}${pct.toFixed(2).replace('.', ',')}%` : '—';
+    const meta   = TICKER_META[key] || { label: key, icon: '📊', color: '#6366f1' };
+    const dir    = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+    const arrow  = pct > 0 ? '▲' : pct < 0 ? '▼' : '—';
+    const pctFmt = pct != null ? `${pct > 0 ? '+' : ''}${pct.toFixed(2).replace('.', ',')}%` : '—';
 
     let valFmt;
     if (meta.pts) {
@@ -1380,10 +1442,7 @@ function renderMarketTicker(items) {
 
     return `
       <div class="ticker-item" style="--ticker-color:${meta.color}">
-        <div class="ticker-label">
-          <span class="ticker-icon">${meta.icon}</span>
-          ${meta.label}
-        </div>
+        <div class="ticker-label"><span class="ticker-icon">${meta.icon}</span>${meta.label}</div>
         <div class="ticker-value">${valFmt}</div>
         <div class="ticker-change ${dir}">${arrow} ${pctFmt}</div>
       </div>`;
@@ -1396,24 +1455,17 @@ function renderStocksTable(stocks, tableEl) {
     return;
   }
 
-  const fmtBRL = v => v != null
-    ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-    : '—';
+  const fmtBRL = v => v != null ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '—';
 
   tableEl.innerHTML = `
     <div class="stocks-table">
       <div class="stocks-header">
-        <span>Código</span>
-        <span>Empresa</span>
-        <span>Preço</span>
-        <span>Variação</span>
+        <span>Código</span><span>Empresa</span><span>Preço</span><span>Variação</span>
       </div>
       ${stocks.map(s => {
-        const dir   = s.pct > 0 ? 'up' : s.pct < 0 ? 'down' : 'flat';
-        const arrow = s.pct > 0 ? '▲' : s.pct < 0 ? '▼' : '—';
-        const pctFmt = s.pct != null
-          ? `${s.pct > 0 ? '+' : ''}${s.pct.toFixed(2).replace('.', ',')}%`
-          : '—';
+        const dir    = s.pct > 0 ? 'up' : s.pct < 0 ? 'down' : 'flat';
+        const arrow  = s.pct > 0 ? '▲' : s.pct < 0 ? '▼' : '—';
+        const pctFmt = s.pct != null ? `${s.pct > 0 ? '+' : ''}${s.pct.toFixed(2).replace('.', ',')}%` : '—';
         return `
           <div class="stock-row">
             <span class="stock-ticker">${escHtml(s.symbol)}</span>
@@ -1447,12 +1499,12 @@ function runComparison() {
   const poupancaAnnual = cdi > 8.5 ? 6.168 : cdi * 0.7;
 
   const opts = [
-    { name: 'Poupança',          rate: mr(poupancaAnnual), exempt: true,  tag: cdi > 8.5 ? '0,5%/mês' : '70% CDI'       },
-    { name: 'CDB 90% CDI',       rate: mr(cdi * 0.9),      exempt: false, tag: '90% CDI'                                  },
-    { name: 'CDB 100% CDI',      rate: mr(cdi),            exempt: false, tag: '100% CDI'                                 },
-    { name: 'LCI/LCA 87% CDI',   rate: mr(cdi * 0.87),     exempt: true,  tag: '87% CDI · isento de IR'                  },
-    { name: 'LCI/LCA 100% CDI',  rate: mr(cdi),            exempt: true,  tag: '100% CDI · isento de IR'                 },
-    { name: 'Tesouro IPCA+6%',   rate: mr(ipca + 6),       exempt: false, tag: `IPCA (${fmtRate(ipca)}%) + 6% a.a.`      },
+    { name: 'Poupança',         rate: mr(poupancaAnnual), exempt: true,  tag: cdi > 8.5 ? '0,5%/mês' : '70% CDI' },
+    { name: 'CDB 90% CDI',      rate: mr(cdi * 0.9),      exempt: false, tag: '90% CDI' },
+    { name: 'CDB 100% CDI',     rate: mr(cdi),            exempt: false, tag: '100% CDI' },
+    { name: 'LCI/LCA 87% CDI',  rate: mr(cdi * 0.87),     exempt: true,  tag: '87% CDI · isento de IR' },
+    { name: 'LCI/LCA 100% CDI', rate: mr(cdi),            exempt: true,  tag: '100% CDI · isento de IR' },
+    { name: 'Tesouro IPCA+6%',  rate: mr(ipca + 6),       exempt: false, tag: `IPCA (${fmtRate(ipca)}%) + 6% a.a.` },
   ];
 
   const results = opts.map(o => {
@@ -1492,11 +1544,15 @@ function runComparison() {
 // =============================================
 //  REDRAW ON RESIZE
 // =============================================
-
-// Redraw on resize when tab is active
 window.addEventListener('resize', () => {
   const tab = document.getElementById('tab-investments');
-  if (!tab?.classList.contains('active') || !_cachedRates) return;
-  drawBanksChart(_cachedRates.cdi.value);
-  runSimulator();
+  if (!tab?.classList.contains('active')) return;
+  if (_cachedRates) {
+    drawBanksChart(_cachedRates.cdi.value);
+    runSimulator();
+  }
+  if (_portfolio.length) {
+    drawEvolutionChart();
+    drawAllocationDonut();
+  }
 });
