@@ -1053,7 +1053,117 @@ function drawAnalysisChart(txs, type) {
 // =============================================
 //  ANNUAL HISTORY CHART
 // =============================================
-let annualDisplayYear = null;
+let annualDisplayYear   = null;
+let _annualHoveredMonth = -1;
+let _annualAnimState    = Array.from({ length: 12 }, () => 0);
+let _annualAnimRaf      = null;
+
+function _redrawAnnualCanvas(canvas) {
+  const s = canvas._annualFull;
+  if (!s) return;
+  const { ctx, dpr, W, H, padL, padR, padT, padB, cW, cH,
+          groupW, barW, gap, maxVal, data, monthNames, year,
+          curM, isDark, greenClr, redClr, gridClr, textClr } = s;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+
+  // Current-month column highlight
+  if (curM >= 0) {
+    ctx.fillStyle = 'rgba(99,102,241,.08)';
+    ctx.fillRect(padL + curM * groupW, padT, groupW, cH);
+  }
+
+  // Animated hover-column highlight
+  for (let i = 0; i < 12; i++) {
+    const p = _annualAnimState[i];
+    if (p > 0.002) {
+      ctx.fillStyle = isDark
+        ? `rgba(255,255,255,${0.05 * p})`
+        : `rgba(99,102,241,${0.07 * p})`;
+      ctx.fillRect(padL + i * groupW + 1, padT, groupW - 2, cH);
+    }
+  }
+
+  // Grid lines + y-axis labels
+  ctx.strokeStyle = gridClr;
+  ctx.lineWidth   = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + cH - (i / 4) * cH;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y); ctx.stroke();
+    const val   = (i / 4) * maxVal;
+    const label = val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toFixed(0);
+    ctx.fillStyle = textClr;
+    ctx.font      = '10px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`R$${label}`, padL - 5, y + 3.5);
+  }
+
+  // Bars with grow + glow on hover
+  for (let i = 0; i < 12; i++) {
+    const { income, expense, isFuture } = data[i];
+    const p      = _annualAnimState[i];
+    const scaleY = 1 + p * 0.10;
+    const alpha  = isFuture ? 0.28 : 1;
+    const groupX = padL + i * groupW + groupW / 2;
+
+    ctx.globalAlpha = alpha;
+
+    if (income > 0) {
+      const h = (income / maxVal) * cH * scaleY;
+      const x = groupX - barW - gap / 2;
+      const y = padT + cH - h;
+      if (p > 0.01) { ctx.shadowColor = '#10b981'; ctx.shadowBlur = 10 * p; }
+      ctx.fillStyle = greenClr;
+      ctx.beginPath();
+      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    if (expense > 0) {
+      const h = (expense / maxVal) * cH * scaleY;
+      const x = groupX + gap / 2;
+      const y = padT + cH - h;
+      if (p > 0.01) { ctx.shadowColor = '#f87171'; ctx.shadowBlur = 10 * p; }
+      ctx.fillStyle = redClr;
+      ctx.beginPath();
+      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = curM === i ? chartFg(.75) : textClr;
+    ctx.font      = curM === i ? 'bold 10px Inter, sans-serif' : '10px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(monthNames[i], groupX, padT + cH + 16);
+  }
+}
+
+function _startAnnualAnimLoop(canvas) {
+  if (_annualAnimRaf) return;
+  const LERP = 0.18;
+
+  function tick() {
+    let needMore = false;
+    for (let i = 0; i < 12; i++) {
+      const target = i === _annualHoveredMonth ? 1 : 0;
+      const diff   = target - _annualAnimState[i];
+      if (Math.abs(diff) > 0.002) {
+        _annualAnimState[i] += diff * LERP;
+        needMore = true;
+      } else {
+        _annualAnimState[i] = target;
+      }
+    }
+    _redrawAnnualCanvas(canvas);
+    _annualAnimRaf = needMore ? requestAnimationFrame(tick) : null;
+  }
+
+  _annualAnimRaf = requestAnimationFrame(tick);
+}
 
 function drawAnnualChart() {
   const canvas = document.getElementById('annual-chart');
@@ -1078,7 +1188,6 @@ function drawAnnualChart() {
     data.push({ income, expense, isFuture });
   }
 
-  // Update summary below chart
   const totalIncome  = data.reduce((s, d) => s + d.income,  0);
   const totalExpense = data.reduce((s, d) => s + d.expense, 0);
   const balance      = totalIncome - totalExpense;
@@ -1103,94 +1212,40 @@ function drawAnnualChart() {
   const dpr  = window.devicePixelRatio || 1;
   const wrap = canvas.parentElement;
   const rect = wrap.getBoundingClientRect();
-  const W    = rect.width || 600;
+  const W    = rect.width  || 600;
   const H    = rect.height || 240;
   canvas.width        = W * dpr;
   canvas.height       = H * dpr;
   canvas.style.width  = W + 'px';
   canvas.style.height = H + 'px';
 
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, W, H);
-
-  const isDark     = document.documentElement.dataset.theme !== 'light';
-  const gridClr    = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)';
-  const textClr    = isDark ? '#94a3b8' : '#78716c';
-  const greenClr   = '#10b981';
-  const redClr     = '#f87171';
-  const highlightW = 'rgba(99,102,241,.08)';
-  const hoverClr   = isDark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.04)';
-
+  const ctx      = canvas.getContext('2d');
+  const isDark   = document.documentElement.dataset.theme !== 'light';
   const padL = 54, padR = 12, padT = 14, padB = 26;
   const cW   = W - padL - padR;
   const cH   = H - padT - padB;
-
-  const maxVal  = Math.max(...data.map(d => Math.max(d.income, d.expense)), 1);
-  const curM    = (year === nowYear) ? nowMonth : -1;
-  const groupW  = cW / 12;
-  const barW    = Math.max(Math.floor(groupW * 0.28), 4);
-  const gap     = 2;
-
-  // Store layout for hit-test
-  canvas._annualLayout = { padL, padT, cW, cH, groupW, barW, gap, maxVal, data };
-
-  if (curM >= 0) {
-    ctx.fillStyle = highlightW;
-    ctx.fillRect(padL + curM * groupW, padT, groupW, cH);
-  }
-
-  const LINES = 4;
-  ctx.strokeStyle = gridClr;
-  ctx.lineWidth   = 1;
-  for (let i = 0; i <= LINES; i++) {
-    const y = padT + cH - (i / LINES) * cH;
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + cW, y); ctx.stroke();
-    const val   = (i / LINES) * maxVal;
-    const label = val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toFixed(0);
-    ctx.fillStyle = textClr;
-    ctx.font      = `10px Inter, sans-serif`;
-    ctx.textAlign = 'right';
-    ctx.fillText(`R$${label}`, padL - 5, y + 3.5);
-  }
-
+  const maxVal   = Math.max(...data.map(d => Math.max(d.income, d.expense)), 1);
+  const curM     = (year === nowYear) ? nowMonth : -1;
+  const groupW   = cW / 12;
+  const barW     = Math.max(Math.floor(groupW * 0.28), 4);
   const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-  for (let i = 0; i < 12; i++) {
-    const { income, expense, isFuture } = data[i];
-    const alpha  = isFuture ? 0.28 : 1;
-    const groupX = padL + i * groupW + groupW / 2;
+  canvas._annualFull = {
+    ctx, dpr, W, H, padL, padR, padT, padB, cW, cH,
+    groupW, barW, gap: 2, maxVal, data, monthNames, year, curM,
+    isDark,
+    greenClr: '#10b981',
+    redClr:   '#f87171',
+    gridClr:  isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)',
+    textClr:  isDark ? '#94a3b8' : '#78716c',
+  };
 
-    ctx.globalAlpha = alpha;
+  // Reset animation state on chart rebuild (year nav, theme change, etc.)
+  _annualHoveredMonth = -1;
+  _annualAnimState.fill(0);
+  if (_annualAnimRaf) { cancelAnimationFrame(_annualAnimRaf); _annualAnimRaf = null; }
 
-    if (income > 0) {
-      const h = (income / maxVal) * cH;
-      const x = groupX - barW - gap / 2;
-      const y = padT + cH - h;
-      ctx.fillStyle = greenClr;
-      ctx.beginPath();
-      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
-      ctx.fill();
-    }
-
-    if (expense > 0) {
-      const h = (expense / maxVal) * cH;
-      const x = groupX + gap / 2;
-      const y = padT + cH - h;
-      ctx.fillStyle = redClr;
-      ctx.beginPath();
-      rrect(ctx, x, y, barW, Math.max(h, 2), Math.min(3, barW / 2));
-      ctx.fill();
-    }
-
-    ctx.globalAlpha = 1;
-
-    ctx.fillStyle = curM === i ? chartFg(.75) : textClr;
-    ctx.font      = curM === i ? `bold 10px Inter, sans-serif` : `10px Inter, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText(monthNames[i], groupX, padT + cH + 16);
-  }
-
+  _redrawAnnualCanvas(canvas);
   _initAnnualInteractions(canvas, data, monthNames, year);
 }
 
@@ -1201,20 +1256,28 @@ function _initAnnualInteractions(canvas, data, monthNames, year) {
     canvas.removeEventListener('click', canvas._annualListeners.click);
   }
 
-  const tooltip    = document.getElementById('annual-tooltip');
-  const fmt        = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
-  const { padL, padT, cW, cH, groupW } = canvas._annualLayout;
+  const tooltip = document.getElementById('annual-tooltip');
+  const fmt     = v => v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+  const { padL, padT, cW, cH, groupW } = canvas._annualFull;
 
   function getMonthIndex(e) {
-    const rect = canvas.getBoundingClientRect();
-    const x    = e.clientX - rect.left;
-    const y    = e.clientY - rect.top;
+    const r = canvas.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
     if (x < padL || x > padL + cW || y < padT || y > padT + cH) return -1;
     return Math.floor((x - padL) / groupW);
   }
 
   const onMove = (e) => {
-    const mi = getMonthIndex(e);
+    const mi         = getMonthIndex(e);
+    const newHovered = (mi >= 0 && mi < 12) ? mi : -1;
+
+    if (newHovered !== _annualHoveredMonth) {
+      _annualHoveredMonth = newHovered;
+      _startAnnualAnimLoop(canvas);
+    }
+    canvas.style.cursor = newHovered >= 0 ? 'pointer' : 'default';
+
     if (mi < 0 || mi >= 12) { tooltip.classList.add('hidden'); return; }
     const { income, expense, isFuture } = data[mi];
     const balance = income - expense;
@@ -1234,17 +1297,23 @@ function _initAnnualInteractions(canvas, data, monthNames, year) {
       </div>
       ${isFuture ? '<div style="font-size:.7rem;color:var(--text-3);margin-top:5px">Mês futuro</div>' : ''}`;
     tooltip.classList.remove('hidden');
-    const wrap   = canvas.parentElement;
-    const wRect  = wrap.getBoundingClientRect();
-    const cx     = e.clientX - wRect.left;
-    const cy     = e.clientY - wRect.top;
-    const tw     = tooltip.offsetWidth;
-    const left   = Math.min(cx + 12, wRect.width - tw - 8);
-    tooltip.style.left = left + 'px';
+    const wrap  = canvas.parentElement;
+    const wRect = wrap.getBoundingClientRect();
+    const cx    = e.clientX - wRect.left;
+    const cy    = e.clientY - wRect.top;
+    const tw    = tooltip.offsetWidth;
+    tooltip.style.left = Math.min(cx + 12, wRect.width - tw - 8) + 'px';
     tooltip.style.top  = Math.max(cy - 10, 4) + 'px';
   };
 
-  const onLeave = () => { tooltip.classList.add('hidden'); };
+  const onLeave = () => {
+    tooltip.classList.add('hidden');
+    canvas.style.cursor = 'default';
+    if (_annualHoveredMonth !== -1) {
+      _annualHoveredMonth = -1;
+      _startAnnualAnimLoop(canvas);
+    }
+  };
 
   const onClick = (e) => {
     const mi = getMonthIndex(e);
