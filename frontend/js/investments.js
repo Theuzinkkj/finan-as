@@ -959,9 +959,16 @@ function _setLcTab(type) {
 }
 
 const _typeIcons = {
-  'Ações': '📈', 'FIIs': '🏢', 'Stock': '🌎', 'Reit': '🏗️',
-  'BDRs': '🌐', 'ETFs': '📊', 'ETFs Internacionais': '🌍',
-  'Tesouro Direto': '🏦', 'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': '💰', 'Outros': '📦',
+  'Ações':      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  'FIIs':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="1"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  'Stock':      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+  'Reit':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  'BDRs':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>',
+  'ETFs':       '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  'ETFs Internacionais': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>',
+  'Tesouro Direto': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7 12 2"/></svg>',
+  'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>',
+  'Outros':     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
 };
 
 const _typeShortLabels = {
@@ -974,7 +981,7 @@ function _setAssetType(value) {
   const iconEl = document.getElementById('lc-type-sel-icon');
   const textEl = document.getElementById('lc-type-sel-text');
   if (hidden) hidden.value = value;
-  if (iconEl) iconEl.textContent = _typeIcons[value] || '📦';
+  if (iconEl) iconEl.innerHTML = _typeIcons[value] || _typeIcons['Outros'];
   if (textEl) textEl.textContent = _typeShortLabels[value] || value;
   document.querySelectorAll('#lc-type-drop .lc-type-opt').forEach(b =>
     b.classList.toggle('selected', b.dataset.value === value)
@@ -995,7 +1002,7 @@ function populateAssetOptions(type, selectedVal) {
   if (!hidden || !textInput || !drop) return;
 
   const opts = ASSET_OPTIONS_BY_TYPE[type] || [];
-  if (iconEl) iconEl.textContent = _typeIcons[type] || '📦';
+  if (iconEl) iconEl.innerHTML = _typeIcons[type] || _typeIcons['Outros'];
 
   hidden.value    = selectedVal || '';
   textInput.value = selectedVal || '';
@@ -1178,8 +1185,10 @@ async function initInvestments() {
     else { drop?.classList.remove('hidden'); picker?.classList.add('open'); }
   });
 
-  // Type picker — select option
+  // Type picker — select option + populate SVG icons
   document.querySelectorAll('.lc-type-opt').forEach(btn => {
+    const iconSpan = btn.querySelector('.lc-type-opt-icon');
+    if (iconSpan) iconSpan.innerHTML = _typeIcons[btn.dataset.value] || _typeIcons['Outros'];
     btn.addEventListener('click', () => {
       const val = btn.dataset.value;
       _setAssetType(val);
@@ -1188,6 +1197,12 @@ async function initInvestments() {
       _updateTotalDisplay();
     });
   });
+
+  // Inicializa ícone do trigger e do asset picker
+  const selIcon = document.getElementById('lc-type-sel-icon');
+  if (selIcon) selIcon.innerHTML = _typeIcons['Ações'];
+  const apIcon = document.getElementById('ap-icon');
+  if (apIcon) apIcon.innerHTML = _typeIcons['Ações'];
 
   // Close pickers on outside click
   document.addEventListener('click', e => {
