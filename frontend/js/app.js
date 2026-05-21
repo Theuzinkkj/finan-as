@@ -3071,3 +3071,19 @@ async function startApp() {
 }
 
 init();
+
+// Corner widget toggle
+(function () {
+  const widget  = document.getElementById('corner-widget');
+  const toggleBtn = document.getElementById('corner-widget-toggle');
+  if (!widget || !toggleBtn) return;
+
+  const STORAGE_KEY = 'atlas_corner_widget_open';
+  const isOpen = localStorage.getItem(STORAGE_KEY) === 'true';
+  if (isOpen) widget.classList.add('open');
+
+  toggleBtn.addEventListener('click', () => {
+    const open = widget.classList.toggle('open');
+    localStorage.setItem(STORAGE_KEY, open);
+  });
+})();

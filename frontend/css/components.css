@@ -2524,3 +2524,85 @@
 [data-theme="light"] .profile-menu-item:hover { background: rgba(120,90,50,.06); }
 [data-theme="light"] .profile-menu-icon       { background: rgba(99,102,241,.1); }
 [data-theme="light"] .profile-logout-btn      { background: rgba(239,68,68,.05); }
+
+/* =============================================
+   CORNER WIDGET — Meta de Gastos + Benefícios
+   ============================================= */
+.corner-widget {
+  position:      fixed;
+  bottom:        24px;
+  right:         24px;
+  z-index:       300;
+  width:         280px;
+  font-family:   var(--font);
+}
+
+.corner-widget-toggle {
+  display:         flex;
+  align-items:     center;
+  gap:             8px;
+  width:           100%;
+  background:      var(--bg-card);
+  border:          1px solid var(--border);
+  border-radius:   12px;
+  padding:         10px 14px;
+  cursor:          pointer;
+  color:           var(--text-2);
+  font-family:     var(--font);
+  font-size:       .82rem;
+  font-weight:     600;
+  letter-spacing:  .02em;
+  text-transform:  uppercase;
+  backdrop-filter: blur(16px);
+  transition:      background .2s, border-color .2s, border-radius .2s;
+  box-shadow:      0 4px 24px rgba(0,0,0,.35);
+}
+.corner-widget-toggle:hover {
+  background:    var(--bg-card-h);
+  border-color:  var(--border-l);
+  color:         var(--text);
+}
+.corner-widget.open .corner-widget-toggle {
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid transparent;
+}
+
+.corner-widget-label { flex: 1; text-align: left; }
+
+.corner-widget-chevron {
+  color:      var(--text-3);
+  transition: transform .25s ease;
+  flex-shrink: 0;
+}
+.corner-widget.open .corner-widget-chevron {
+  transform: rotate(180deg);
+}
+
+.corner-widget-body {
+  overflow:        hidden;
+  max-height:      0;
+  opacity:         0;
+  background:      var(--bg-card);
+  border:          1px solid var(--border);
+  border-top:      none;
+  border-radius:   0 0 12px 12px;
+  padding:         0 14px;
+  backdrop-filter: blur(16px);
+  box-shadow:      0 8px 32px rgba(0,0,0,.4);
+  transition:      max-height .3s ease, opacity .25s ease, padding .3s ease;
+}
+.corner-widget.open .corner-widget-body {
+  max-height: 480px;
+  opacity:    1;
+  padding:    12px 14px 14px;
+}
+
+.cw-section { margin-bottom: 8px; }
+.cw-section:last-child { margin-bottom: 0; }
+.cw-section + .cw-section {
+  border-top:  1px solid var(--border);
+  padding-top: 8px;
+}
+
+[data-theme="light"] .corner-widget-toggle { box-shadow: 0 4px 20px rgba(0,0,0,.12); }
+[data-theme="light"] .corner-widget-body   { box-shadow: 0 8px 28px rgba(0,0,0,.15); }
