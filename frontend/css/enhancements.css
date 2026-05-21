@@ -1,0 +1,435 @@
+/* =============================================
+   ENHANCEMENTS — PWA, CSV, Tour, Badges, Confetti
+   ============================================= */
+
+/* ─── CSV Import Button ──────────────────────────────────────── */
+.btn-import-csv {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  padding:       6px 12px;
+  font-size:     .8rem;
+  font-weight:   500;
+  color:         var(--text-2);
+  background:    rgba(99,102,241,.08);
+  border:        1px solid rgba(99,102,241,.2);
+  border-radius: var(--r-sm);
+  cursor:        pointer;
+  transition:    all .2s;
+  white-space:   nowrap;
+}
+.btn-import-csv:hover {
+  background: rgba(99,102,241,.16);
+  color:      var(--text);
+}
+
+/* ─── CSV Modal ──────────────────────────────────────────────── */
+.csv-upload-area {
+  border:         2px dashed var(--border-h);
+  border-radius:  var(--r);
+  padding:        40px 24px;
+  text-align:     center;
+  cursor:         pointer;
+  transition:     border-color .2s, background .2s;
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            10px;
+  color:          var(--text-2);
+}
+.csv-upload-area svg { opacity: .5; }
+.csv-upload-area p { margin: 0; font-size: .9rem; }
+.csv-upload-area.csv-drag {
+  border-color: var(--purple);
+  background:   rgba(99,102,241,.06);
+}
+.csv-hint {
+  font-size: .75rem !important;
+  color:     var(--text-3) !important;
+}
+.csv-format-help {
+  margin-top:  16px;
+  padding:     12px 16px;
+  background:  rgba(255,255,255,.04);
+  border:      1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size:   .8rem;
+  color:       var(--text-2);
+}
+.csv-format-help ul { margin: 8px 0 0 16px; }
+.csv-format-help li { margin-bottom: 4px; }
+.csv-format-help code {
+  background:    rgba(99,102,241,.12);
+  padding:       1px 6px;
+  border-radius: 4px;
+  font-size:     .78rem;
+}
+.csv-preview-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  margin-bottom:   12px;
+  font-size:       .85rem;
+  color:           var(--text-2);
+}
+.csv-col-map {
+  display:  flex;
+  gap:      12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.csv-map-row {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+  font-size:   .8rem;
+  color:       var(--text-2);
+}
+.csv-preview-table-wrap {
+  overflow-x: auto;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.csv-preview-table {
+  width:            100%;
+  border-collapse:  collapse;
+  font-size:        .82rem;
+}
+.csv-preview-table th {
+  background:  rgba(255,255,255,.05);
+  padding:     6px 10px;
+  text-align:  left;
+  font-weight: 600;
+  font-size:   .75rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color:       var(--text-3);
+  position:    sticky;
+  top:         0;
+}
+.csv-preview-table td {
+  padding:      6px 10px;
+  border-bottom: 1px solid var(--border);
+  color:        var(--text);
+}
+.csv-row-invalid td { color: var(--text-3); opacity: .6; }
+.badge {
+  display:       inline-block;
+  padding:       2px 7px;
+  border-radius: 100px;
+  font-size:     .72rem;
+  font-weight:   600;
+}
+.badge-income  { background: rgba(16,185,129,.15); color: var(--green); }
+.badge-expense { background: rgba(239,68,68,.15);  color: var(--red);   }
+
+/* ─── Score History ──────────────────────────────────────────── */
+.score-history-card {
+  padding: 20px;
+}
+.score-history-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  margin-bottom:   16px;
+}
+.score-history-header h3 { font-size: .95rem; font-weight: 600; }
+.score-history-empty {
+  text-align:  center;
+  color:       var(--text-3);
+  font-size:   .85rem;
+  padding:     20px 0;
+}
+.score-history-bars {
+  display:     flex;
+  align-items: flex-end;
+  gap:         8px;
+  height:      80px;
+}
+.score-history-bar-wrap {
+  flex:        1;
+  display:     flex;
+  flex-direction: column;
+  align-items: center;
+  gap:         4px;
+  height:      100%;
+  justify-content: flex-end;
+}
+.score-history-bar {
+  width:         100%;
+  border-radius: 4px 4px 0 0;
+  transition:    height .4s cubic-bezier(.34,1.56,.64,1);
+  min-height:    4px;
+  position:      relative;
+}
+.score-history-bar:hover::after {
+  content:        attr(data-tip);
+  position:       absolute;
+  bottom:         calc(100% + 6px);
+  left:           50%;
+  transform:      translateX(-50%);
+  background:     var(--bg-card);
+  border:         1px solid var(--border-h);
+  border-radius:  6px;
+  padding:        4px 8px;
+  font-size:      .72rem;
+  white-space:    nowrap;
+  color:          var(--text);
+  pointer-events: none;
+  z-index:        10;
+}
+.score-history-label {
+  font-size:   .65rem;
+  color:       var(--text-3);
+  text-align:  center;
+  white-space: nowrap;
+}
+.score-history-value {
+  font-size:  .72rem;
+  font-weight: 600;
+}
+
+/* ─── Projection Card ────────────────────────────────────────── */
+.projection-card {
+  background:   linear-gradient(135deg, rgba(16,185,129,.08), rgba(99,102,241,.06));
+  border-color: rgba(16,185,129,.2);
+}
+.projection-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     flex-start;
+  margin-bottom:   14px;
+}
+.projection-header h3 { font-size: .95rem; font-weight: 600; }
+.projection-badge {
+  font-size:      .72rem;
+  background:     rgba(16,185,129,.15);
+  color:          var(--green);
+  padding:        2px 8px;
+  border-radius:  100px;
+  font-weight:    600;
+}
+.projection-grid {
+  display:  grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap:      10px;
+  margin-bottom: 12px;
+}
+.projection-item {
+  background:    rgba(255,255,255,.04);
+  border-radius: var(--r-sm);
+  padding:       10px 12px;
+}
+.projection-item-label { font-size: .72rem; color: var(--text-3); margin-bottom: 4px; }
+.projection-item-value { font-size: 1rem; font-weight: 700; color: var(--green); }
+.projection-item-value.negative { color: var(--red); }
+.projection-note {
+  font-size: .78rem;
+  color:     var(--text-3);
+  margin-top: 4px;
+}
+
+/* ─── Achievements / Badges ──────────────────────────────────── */
+.achievements-section {
+  margin-bottom: 0;
+}
+.achievements-grid {
+  display:  flex;
+  flex-wrap: wrap;
+  gap:      10px;
+  padding:  4px 0;
+}
+.achievement-badge {
+  display:        flex;
+  align-items:    center;
+  gap:            8px;
+  padding:        8px 12px;
+  background:     rgba(255,255,255,.04);
+  border:         1px solid var(--border);
+  border-radius:  var(--r-sm);
+  font-size:      .8rem;
+  transition:     all .2s;
+  position:       relative;
+  overflow:       hidden;
+}
+.achievement-badge.unlocked {
+  background:   rgba(16,185,129,.08);
+  border-color: rgba(16,185,129,.25);
+}
+.achievement-badge.locked { opacity: .4; filter: grayscale(1); }
+.achievement-badge-icon { font-size: 1.1rem; }
+.achievement-badge-info { display: flex; flex-direction: column; gap: 1px; }
+.achievement-badge-name { font-weight: 600; color: var(--text); font-size: .8rem; }
+.achievement-badge-desc { color: var(--text-3); font-size: .72rem; }
+.achievements-empty {
+  color:     var(--text-3);
+  font-size: .85rem;
+  padding:   12px 0;
+}
+
+/* ─── Achievement Toast ──────────────────────────────────────── */
+.toast-achievement {
+  display:       flex;
+  align-items:   center;
+  gap:           10px;
+  padding:       12px 16px;
+  background:    linear-gradient(135deg, rgba(16,185,129,.2), rgba(99,102,241,.15));
+  border:        1px solid rgba(16,185,129,.3);
+  border-radius: var(--r-sm);
+  font-size:     .88rem;
+  font-weight:   500;
+  min-width:     240px;
+}
+.toast-achievement-icon { font-size: 1.4rem; }
+
+/* ─── Confetti ───────────────────────────────────────────────── */
+#confetti-canvas {
+  position:       fixed;
+  top:            0;
+  left:           0;
+  width:          100%;
+  height:         100%;
+  pointer-events: none;
+  z-index:        9999;
+}
+
+/* ─── Tour Guiado ────────────────────────────────────────────── */
+.tour-overlay {
+  position:        fixed;
+  inset:           0;
+  z-index:         8000;
+  pointer-events:  none;
+}
+.tour-highlight {
+  position:        absolute;
+  border-radius:   12px;
+  box-shadow:      0 0 0 9999px rgba(0,0,0,.65);
+  pointer-events:  none;
+  transition:      all .35s cubic-bezier(.4,0,.2,1);
+  z-index:         8001;
+}
+.tour-tooltip {
+  position:        fixed;
+  background:      var(--bg-card);
+  border:          1px solid rgba(99,102,241,.4);
+  border-radius:   var(--r);
+  padding:         16px 18px;
+  width:           280px;
+  z-index:         8002;
+  pointer-events:  all;
+  box-shadow:      0 8px 32px rgba(0,0,0,.3);
+  animation:       tooltipIn .25s ease;
+}
+@keyframes tooltipIn {
+  from { opacity: 0; transform: translateY(8px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tour-tooltip-step {
+  font-size:   .72rem;
+  color:       var(--purple-l);
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.tour-tooltip-title {
+  font-size:   1rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.tour-tooltip-desc {
+  font-size:  .85rem;
+  color:      var(--text-2);
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+.tour-tooltip-footer {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     center;
+  gap:             8px;
+}
+.tour-dots { display: flex; gap: 4px; }
+.tour-dot {
+  width:         7px;
+  height:        7px;
+  border-radius: 50%;
+  background:    var(--border-h);
+  transition:    background .2s;
+}
+.tour-dot.active { background: var(--purple); }
+.tour-btn-skip {
+  background: none;
+  border:     none;
+  color:      var(--text-3);
+  font-size:  .8rem;
+  cursor:     pointer;
+  padding:    4px 0;
+}
+.tour-btn-skip:hover { color: var(--text); }
+.tour-btn-next {
+  background:    var(--purple);
+  color:         #fff;
+  border:        none;
+  border-radius: var(--r-sm);
+  padding:       7px 16px;
+  font-size:     .85rem;
+  font-weight:   600;
+  cursor:        pointer;
+  transition:    background .2s;
+}
+.tour-btn-next:hover { background: var(--purple-d); }
+
+/* ─── PWA Install Banner ─────────────────────────────────────── */
+.pwa-install-banner {
+  position:      fixed;
+  bottom:        16px;
+  left:          50%;
+  transform:     translateX(-50%);
+  background:    linear-gradient(135deg, rgba(99,102,241,.95), rgba(37,99,235,.95));
+  color:         #fff;
+  border-radius: var(--r);
+  padding:       12px 18px;
+  display:       flex;
+  align-items:   center;
+  gap:           12px;
+  font-size:     .88rem;
+  font-weight:   500;
+  box-shadow:    0 8px 32px rgba(0,0,0,.35);
+  z-index:       7000;
+  animation:     slideUp .4s ease;
+  white-space:   nowrap;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.pwa-install-banner button {
+  background:    rgba(255,255,255,.15);
+  border:        1px solid rgba(255,255,255,.2);
+  color:         #fff;
+  padding:       5px 12px;
+  border-radius: var(--r-sm);
+  cursor:        pointer;
+  font-size:     .82rem;
+  font-weight:   600;
+  transition:    background .2s;
+}
+.pwa-install-banner button:hover { background: rgba(255,255,255,.25); }
+.pwa-install-banner .pwa-dismiss {
+  background: none;
+  border:     none;
+  font-size:  1rem;
+  opacity:    .7;
+  padding:    2px 4px;
+}
+
+/* ─── Modal LG ───────────────────────────────────────────────── */
+.modal-lg { max-width: 600px; }
+
+/* ─── Responsive fixes ───────────────────────────────────────── */
+@media (max-width: 600px) {
+  .csv-col-map      { flex-direction: column; }
+  .projection-grid  { grid-template-columns: 1fr 1fr; }
+  .pwa-install-banner { width: calc(100% - 32px); white-space: normal; }
+}

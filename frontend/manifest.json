@@ -1,0 +1,34 @@
+{
+  "name": "Atlas — Controle Financeiro Inteligente",
+  "short_name": "Atlas",
+  "description": "Organize seus gastos, visualize para onde vai seu dinheiro e comece a economizar.",
+  "start_url": "/app",
+  "display": "standalone",
+  "background_color": "#0f0e17",
+  "theme_color": "#7c3aed",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}

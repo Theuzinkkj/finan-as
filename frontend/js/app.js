@@ -450,6 +450,29 @@ function renderBudgets(txs) {
 
   grid.innerHTML = cards ? cards + quickAdd : '';
   if (emptyEl) emptyEl.classList.toggle('hidden', !!cards);
+
+  // Disparar alerta de email quando >= 80% (máximo 1x por categoria por mês)
+  if (!Demo.active) {
+    const alertKey = `atlas_budget_alerted_${Auth.userId || 'anon'}`;
+    const alerted  = JSON.parse(localStorage.getItem(alertKey) || '{}');
+    const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    entries.forEach(([key, limit]) => {
+      const spent = catTotals[key] || 0;
+      const pct   = limit > 0 ? (spent / limit) * 100 : 0;
+      const k     = `${monthKey}_${key}`;
+      if (pct >= 80 && !alerted[k]) {
+        alerted[k] = true;
+        localStorage.setItem(alertKey, JSON.stringify(alerted));
+        const catLabel = CATEGORIES[key]?.label || key;
+        API.post('/api/notify/budget-alert', {
+          category: catLabel,
+          spent:    spent.toFixed(2),
+          limit:    limit.toFixed(2),
+          pct:      pct.toFixed(0),
+        }).catch(() => {});
+      }
+    });
+  }
 }
 
 // =============================================
@@ -1161,6 +1184,9 @@ function renderAll() {
   drawDonut(txs);
   drawLine(txs);
   drawAnalysisChart(txs);
+  if (typeof renderProjection === 'function')  renderProjection();
+  if (typeof checkAchievements === 'function') checkAchievements();
+  document.dispatchEvent(new CustomEvent('atlas:rendered'));
 }
 
 // (AI analysis, chat and export moved to js/ai.js and js/export.js)
@@ -2681,6 +2707,7 @@ async function init() {
     bindAuthEvents();
     initCustomSelects();
     initPasswordToggles();
+    initCSVImport();
 
     if (new URLSearchParams(window.location.search).get('demo') === '1') Demo.enter();
     if (Demo.active) {
@@ -2814,6 +2841,8 @@ async function startApp() {
   }
 
   renderAll();
+  if (typeof initEnhancements === 'function') initEnhancements();
+  setTimeout(() => { if (typeof startTour === 'function') startTour(); }, 1200);
 
   syncFromCloud().then(async () => {
     await autoGenerateRecurring();

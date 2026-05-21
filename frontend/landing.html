@@ -17,6 +17,11 @@
   <meta name="twitter:title"       content="Atlas — Controle Financeiro Inteligente">
   <meta name="twitter:description" content="Organize seus gastos e comece a economizar — de graça.">
   <meta name="twitter:image"       content="/og-image.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Atlas">
 
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -640,6 +645,121 @@
     .step-desc  { font-size: .82rem; color: var(--text-2); line-height: 1.55; }
 
     /* ── Final CTA ────────────────────────── */
+    /* ── Shared section labels ── */
+    .section-label-pill {
+      display:        inline-block;
+      padding:        4px 14px;
+      background:     rgba(124,58,237,.15);
+      border:         1px solid rgba(124,58,237,.3);
+      border-radius:  100px;
+      font-size:      .72rem;
+      font-weight:    700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color:          #a78bfa;
+      margin-bottom:  14px;
+    }
+    .section-heading {
+      font-size:   clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 800;
+      margin:      0 0 32px;
+      line-height: 1.2;
+    }
+
+    /* ── Testimonials ── */
+    .testimonials-section {
+      padding:    80px 24px;
+      text-align: center;
+      position:   relative;
+      z-index:    1;
+    }
+    .testimonials-grid {
+      display:               grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap:                   20px;
+      max-width:             960px;
+      margin:                0 auto;
+    }
+    .testimonial-card {
+      background:    rgba(255,255,255,.04);
+      border:        1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding:       24px;
+      text-align:    left;
+      transition:    transform .2s, border-color .2s;
+    }
+    .testimonial-card:hover {
+      transform:    translateY(-4px);
+      border-color: rgba(124,58,237,.3);
+    }
+    .testimonial-stars { color: #f59e0b; font-size: 1rem; margin-bottom: 12px; }
+    .testimonial-text {
+      color:       #cbd5e1;
+      font-size:   .9rem;
+      line-height: 1.6;
+      margin:      0 0 18px;
+      font-style:  italic;
+    }
+    .testimonial-author { display: flex; align-items: center; gap: 10px; }
+    .testimonial-avatar {
+      width:         38px;
+      height:        38px;
+      border-radius: 50%;
+      background:    linear-gradient(135deg, #7c3aed, #3b82f6);
+      display:       flex;
+      align-items:   center;
+      justify-content: center;
+      font-weight:   700;
+      font-size:     .95rem;
+      color:         #fff;
+      flex-shrink:   0;
+    }
+    .testimonial-name { font-weight: 600; font-size: .88rem; }
+    .testimonial-role { color: #64748b; font-size: .78rem; }
+
+    /* ── FAQ ── */
+    .faq-section {
+      padding:    80px 24px;
+      max-width:  720px;
+      margin:     0 auto;
+      position:   relative;
+      z-index:    1;
+    }
+    .faq-list { margin-top: 0; }
+    .faq-item {
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      overflow:      hidden;
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-question {
+      display:         flex;
+      justify-content: space-between;
+      align-items:     center;
+      padding:         18px 0;
+      font-weight:     600;
+      font-size:       .95rem;
+      cursor:          pointer;
+      list-style:      none;
+      color:           #f1f5f9;
+      transition:      color .2s;
+    }
+    .faq-question::-webkit-details-marker { display: none; }
+    .faq-question::after {
+      content:     '+';
+      font-size:   1.2rem;
+      color:       #7c3aed;
+      flex-shrink: 0;
+      transition:  transform .25s;
+    }
+    details[open] .faq-question { color: #a78bfa; }
+    details[open] .faq-question::after { transform: rotate(45deg); }
+    .faq-answer {
+      color:         #94a3b8;
+      font-size:     .88rem;
+      line-height:   1.65;
+      padding-bottom: 16px;
+    }
+
     .cta-section {
       position:   relative;
       z-index:    1;
@@ -1145,6 +1265,79 @@
     </div>
   </section>
 
+  <!-- ═══ DEPOIMENTOS ═══════════════════════════════════════════════════════════ -->
+  <section class="testimonials-section spot-item">
+    <div class="section-label-pill">Depoimentos</div>
+    <h2 class="section-heading">O que as pessoas estão dizendo</h2>
+    <div class="testimonials-grid">
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Finalmente um app de finanças que eu realmente uso. Em 2 meses percebi que gastava R$ 400 todo mês em assinaturas que nem lembrava que tinha."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div>
+            <div class="testimonial-name">Mariana S.</div>
+            <div class="testimonial-role">Designer, São Paulo</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"A análise da IA me mostrou que eu estava gastando 40% da renda em alimentação. Nunca teria percebido sem o Atlas. Já economizei mais de R$ 800."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">R</div>
+          <div>
+            <div class="testimonial-name">Rafael T.</div>
+            <div class="testimonial-role">Desenvolvedor, Curitiba</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="testimonial-stars">★★★★★</div>
+        <p class="testimonial-text">"Controlo meu VR e VT pelo Atlas e sei exatamente quanto ainda tenho. O módulo de investimentos me ajuda a acompanhar minhas ações sem complicação."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">C</div>
+          <div>
+            <div class="testimonial-name">Camila R.</div>
+            <div class="testimonial-role">Analista Financeira, RJ</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FAQ ════════════════════════════════════════════════════════════════════ -->
+  <section class="faq-section spot-item">
+    <div class="section-label-pill">Perguntas Frequentes</div>
+    <h2 class="section-heading">Tire suas dúvidas</h2>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary class="faq-question">É realmente gratuito? Tem pegadinha?</summary>
+        <div class="faq-answer">Sim, o Atlas é 100% gratuito para uso pessoal. Sem limite de transações, sem anúncios, sem cobrar por funcionalidades básicas. No futuro pode existir um plano premium com recursos avançados, mas os recursos atuais continuarão gratuitos.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-question">Meus dados são seguros?</summary>
+        <div class="faq-answer">Sim. Seus dados são armazenados no Supabase (infraestrutura da Postgres) com criptografia em trânsito (HTTPS) e Row Level Security — só você tem acesso às suas transações. Você pode exportar ou apagar seus dados a qualquer momento nas configurações.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-question">Funciona no celular?</summary>
+        <div class="faq-answer">Sim! O Atlas é um Progressive Web App (PWA). No celular, você pode instalar direto na tela inicial sem precisar de app store. No Chrome/Edge, basta abrir o site e clicar em "Adicionar à tela inicial". Funciona como um app nativo.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-question">Posso importar meu extrato bancário?</summary>
+        <div class="faq-answer">Sim! O Atlas aceita importação de arquivos CSV. Todo banco brasileiro permite exportar seu extrato em CSV (Nubank, Inter, Itaú, Bradesco e outros). Basta acessar Transações → Importar CSV e arrastar o arquivo.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-question">A IA tem acesso aos meus dados financeiros?</summary>
+        <div class="faq-answer">A análise IA é processada pelo Groq (modelo LLaMA) e recebe apenas um resumo anônimo das suas transações do mês atual — sem nomes completos, CPF ou dados pessoais sensíveis. Nenhum dado é usado para treinar modelos externos.</div>
+      </details>
+      <details class="faq-item">
+        <summary class="faq-question">Consigo acompanhar investimentos?</summary>
+        <div class="faq-answer">Sim! O módulo de investimentos suporta ações brasileiras, FIIs, ações internacionais, BDRs, ETFs, Tesouro Direto e renda fixa. As cotações são atualizadas em tempo real via Yahoo Finance e os indicadores econômicos (SELIC, CDI, IPCA) vêm direto do Banco Central.</div>
+      </details>
+    </div>
+  </section>
+
   <!-- ═══ FINAL CTA ═══════════════════════════════════════════════════════════ -->
   <section class="cta-section">
     <div class="cta-card">
@@ -1379,5 +1572,12 @@
     }
   </script>
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>

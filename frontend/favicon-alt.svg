@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="a-g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#a5b4fc"/>
+      <stop offset="50%"  stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#3730a3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Fundo escuro do site -->
+  <rect width="32" height="32" rx="7" fill="#0d1117"/>
+
+  <!-- "A" roxo gradiente sobre fundo preto -->
+  <path fill-rule="evenodd" fill="url(#a-g)"
+    d="M16,5 L25.5,27 L21.5,27 L19.5,20 L12.5,20 L10.5,27 L6.5,27 Z
+       M16,9.5 L19.5,20 L12.5,20 Z"/>
+</svg>

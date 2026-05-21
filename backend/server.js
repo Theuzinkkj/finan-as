@@ -1,7 +1,8 @@
 'use strict';
 
-const express = require('express');
-const path    = require('path');
+const express    = require('express');
+const path       = require('path');
+const nodemailer = require('nodemailer');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
@@ -10,6 +11,25 @@ const SUPA_ANON    = process.env.SUPABASE_KEY         || '';
 const SUPA_SERVICE = process.env.SUPABASE_SERVICE_KEY || SUPA_ANON;
 const GROQ_KEY     = process.env.GROQ_KEY             || '';
 const IS_PROD      = process.env.NODE_ENV === 'production';
+
+// ── Email (Nodemailer) ────────────────────────────────────────────────────────
+// Suporta SMTP genérico (Gmail, Outlook, Brevo, etc.) via variáveis de ambiente.
+// SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
+function createMailer() {
+  const host = process.env.SMTP_HOST;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!host || !user || !pass) return null;
+  return nodemailer.createTransport({
+    host,
+    port:   +(process.env.SMTP_PORT || 587),
+    secure: +(process.env.SMTP_PORT || 587) === 465,
+    auth:   { user, pass },
+  });
+}
+
+const _mailer   = createMailer();
+const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || 'Atlas <noreply@atlas.app>';
 
 // ── Validação de ambiente ─────────────────────────────────────────────────────
 // Falha rápido na inicialização — melhor que erros silenciosos em runtime.
@@ -780,6 +800,116 @@ app.post('/api/ai/chat', aiLimiter, requireAuth, async (req, res, next) => {
 
     if (!ok) return res.status(status).json({ message: data?.error?.message || 'Erro na IA.' });
     res.status(200).json(data);
+  } catch (err) { next(err); }
+});
+
+// ── Notifications (Email) ─────────────────────────────────────────────────────
+const notifLimiter = makeRateLimiter(60_000, 5, 'Muitas notificações. Tente em 1 minuto.');
+
+async function sendEmail({ to, subject, html }) {
+  if (!_mailer) return { ok: false, reason: 'Email não configurado. Adicione SMTP_HOST, SMTP_USER e SMTP_PASS no .env.' };
+  try {
+    await _mailer.sendMail({ from: SMTP_FROM, to, subject, html });
+    return { ok: true };
+  } catch (err) {
+    console.error('[Atlas] Erro ao enviar email:', err.message);
+    return { ok: false, reason: err.message };
+  }
+}
+
+// Alerta de orçamento — dispara quando usuário atinge >= 80% de uma categoria
+app.post('/api/notify/budget-alert', notifLimiter, requireAuth, async (req, res, next) => {
+  try {
+    const { category, spent, limit, pct } = req.body || {};
+    if (!category || !spent || !limit) return res.status(400).json({ message: 'Parâmetros inválidos.' });
+
+    const fmtBRL = v => `R$ ${Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const subject = `⚠️ Alerta Atlas: ${pct}% do orçamento de ${category} usado`;
+    const html = `
+      <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0f0e17;color:#f1f5f9;border-radius:16px">
+        <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;margin-bottom:4px">💎 Atlas</div>
+        <div style="color:#94a3b8;font-size:.85rem;margin-bottom:24px">Alerta de Orçamento</div>
+        <div style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:20px;margin-bottom:20px">
+          <div style="font-size:1.1rem;font-weight:700;color:#f59e0b;margin-bottom:8px">⚠️ ${pct}% do orçamento de ${category} consumido</div>
+          <div style="color:#94a3b8;font-size:.9rem">
+            Você gastou <strong style="color:#f1f5f9">${fmtBRL(spent)}</strong> de um limite de <strong style="color:#f1f5f9">${fmtBRL(limit)}</strong> em <strong style="color:#f1f5f9">${category}</strong> neste mês.
+          </div>
+        </div>
+        <div style="color:#94a3b8;font-size:.85rem;margin-bottom:24px">
+          Ainda restam <strong style="color:#f1f5f9">${fmtBRL(limit - spent)}</strong> no orçamento. Monitore seus gastos para não ultrapassar o limite.
+        </div>
+        <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=dashboard"
+           style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
+          Ver meus gastos →
+        </a>
+        <div style="margin-top:32px;color:#4a5568;font-size:.75rem;border-top:1px solid rgba(255,255,255,.08);padding-top:16px">
+          Você recebeu este email porque configurou alertas de orçamento no Atlas.
+        </div>
+      </div>`;
+
+    const result = await sendEmail({ to: req.userEmail, subject, html });
+    if (!result.ok) return res.status(503).json({ message: result.reason });
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Resumo mensal — enviado manualmente pelo usuário ou por cron externo
+app.post('/api/notify/monthly-summary', notifLimiter, requireAuth, async (req, res, next) => {
+  try {
+    const { month, income, expense, balance, score, score_label, top_category } = req.body || {};
+    if (!month) return res.status(400).json({ message: 'Parâmetro month obrigatório.' });
+
+    const fmtBRL  = v => `R$ ${Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    const positive = (balance || 0) >= 0;
+    const scoreColor = (score || 0) >= 75 ? '#10b981' : (score || 0) >= 50 ? '#f59e0b' : '#ef4444';
+    const subject = `📊 Resumo Atlas — ${month}`;
+
+    const html = `
+      <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0f0e17;color:#f1f5f9;border-radius:16px">
+        <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;margin-bottom:4px">💎 Atlas</div>
+        <div style="color:#94a3b8;font-size:.85rem;margin-bottom:24px">Resumo Mensal</div>
+        <div style="font-size:1.3rem;font-weight:700;margin-bottom:20px">Seu mês de <strong style="color:#7c3aed">${month}</strong></div>
+        <div style="display:grid;gap:12px;margin-bottom:20px">
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px">
+            <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Saldo</div>
+            <div style="font-size:1.4rem;font-weight:800;color:${positive ? '#10b981' : '#ef4444'}">${positive ? '+' : ''}${fmtBRL(balance)}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:rgba(16,185,129,.08);border-radius:10px;padding:14px 18px">
+              <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Receitas</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#10b981">${fmtBRL(income)}</div>
+            </div>
+            <div style="background:rgba(239,68,68,.08);border-radius:10px;padding:14px 18px">
+              <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Despesas</div>
+              <div style="font-size:1.1rem;font-weight:700;color:#ef4444">${fmtBRL(expense)}</div>
+            </div>
+          </div>
+          ${score != null ? `
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px">
+            <div style="font-size:2rem;font-weight:800;color:${scoreColor}">${score}</div>
+            <div>
+              <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em">Score Financeiro</div>
+              <div style="font-weight:700;color:${scoreColor}">${score_label || ''}</div>
+            </div>
+          </div>` : ''}
+          ${top_category ? `
+          <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px">
+            <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Maior gasto</div>
+            <div style="font-weight:600">${top_category}</div>
+          </div>` : ''}
+        </div>
+        <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=analysis"
+           style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
+          Ver análise completa →
+        </a>
+        <div style="margin-top:32px;color:#4a5568;font-size:.75rem;border-top:1px solid rgba(255,255,255,.08);padding-top:16px">
+          Atlas Finance — seus dados, seu controle.
+        </div>
+      </div>`;
+
+    const result = await sendEmail({ to: req.userEmail, subject, html });
+    if (!result.ok) return res.status(503).json({ message: result.reason });
+    res.json({ ok: true });
   } catch (err) { next(err); }
 });
 
