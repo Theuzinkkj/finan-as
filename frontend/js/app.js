@@ -695,6 +695,14 @@ function updateProfileUI() {
     greetEl.classList.toggle('hidden', name === '—');
   }
 
+  // Dashboard hero title (desktop)
+  const heroTitle = document.getElementById('dash-hero-title');
+  if (heroTitle) {
+    const h = new Date().getHours();
+    const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+    heroTitle.textContent = name !== '—' ? `${saudacao}, ${name}.` : `${saudacao}.`;
+  }
+
   // Mobile greeting
   const mobGreetName = document.getElementById('mob-greeting-name');
   const mobGreetSub  = document.getElementById('mob-greeting-sub');
@@ -924,6 +932,29 @@ function renderCards(txs) {
   const mobExp = document.getElementById('mob-expense-val');
   if (mobInc) mobInc.textContent = fmt(income);
   if (mobExp) mobExp.textContent = fmt(expense);
+
+  // Dashboard hero sub (contexto de economia)
+  const heroSub = document.getElementById('dash-hero-sub');
+  if (heroSub) {
+    const mes = currentDate.toLocaleString('pt-BR', { month: 'long' });
+    if (income > 0) {
+      heroSub.innerHTML = balance >= 0
+        ? `Você está economizando <span class="hero-amount">${fmt(balance)}</span> em ${mes}.`
+        : `Suas despesas superaram as receitas em ${mes}.`;
+    } else {
+      heroSub.textContent = `Sem receitas registradas em ${mes}.`;
+    }
+  }
+
+  // Transactions page sub header
+  const txSub = document.getElementById('tx-page-sub');
+  if (txSub) {
+    txSub.innerHTML = `<span>${document.getElementById('filter-count')?.textContent || ''}</span><span class="inc">+${fmt(income)} receitas</span><span class="exp">−${fmt(expense)} despesas</span>`;
+  }
+  const txMonthTitle = document.getElementById('tx-page-month-title');
+  if (txMonthTitle) {
+    txMonthTitle.textContent = monthLabel(currentDate);
+  }
   document.getElementById('balance-sub').textContent   = income > 0
     ? `${((expense / income) * 100).toFixed(0)}% da receita gasto`
     : 'Sem receitas no mês';
@@ -1037,10 +1068,36 @@ function renderAllTxs() {
     .filter(t => !search || t.description.toLowerCase().includes(search) || (t.notes || '').toLowerCase().includes(search))
     .sort((a, b) => b.date.localeCompare(a.date));
 
-  document.getElementById('all-transactions').innerHTML =
-    list.length ? list.map(txHTML).join('') : emptyHTML('Nenhuma transação encontrada.');
-  document.getElementById('filter-count').textContent =
-    `${list.length} transaç${list.length === 1 ? 'ão' : 'ões'}`;
+  const countEl = document.getElementById('filter-count');
+  if (countEl) countEl.textContent = `${list.length} transaç${list.length === 1 ? 'ão' : 'ões'}`;
+
+  if (!list.length) {
+    document.getElementById('all-transactions').innerHTML = emptyHTML('Nenhuma transação encontrada.');
+    return;
+  }
+
+  // Agrupa por data
+  const groups = {};
+  list.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
+
+  const DIAS = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  let html = '';
+  for (const [date, txs] of Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))) {
+    const d       = new Date(date + 'T12:00:00');
+    const [,mo,dy]= date.split('-');
+    const total   = txs.reduce((s, t) => s + (t.type === 'receita' ? t.amount : t.type === 'despesa' ? -t.amount : 0), 0);
+    const totCls  = total > 0 ? 'income' : total < 0 ? 'expense' : 'neutral';
+    const totStr  = (total >= 0 ? '+' : '−') + fmt(Math.abs(total));
+    html += `<div class="tx-day-group">
+      <div class="tx-day-header">
+        <div><span class="tx-day-name">${DIAS[d.getDay()]}</span><span class="tx-day-date"> · ${dy}/${mo}</span><span class="tx-day-count">${txs.length} ${txs.length === 1 ? 'item' : 'itens'}</span></div>
+        <span class="tx-day-total ${totCls}">${totStr}</span>
+      </div>
+      <div class="tx-day-items">${txs.map(txHTML).join('')}</div>
+    </div>`;
+  }
+
+  document.getElementById('all-transactions').innerHTML = html;
 }
 
 // =============================================

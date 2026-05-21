@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="css/features.css">
   <link rel="stylesheet" href="css/enhancements.css">
   <link rel="stylesheet" href="css/mobile.css">
+  <link rel="stylesheet" href="css/desktop.css">
 </head>
 <body>
 
@@ -253,6 +254,15 @@
     <!-- ======= DASHBOARD ======= -->
     <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
 
+      <!-- Dashboard hero (oculto no mobile) -->
+      <div class="dash-hero" id="dash-hero">
+        <div class="dash-hero-left">
+          <div class="dash-hero-label">Visão geral</div>
+          <div class="dash-hero-title" id="dash-hero-title">Bom dia.</div>
+          <div class="dash-hero-sub" id="dash-hero-sub"></div>
+        </div>
+      </div>
+
       <!-- Mobile greeting (oculto no desktop) -->
       <div class="mob-greeting" id="mob-greeting">
         <div>
@@ -383,6 +393,11 @@
 
     <!-- ======= TRANSACTIONS ======= -->
     <section class="tab-content" id="tab-transactions" role="tabpanel" aria-labelledby="nav-tab-transactions">
+      <div class="tx-page-header" id="tx-page-header">
+        <div class="tx-page-label">Transações</div>
+        <div class="tx-page-title" id="tx-page-month-title"></div>
+        <div class="tx-page-sub" id="tx-page-sub"></div>
+      </div>
       <div class="filters-bar">
         <div class="search-wrap">
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>

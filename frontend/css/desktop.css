@@ -1,0 +1,157 @@
+/* =============================================
+   ATLAS DESKTOP — V1 Refined UX
+   ============================================= */
+
+/* ── Nav tabs: pill container ────────────────── */
+.nav-tabs {
+  background:    var(--surface, rgba(255,255,255,.05)) !important;
+  border:        1px solid var(--border) !important;
+  border-radius: 999px !important;
+  padding:       4px !important;
+  gap:           2px !important;
+}
+.nav-tab {
+  border-radius: 999px !important;
+  font-size:     13px !important;
+  padding:       8px 16px !important;
+}
+.nav-tab.active {
+  background:  var(--violet, var(--purple)) !important;
+  box-shadow:  0 4px 16px rgba(124,92,255,.4) !important;
+  color:       #fff !important;
+}
+
+/* ── Header: greeting always visible on desktop ─ */
+@media (min-width: 901px) {
+  .header-greeting { display: flex !important; }
+}
+
+/* ── Dashboard hero ──────────────────────────── */
+.dash-hero {
+  padding:       28px 32px 0;
+  display:       flex;
+  align-items:   flex-end;
+  justify-content:space-between;
+  flex-wrap:     wrap;
+  gap:           12px;
+}
+.dash-hero-left  {}
+.dash-hero-label {
+  font-size:     10px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:         var(--text-mute, var(--text-3));
+  font-family:   ui-monospace, monospace;
+  font-weight:   500;
+}
+.dash-hero-title {
+  font-size:      28px;
+  font-weight:    600;
+  letter-spacing: -0.5px;
+  margin-top:     6px;
+}
+.dash-hero-sub {
+  color:     var(--text-dim, var(--text-2));
+  font-size: 14px;
+  margin-top:4px;
+}
+.dash-hero-sub .hero-amount {
+  color:      var(--emerald, var(--green-l));
+  font-weight:600;
+}
+
+/* Hide hero on mobile (handled by mobile.css) */
+@media (max-width: 900px) {
+  .dash-hero { display: none !important; }
+}
+
+/* ── Desktop balance card gradient ───────────── */
+@media (min-width: 901px) {
+  .card-balance {
+    background:    linear-gradient(135deg, rgba(124,92,255,.3), rgba(91,192,255,.1) 70%, transparent) !important;
+    border:        1px solid var(--violet-soft, rgba(124,92,255,.25)) !important;
+    border-radius: 16px !important;
+    position:      relative;
+    overflow:      hidden;
+  }
+  .card-balance::before {
+    content:       '';
+    position:      absolute;
+    top: -40px; right: -40px;
+    width:         180px;
+    height:        180px;
+    border-radius: 999px;
+    background:    radial-gradient(circle, rgba(124,92,255,.35), transparent 60%);
+    pointer-events:none;
+  }
+  .card-balance .card-value {
+    font-size:      36px !important;
+    font-weight:    600;
+    letter-spacing: -1px;
+    color:          var(--emerald, var(--green-l)) !important;
+  }
+  .card-balance .card-label {
+    font-size:     10px !important;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    font-family:   ui-monospace, monospace;
+    color:         var(--text-mute, var(--text-3));
+  }
+}
+
+/* ── Transactions page header ────────────────── */
+.tx-page-header {
+  padding:    28px 0 20px;
+}
+.tx-page-label {
+  font-size:     10px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:         var(--text-mute, var(--text-3));
+  font-family:   ui-monospace, monospace;
+  font-weight:   500;
+}
+.tx-page-title {
+  font-size:      22px;
+  font-weight:    600;
+  letter-spacing: -0.3px;
+  margin-top:     4px;
+}
+.tx-page-sub {
+  font-size:  13px;
+  color:      var(--text-dim, var(--text-2));
+  margin-top: 4px;
+  display:    flex;
+  gap:        16px;
+  flex-wrap:  wrap;
+}
+.tx-page-sub .inc { color: var(--emerald, var(--green-l)); font-weight: 600; }
+.tx-page-sub .exp { color: var(--coral, #f87171); font-weight: 600; }
+
+/* ── Transaction day grouping ────────────────── */
+.tx-day-group { margin-bottom: 4px; }
+
+.tx-day-header {
+  display:         flex;
+  justify-content: space-between;
+  align-items:     baseline;
+  padding:         14px 0 6px;
+  font-size:       12px;
+  color:           var(--text-dim, var(--text-2));
+  font-weight:     500;
+  border-bottom:   none;
+}
+.tx-day-name  { font-weight: 600; color: var(--text, #f1f5f9); }
+.tx-day-date  { color: var(--text-dim, var(--text-2)); }
+.tx-day-count {
+  margin-left: 10px;
+  font-size:   11px;
+  color:       var(--text-mute, var(--text-3));
+  font-weight: 400;
+}
+.tx-day-total         { font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; }
+.tx-day-total.income  { color: var(--emerald, var(--green-l)); }
+.tx-day-total.expense { color: var(--coral, #f87171); }
+.tx-day-total.neutral { color: var(--text-dim, var(--text-2)); }
+
+.tx-day-items .tx-item:last-child { border-bottom-color: transparent; }
