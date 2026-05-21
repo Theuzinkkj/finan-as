@@ -695,6 +695,17 @@ function updateProfileUI() {
     greetEl.classList.toggle('hidden', name === '—');
   }
 
+  // Mobile greeting
+  const mobGreetName = document.getElementById('mob-greeting-name');
+  const mobGreetSub  = document.getElementById('mob-greeting-sub');
+  const mobAvatar    = document.getElementById('mob-avatar');
+  if (mobGreetName) mobGreetName.textContent = name !== '—' ? name + ' 👋' : '👋';
+  if (mobAvatar)    mobAvatar.textContent    = initial;
+  if (mobGreetSub) {
+    const h = new Date().getHours();
+    mobGreetSub.textContent = h < 12 ? 'Bom dia,' : h < 18 ? 'Boa tarde,' : 'Boa noite,';
+  }
+
   // Panel avatar
   const panelImg = document.getElementById('profile-avatar-img');
   if (panelImg) {
@@ -908,6 +919,11 @@ function renderCards(txs) {
   document.getElementById('expense-value').textContent = fmt(expense);
   document.getElementById('balance-value').textContent = fmt(balance);
   document.getElementById('balance-value').style.color = balance >= 0 ? 'var(--green-l)' : '#f87171';
+
+  const mobInc = document.getElementById('mob-income-val');
+  const mobExp = document.getElementById('mob-expense-val');
+  if (mobInc) mobInc.textContent = fmt(income);
+  if (mobExp) mobExp.textContent = fmt(expense);
   document.getElementById('balance-sub').textContent   = income > 0
     ? `${((expense / income) * 100).toFixed(0)}% da receita gasto`
     : 'Sem receitas no mês';
@@ -2051,10 +2067,51 @@ function updateNotesFieldForType(type) {
 }
 
 function bindEvents() {
-  // FAB — nova transação
+  // FAB — nova transação (desktop floating dock)
   document.getElementById('btn-add').addEventListener('click', () => {
     resetTransactionModal();
     openModal('modal-transaction');
+  });
+
+  // FAB mobile — menu expandível
+  const mobFabBtn     = document.getElementById('mob-fab-btn');
+  const mobFabMenu    = document.getElementById('mob-fab-menu');
+  const mobFabOverlay = document.getElementById('mob-fab-overlay');
+  const mobFabIcon    = document.getElementById('mob-fab-icon');
+
+  function toggleMobFab(open) {
+    mobFabMenu?.classList.toggle('open', open);
+    mobFabOverlay?.classList.toggle('open', open);
+    if (mobFabIcon) mobFabIcon.classList.toggle('open', open);
+  }
+
+  mobFabBtn?.addEventListener('click', () => {
+    toggleMobFab(!mobFabMenu.classList.contains('open'));
+  });
+  mobFabOverlay?.addEventListener('click', () => toggleMobFab(false));
+
+  document.getElementById('mob-opt-expense')?.addEventListener('click', () => {
+    toggleMobFab(false);
+    selectedType = 'despesa';
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'despesa'));
+    resetTransactionModal();
+    openModal('modal-transaction');
+  });
+  document.getElementById('mob-opt-income')?.addEventListener('click', () => {
+    toggleMobFab(false);
+    selectedType = 'receita';
+    document.querySelectorAll('.type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'receita'));
+    resetTransactionModal();
+    openModal('modal-transaction');
+  });
+  document.getElementById('mob-opt-transfer')?.addEventListener('click', () => {
+    toggleMobFab(false);
+    resetTransactionModal();
+    openModal('modal-transaction');
+  });
+  document.getElementById('mob-opt-invest')?.addEventListener('click', () => {
+    toggleMobFab(false);
+    switchTab('investments');
   });
 
   // Botão inline na aba de transações

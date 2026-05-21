@@ -37,6 +37,7 @@
   <link rel="stylesheet" href="css/investments.css">
   <link rel="stylesheet" href="css/features.css">
   <link rel="stylesheet" href="css/enhancements.css">
+  <link rel="stylesheet" href="css/mobile.css">
 </head>
 <body>
 
@@ -251,11 +252,36 @@
 
     <!-- ======= DASHBOARD ======= -->
     <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
+
+      <!-- Mobile greeting (oculto no desktop) -->
+      <div class="mob-greeting" id="mob-greeting">
+        <div>
+          <div class="mob-greeting-sub" id="mob-greeting-sub">Olá,</div>
+          <div class="mob-greeting-name" id="mob-greeting-name">—</div>
+        </div>
+        <div class="mob-greeting-actions">
+          <button class="mob-notif-btn" aria-label="Notificações">🔔</button>
+          <div class="mob-avatar" id="mob-avatar">?</div>
+        </div>
+      </div>
+
       <div class="summary-grid">
         <div class="card card-balance">
           <div class="card-label">Saldo do Mês</div>
           <div class="card-value" id="balance-value">R$ 0,00</div>
           <div class="card-sub" id="balance-sub"></div>
+          <!-- Mobile: receita/despesa inline no card (oculto no desktop) -->
+          <div class="mob-balance-split">
+            <div class="mob-split-item">
+              <div class="mob-split-label">Receitas</div>
+              <div class="mob-split-value income" id="mob-income-val">R$ 0,00</div>
+            </div>
+            <div class="mob-split-div"></div>
+            <div class="mob-split-item">
+              <div class="mob-split-label">Despesas</div>
+              <div class="mob-split-value expense" id="mob-expense-val">R$ 0,00</div>
+            </div>
+          </div>
         </div>
         <div class="card card-income card-clickable" id="card-income" title="Ver receitas" onclick="goToTransactions('receita')">
           <div class="card-icon-box income-box">↑</div>
@@ -767,25 +793,49 @@
     </div>
   </div>
 
-  <!-- Mobile bottom nav -->
+  <!-- Mobile bottom nav (5 abas + FAB central) -->
   <nav class="mobile-nav" role="tablist" aria-label="Navegação principal">
     <button class="mobile-nav-btn active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="tab-dashboard" id="mobile-nav-tab-dashboard">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      <span>Dashboard</span>
+      <span class="mob-nav-icon">◉</span>
+      <span>Início</span>
     </button>
     <button class="mobile-nav-btn" data-tab="transactions" role="tab" aria-selected="false" aria-controls="tab-transactions" id="mobile-nav-tab-transactions">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span class="mob-nav-icon">⇌</span>
       <span>Transações</span>
     </button>
+    <button class="mobile-nav-fab-wrap" id="mob-fab-btn" aria-label="Nova transação">
+      <div class="mob-fab" id="mob-fab-icon">＋</div>
+    </button>
     <button class="mobile-nav-btn" data-tab="analysis" role="tab" aria-selected="false" aria-controls="tab-analysis" id="mobile-nav-tab-analysis">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>
+      <span class="mob-nav-icon">✦</span>
       <span>IA</span>
     </button>
     <button class="mobile-nav-btn" data-tab="investments" role="tab" aria-selected="false" aria-controls="tab-investments" id="mobile-nav-tab-investments">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      <span class="mob-nav-icon">◆</span>
       <span>Invest.</span>
     </button>
   </nav>
+
+  <!-- FAB expand menu -->
+  <div class="mob-fab-menu" id="mob-fab-menu">
+    <div class="mob-fab-option" id="mob-opt-expense">
+      <span class="mob-fab-label">Despesa</span>
+      <div class="mob-fab-chip expense">↑</div>
+    </div>
+    <div class="mob-fab-option" id="mob-opt-income">
+      <span class="mob-fab-label">Receita</span>
+      <div class="mob-fab-chip income">↓</div>
+    </div>
+    <div class="mob-fab-option" id="mob-opt-transfer">
+      <span class="mob-fab-label">Transferência</span>
+      <div class="mob-fab-chip transfer">⇌</div>
+    </div>
+    <div class="mob-fab-option" id="mob-opt-invest">
+      <span class="mob-fab-label">Aporte</span>
+      <div class="mob-fab-chip invest">◆</div>
+    </div>
+  </div>
+  <div class="mob-fab-overlay" id="mob-fab-overlay"></div>
 
   <!-- Context menu: Transaction options -->
   <div id="tx-context-menu" class="tx-context-menu hidden">
