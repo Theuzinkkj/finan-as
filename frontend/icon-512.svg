@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#070e1e"/>
+      <stop offset="100%" stop-color="#0e1d34"/>
+    </linearGradient>
+    <linearGradient id="gr" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="globe-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="20%" r="50%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#070e1e" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="drop-shadow">
+      <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#38bdf8" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- Ambient glow behind globe -->
+  <ellipse cx="256" cy="120" rx="140" ry="80" fill="url(#glow)"/>
+
+  <!-- A — left leg -->
+  <line x1="256" y1="120" x2="104" y2="432"
+        stroke="url(#gr)" stroke-width="42" stroke-linecap="round"
+        filter="url(#drop-shadow)"/>
+  <!-- A — right leg -->
+  <line x1="256" y1="120" x2="408" y2="432"
+        stroke="url(#gr)" stroke-width="42" stroke-linecap="round"
+        filter="url(#drop-shadow)"/>
+  <!-- A — crossbar -->
+  <line x1="176" y1="312" x2="336" y2="312"
+        stroke="url(#gr)" stroke-width="34" stroke-linecap="round"/>
+
+  <!-- Globe at apex -->
+  <circle cx="256" cy="120" r="54" fill="url(#globe-fill)" filter="url(#drop-shadow)"/>
+
+  <!-- Globe grid: equator -->
+  <line x1="202" y1="120" x2="310" y2="120" stroke="#070e1e" stroke-width="11" opacity="0.55"/>
+  <!-- Globe grid: top arc -->
+  <path d="M215,95 Q256,80 297,95" fill="none" stroke="#070e1e" stroke-width="9" opacity="0.3"/>
+  <!-- Globe grid: bottom arc -->
+  <path d="M215,145 Q256,160 297,145" fill="none" stroke="#070e1e" stroke-width="9" opacity="0.3"/>
+  <!-- Globe grid: meridian -->
+  <line x1="256" y1="66" x2="256" y2="174" stroke="#070e1e" stroke-width="11" opacity="0.55"/>
+  <!-- Globe outer ring -->
+  <circle cx="256" cy="120" r="54" fill="none" stroke="#e0f2fe" stroke-width="5" opacity="0.3"/>
+</svg>
