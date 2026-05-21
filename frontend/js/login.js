@@ -250,6 +250,50 @@ function bindAuthEvents() {
   });
 }
 
+// ─── Mockup interactivity ────────────────────────────────────────────────────
+function initMockupInteractivity() {
+  const left   = document.querySelector('.auth-left');
+  const scene  = document.querySelector('.auth-mockup-scene');
+  const window_ = document.querySelector('.auth-mockup-window');
+  if (!left || !scene || !window_) return;
+
+  left.addEventListener('mousemove', e => {
+    const rect = left.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) / rect.width  - 0.5;
+    const cy = (e.clientY - rect.top)  / rect.height - 0.5;
+    scene.style.transform   = `translate(${cx * 10}px, ${cy * 8}px)`;
+    window_.style.transform = `rotateY(${cx * 4}deg) rotateX(${-cy * 3}deg)`;
+  });
+
+  left.addEventListener('mouseleave', () => {
+    scene.style.transform   = '';
+    window_.style.transform = '';
+  });
+
+  // Number counter animation
+  const counters = [
+    { el: document.querySelector('.mk-card-value'), target: 3192.50, prefix: 'R$ ', decimals: 2 },
+    { el: document.querySelectorAll('.mk-stat-value')[0], target: 5300, prefix: 'R$ ', decimals: 0 },
+    { el: document.querySelectorAll('.mk-stat-value')[1], target: 2107, prefix: 'R$ ', decimals: 0 },
+  ];
+
+  setTimeout(() => {
+    counters.forEach(({ el, target, prefix, decimals }) => {
+      if (!el) return;
+      const duration = 1200;
+      const start    = performance.now();
+      const fmt = v => prefix + v.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+      const tick = now => {
+        const t = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        el.textContent = fmt(target * ease);
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+  }, 400);
+}
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   const theme = localStorage.getItem('financeai_theme') || 'dark';
@@ -257,6 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initPasswordToggles();
   bindAuthEvents();
+  initMockupInteractivity();
 
   const redirect = await handleAuthRedirect();
 

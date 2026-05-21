@@ -747,9 +747,9 @@ body.demo-mode { padding-top: 40px; }
   }
   .auth-title #auth-welcome-line2 {
     font-weight:    400;
-    font-style:     italic;
-    color:          var(--purple);
-    letter-spacing: -.02em;
+    font-style:     normal;
+    color:          inherit;
+    letter-spacing: normal;
   }
 
   /* Hide desktop subtitle on mobile */
@@ -769,9 +769,54 @@ body.demo-mode { padding-top: 40px; }
   .auth-form-container { padding: 44px 36px 24px; }
   .auth-trust-bar { padding: 14px 36px; }
 }
-@media (min-width: 801px) and (max-width: 1100px) {
-  .auth-left  { padding: 32px 32px; }
-  .auth-right { width: 420px; }
-  .auth-form-container { padding: 44px 36px 24px; }
-  .auth-trust-bar { padding: 14px 36px; }
+
+/* ── MOCKUP INTERACTIVITY ─────────────────────────── */
+.auth-mockup-scene {
+  transition: transform 0.12s ease-out;
+}
+.auth-mockup-window {
+  animation: mkEntrance 0.9s cubic-bezier(.22,.68,0,1.1) 0.2s both;
+  transition: transform 0.15s ease-out;
+  will-change: transform;
+  transform-style: preserve-3d;
+}
+@keyframes mkEntrance {
+  from { opacity: 0; transform: translateY(28px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.mk-float-badge.mk-float-top {
+  animation: mkSlideFromRight 0.6s ease 0.9s both, mkFloatY 4s ease-in-out 1.5s infinite;
+}
+.mk-float-badge.mk-float-bottom {
+  animation: mkSlideFromLeft 0.6s ease 1.1s both, mkFloatY 4s ease-in-out 1.9s infinite alternate;
+}
+@keyframes mkSlideFromRight {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes mkSlideFromLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes mkFloatY {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+.mk-chart-line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: mkDrawLine 1.8s ease 0.5s forwards;
+}
+@keyframes mkDrawLine {
+  to { stroke-dashoffset: 0; }
+}
+
+.mk-card-value {
+  animation: mkPulse 3.5s ease-in-out 1.8s infinite;
+}
+@keyframes mkPulse {
+  0%, 90%, 100% { opacity: 1; }
+  95%           { opacity: .65; }
 }
