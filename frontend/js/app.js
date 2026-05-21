@@ -695,11 +695,12 @@ function updateProfileUI() {
     greetEl.classList.toggle('hidden', name === '—');
   }
 
+  const h = new Date().getHours();
+  const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
+
   // Dashboard hero title (desktop)
   const heroTitle = document.getElementById('dash-hero-title');
   if (heroTitle) {
-    const h = new Date().getHours();
-    const saudacao = h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite';
     heroTitle.textContent = name !== '—' ? `${saudacao}, ${name}.` : `${saudacao}.`;
   }
 
@@ -717,10 +718,7 @@ function updateProfileUI() {
   // Mês na tela de investimentos
   const mobInvMonth = document.getElementById('mob-inv-month');
   if (mobInvMonth) mobInvMonth.textContent = currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
-  if (mobGreetSub) {
-    const h = new Date().getHours();
-    mobGreetSub.textContent = h < 12 ? 'Bom dia,' : h < 18 ? 'Boa tarde,' : 'Boa noite,';
-  }
+  if (mobGreetSub) mobGreetSub.textContent = `${saudacao},`;
 
   // Panel avatar
   const panelImg = document.getElementById('profile-avatar-img');
@@ -2882,6 +2880,19 @@ function bindEvents() {
 
   // Swipe para deletar no mobile
   initSwipeToDelete();
+
+  // Mouse spotlight nos cards de receita/despesa
+  document.querySelectorAll('.card-clickable').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.removeProperty('--mx');
+      card.style.removeProperty('--my');
+    });
+  });
 }
 
 // =============================================
@@ -3060,16 +3071,3 @@ async function startApp() {
 }
 
 init();
-
-// Mouse spotlight nos cards de receita/despesa
-document.querySelectorAll('.card-clickable').forEach(card => {
-  card.addEventListener('mousemove', e => {
-    const r = card.getBoundingClientRect();
-    card.style.setProperty('--mx', `${e.clientX - r.left}px`);
-    card.style.setProperty('--my', `${e.clientY - r.top}px`);
-  });
-  card.addEventListener('mouseleave', () => {
-    card.style.removeProperty('--mx');
-    card.style.removeProperty('--my');
-  });
-});

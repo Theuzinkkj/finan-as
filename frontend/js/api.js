@@ -127,10 +127,8 @@ const Auth = {
   },
 
   _clearDisplay() {
-    ['financeai_display_email', 'financeai_display_uid',
-     'financeai_auth_token',    'financeai_auth_email',
-     'financeai_auth_uid',      'financeai_auth_expiry']
-      .forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('financeai_display_email');
+    localStorage.removeItem('financeai_display_uid');
   },
 
   // Verifica sessão no backend — retorna true se autenticado.

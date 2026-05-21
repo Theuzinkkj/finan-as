@@ -20,10 +20,11 @@ function createMailer() {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   if (!host || !user || !pass) return null;
+  const port = +(process.env.SMTP_PORT || 587);
   return nodemailer.createTransport({
     host,
-    port:   +(process.env.SMTP_PORT || 587),
-    secure: +(process.env.SMTP_PORT || 587) === 465,
+    port,
+    secure: port === 465,
     auth:   { user, pass },
   });
 }
