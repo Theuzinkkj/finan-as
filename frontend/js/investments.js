@@ -381,11 +381,38 @@ function renderInvSummaryGrid() {
       </div>
     </div>
   `;
+
+  requestAnimationFrame(() => {
+    el.querySelectorAll('.inv-scard-value').forEach(v => _countUpCurrency(v));
+  });
+}
+
+// ── Count-up animation ────────────────────────
+function _countUpCurrency(el, duration) {
+  duration = duration || 750;
+  const raw = el.textContent.trim();
+  if (!raw.includes('R$')) return;
+  const num = parseFloat(raw.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+  if (isNaN(num) || num === 0) return;
+  const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const start = performance.now();
+  function step(now) {
+    const t    = Math.min((now - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = fmt(num * ease);
+    if (t < 1) requestAnimationFrame(step);
+    else el.textContent = fmt(num);
+  }
+  requestAnimationFrame(step);
 }
 
 // ── Evolution Bar Chart ────────────────────────
 let _invPeriod     = '12';
 let _invTypeFilter = 'all';
+let _evoData       = [];
+let _evoDraw       = {};
+let _evoHovIdx     = -1;
+let _evoCanvas     = null;
 
 function populateTypeFilters() {
   const types = [...new Set(_portfolio.map(e => e.asset_type).filter(Boolean))];
@@ -405,15 +432,13 @@ function drawEvolutionChart() {
   const periodMonths = _invPeriod === 'all' ? 9999 : parseInt(_invPeriod);
   const now = new Date();
 
-  // Build month slots (last N months)
-  const numSlots = Math.min(periodMonths, 24);
   let slots = [];
+  const numSlots = Math.min(periodMonths, 24);
   for (let i = numSlots - 1; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     slots.push({ year: d.getFullYear(), month: d.getMonth() });
   }
 
-  // When "all": derive slots from actual data
   if (_invPeriod === 'all') {
     const keySet = new Set();
     _portfolio.forEach(e => {
@@ -432,7 +457,7 @@ function drawEvolutionChart() {
 
   const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
 
-  const slotData = slots.map(sl => {
+  _evoData = slots.map(sl => {
     const slotEnd = new Date(sl.year, sl.month + 1, 0);
     const entries = _portfolio.filter(e => {
       if ((e.transaction_type || 'compra') !== 'compra') return false;
@@ -444,53 +469,68 @@ function drawEvolutionChart() {
     const gain = _cachedRates ? entries.reduce((s, e) => {
       const d = new Date(e.date + 'T12:00:00');
       const m = Math.max(
-        (slotEnd.getFullYear() - d.getFullYear()) * 12 + (slotEnd.getMonth() - d.getMonth()),
-        0
+        (slotEnd.getFullYear() - d.getFullYear()) * 12 + (slotEnd.getMonth() - d.getMonth()), 0
       );
       return s + +e.amount * (Math.pow(1 + cdiMonthly, m) - 1);
     }, 0) : 0;
     return { ...sl, applied, gain };
   }).filter(s => s.applied > 0);
 
-  if (!slotData.length) return;
+  if (!_evoData.length) return;
 
   const W = canvas.parentElement?.clientWidth || 500;
   const H = 220;
-  canvas.width  = W;
-  canvas.height = H;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-
-  const maxVal = Math.max(...slotData.map(s => s.applied + s.gain), 1);
-  const n      = slotData.length;
   const pL = 10, pR = 10, pT = 16, pB = 28;
-  const cH     = H - pT - pB;
+  const maxVal = Math.max(..._evoData.map(s => s.applied + s.gain), 1);
+  const n      = _evoData.length;
   const slotW  = (W - pL - pR) / n;
   const bW     = Math.max(slotW * 0.62, 4);
   const bGap   = (slotW - bW) / 2;
+  _evoDraw = { W, H, pL, pR, pT, pB, maxVal, n, slotW, bW, bGap };
+  _evoCanvas = canvas;
 
-  slotData.forEach((sl, i) => {
+  canvas.width  = W;
+  canvas.height = H;
+  _renderEvoBars(-1);
+
+  if (!canvas._evoWired) {
+    canvas._evoWired = true;
+    canvas.addEventListener('mousemove', _onEvoMove);
+    canvas.addEventListener('mouseleave', _onEvoLeave);
+  }
+}
+
+function _renderEvoBars(hovIdx) {
+  if (!_evoCanvas || !_evoData.length) return;
+  const { W, H, pL, pT, pB, maxVal, slotW, bW, bGap } = _evoDraw;
+  const cH  = H - pT - pB;
+  const ctx = _evoCanvas.getContext('2d');
+  const now = new Date();
+  ctx.clearRect(0, 0, W, H);
+
+  _evoData.forEach((sl, i) => {
     const x      = pL + i * slotW + bGap;
     const totalH = Math.max(((sl.applied + sl.gain) / maxVal) * cH, 3);
     const gainH  = sl.applied > 0 ? Math.min((sl.gain / (sl.applied + sl.gain)) * totalH, totalH * 0.4) : 0;
     const appH   = totalH - gainH;
     const y      = pT + cH - totalH;
     const isNow  = sl.year === now.getFullYear() && sl.month === now.getMonth();
+    const isHov  = i === hovIdx;
 
-    // Applied (dark green, main body + rounded bottom)
-    ctx.fillStyle = isNow ? '#15803d' : '#166534';
+    ctx.globalAlpha = (hovIdx >= 0 && !isHov) ? 0.35 : 1;
+
+    const appColor = isHov ? '#22c55e' : (isNow ? '#15803d' : '#166534');
+    ctx.fillStyle = appColor;
     ctx.beginPath(); rrect(ctx, x, y + gainH, bW, appH, gainH > 1 ? 0 : 3); ctx.fill();
 
-    // Gain (light green, top cap with rounded top)
     if (gainH > 1) {
-      ctx.fillStyle = '#86efac';
+      ctx.fillStyle = isHov ? '#bbf7d0' : '#86efac';
       ctx.beginPath(); rrect(ctx, x, y, bW, gainH + 2, 3); ctx.fill();
-      // Re-draw applied bar without rounded top to mask the overlap
-      ctx.fillStyle = isNow ? '#15803d' : '#166534';
+      ctx.fillStyle = appColor;
       ctx.fillRect(x, y + gainH + 2, bW, appH - 2);
     }
 
-    // Month label
+    ctx.globalAlpha = 1;
     ctx.fillStyle    = chartFg(isNow ? 0.85 : 0.4);
     ctx.font         = isNow ? 'bold 9px Inter' : '9px Inter';
     ctx.textAlign    = 'center';
@@ -499,15 +539,71 @@ function drawEvolutionChart() {
     const yr = String(sl.year).slice(2);
     ctx.fillText(`${mo}/${yr}`, x + bW / 2, H - pB + 4);
 
-    // Value label (only when bars are wide enough)
     if (bW >= 20 && sl.applied >= 100) {
       const fmtV = v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0);
-      ctx.fillStyle    = chartFg(0.45);
-      ctx.font         = '8px Inter';
+      ctx.fillStyle    = chartFg(isHov ? 0.7 : 0.45);
+      ctx.font         = isHov ? 'bold 8px Inter' : '8px Inter';
       ctx.textBaseline = 'bottom';
       ctx.fillText(fmtV(sl.applied + sl.gain), x + bW / 2, y - 2);
     }
   });
+}
+
+function _onEvoMove(e) {
+  const canvas = e.currentTarget;
+  const r  = canvas.getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (canvas.width / r.width);
+  const { pL, slotW, bW, bGap } = _evoDraw;
+
+  let newHov = -1;
+  _evoData.forEach((_, i) => {
+    const x = pL + i * slotW + bGap;
+    if (mx >= x - 4 && mx <= x + bW + 4) newHov = i;
+  });
+
+  if (newHov !== _evoHovIdx) {
+    _evoHovIdx = newHov;
+    _renderEvoBars(newHov);
+  }
+  if (newHov >= 0) _showEvoTooltip(e, newHov);
+  else _hideEvoTooltip();
+}
+
+function _onEvoLeave() {
+  _evoHovIdx = -1;
+  _renderEvoBars(-1);
+  _hideEvoTooltip();
+}
+
+function _showEvoTooltip(e, idx) {
+  let tip = document.getElementById('inv-evo-tooltip');
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.id = 'inv-evo-tooltip';
+    tip.className = 'inv-evo-tooltip';
+    document.body.appendChild(tip);
+  }
+  const sl  = _evoData[idx];
+  const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const mo  = String(sl.month + 1).padStart(2, '0');
+  tip.innerHTML = `
+    <div class="evo-tip-month">${mo}/${sl.year}</div>
+    <div class="evo-tip-row"><span>Investido</span><span>${fmt(sl.applied)}</span></div>
+    ${sl.gain > 0.01 ? `<div class="evo-tip-row gain"><span>Ganho est.</span><span>+${fmt(sl.gain)}</span></div>` : ''}
+    <div class="evo-tip-row total"><span>Total</span><span>${fmt(sl.applied + sl.gain)}</span></div>
+  `;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let tx = e.clientX + 14, ty = e.clientY - 10;
+  if (tx + 160 > vw) tx = e.clientX - 160;
+  if (ty + 100 > vh) ty = e.clientY - 100;
+  tip.style.left    = tx + 'px';
+  tip.style.top     = ty + 'px';
+  tip.style.display = 'block';
+}
+
+function _hideEvoTooltip() {
+  const tip = document.getElementById('inv-evo-tooltip');
+  if (tip) tip.style.display = 'none';
 }
 
 // ── Allocation Donut ───────────────────────────
@@ -629,6 +725,8 @@ function _redrawDonut(hovIdx) {
 }
 
 // ── Assets Table ───────────────────────────────
+let _expandedAssets = new Set();
+
 function renderAssetsTable() {
   const tableEl  = document.getElementById('inv-assets-table');
   const countEl  = document.getElementById('inv-assets-count');
@@ -667,8 +765,11 @@ function renderAssetsTable() {
   const now        = new Date();
   const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
 
+  const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
   tableEl.innerHTML = `
     <div class="inv-assets-head">
+      <span></span>
       <span>Ativo</span>
       <span>Tipo</span>
       <span>Qtd / Lançamentos</span>
@@ -684,22 +785,48 @@ function renderAssetsTable() {
       const netTotal  = totalBuy - totalSell;
       const totalQty  = buys.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0)
                       - sells.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0);
-      const hasQty = buys.some(e => e.quantity != null && +e.quantity > 0);
-
-      const estVal = _cachedRates ? buys.reduce((sum, e) => {
+      const hasQty    = buys.some(e => e.quantity != null && +e.quantity > 0);
+      const estVal    = _cachedRates ? buys.reduce((sum, e) => {
         const d = new Date(e.date + 'T12:00:00');
         const m = Math.max((now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()), 0);
         return sum + +e.amount * Math.pow(1 + cdiMonthly, m);
       }, 0) - totalSell : netTotal;
-
-      const gain    = estVal - netTotal;
-      const gainPct = netTotal > 0 ? ((gain / netTotal) * 100).toFixed(2).replace('.', ',') : '0,00';
-      const gainDir = gain >= 0 ? 'up' : 'down';
-      const color   = TYPE_COLORS[it.asset_type] || '#94a3b8';
+      const gain      = estVal - netTotal;
+      const gainPct   = netTotal > 0 ? ((gain / netTotal) * 100).toFixed(2).replace('.', ',') : '0,00';
+      const gainDir   = gain >= 0 ? 'up' : 'down';
+      const color     = TYPE_COLORS[it.asset_type] || '#94a3b8';
       const shortType = TYPE_SHORT[it.asset_type] || it.asset_type;
+      const expanded  = _expandedAssets.has(it.asset);
+      const hasMulti  = it.entries.length > 1;
+
+      const subRows = expanded ? `
+        <div class="inv-asset-sub" data-asset="${escHtml(it.asset)}">
+          <div class="inv-sub-head">
+            <span>Data</span><span>Tipo</span><span>Qtd</span><span>Preço</span><span>Total</span><span></span>
+          </div>
+          ${it.entries.sort((a, b) => b.date.localeCompare(a.date)).map(e => {
+            const d   = new Date(e.date + 'T12:00:00');
+            const isBuy = (e.transaction_type || 'compra') === 'compra';
+            return `
+              <div class="inv-sub-row">
+                <span class="inv-sub-date">${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}</span>
+                <span class="inv-sub-type ${isBuy ? 'buy' : 'sell'}">${isBuy ? 'Compra' : 'Venda'}</span>
+                <span class="inv-sub-qty">${e.quantity != null ? (+e.quantity).toLocaleString('pt-BR', { maximumFractionDigits: 4 }) + ' un' : '—'}</span>
+                <span class="inv-sub-price">${e.price != null ? fmt(+e.price) : '—'}</span>
+                <span class="inv-sub-total">${fmt(+e.amount)}</span>
+                <span class="inv-sub-actions">
+                  <button class="btn-asset-edit btn-sub-edit" data-id="${escHtml(e.id)}" data-asset="${escHtml(it.asset)}" title="Editar">✏</button>
+                  <button class="btn-entry-delete btn-sub-del" data-id="${escHtml(e.id)}" data-asset="${escHtml(it.asset)}" title="Remover">✕</button>
+                </span>
+              </div>`;
+          }).join('')}
+        </div>` : '';
 
       return `
-        <div class="inv-asset-row">
+        <div class="inv-asset-row${expanded ? ' is-expanded' : ''}" data-asset="${escHtml(it.asset)}">
+          <button class="btn-asset-expand${!hasMulti ? ' single' : ''}" data-asset="${escHtml(it.asset)}" title="${expanded ? 'Recolher' : 'Ver lançamentos'}">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="expand-chevron${expanded ? ' open' : ''}"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
           <div class="inv-asset-info">
             <span class="inv-asset-ticker">${escHtml(it.asset)}</span>
           </div>
@@ -709,8 +836,7 @@ function renderAssetsTable() {
           <div class="inv-asset-qty">
             ${hasQty && totalQty > 0
               ? `<span>${totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} un</span>`
-              : `<span>${it.entries.length} lançamento${it.entries.length !== 1 ? 's' : ''}</span>`
-            }
+              : `<span>${it.entries.length} lançamento${it.entries.length !== 1 ? 's' : ''}</span>`}
           </div>
           <div class="inv-asset-invested">${fmt(netTotal)}</div>
           <div class="inv-asset-est">
@@ -719,9 +845,10 @@ function renderAssetsTable() {
           </div>
           <div class="inv-asset-actions">
             <button class="btn-asset-edit" data-id="${escHtml(it.entries[0]?.id || '')}" data-asset="${escHtml(it.asset)}" title="Editar último lançamento">✏</button>
-            <button class="btn-entry-delete" data-asset="${escHtml(it.asset)}" title="Remover lançamentos">✕</button>
+            <button class="btn-entry-delete" data-asset="${escHtml(it.asset)}" title="Remover todos">✕</button>
           </div>
-        </div>`;
+        </div>
+        ${subRows}`;
     }).join('')}
   `;
 
@@ -737,29 +864,43 @@ function renderAssetsTable() {
     }
   }
 
-  tableEl.querySelectorAll('.btn-asset-edit').forEach(btn => {
-    btn.addEventListener('click', () => {
+  // Expand/collapse
+  tableEl.querySelectorAll('.btn-asset-expand').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
       const asset = btn.dataset.asset;
-      const entries = _portfolio.filter(e => e.asset === asset);
-      if (entries.length === 1) {
-        openPortfolioModal(entries[0].id);
-      } else if (entries.length > 1) {
-        openPortfolioModal(entries[0].id);
-      }
+      if (_expandedAssets.has(asset)) _expandedAssets.delete(asset);
+      else _expandedAssets.add(asset);
+      renderAssetsTable();
     });
   });
 
+  // Edit (row-level — opens latest entry)
+  tableEl.querySelectorAll('.btn-asset-edit').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openPortfolioModal(btn.dataset.id);
+    });
+  });
+
+  // Delete — row-level (all entries for asset) vs sub-row (single entry)
   tableEl.querySelectorAll('.btn-entry-delete').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const asset = btn.dataset.asset;
-      const toDelete = _portfolio.filter(e => e.asset === asset);
-      const msg = toDelete.length === 1
-        ? `Remover o lançamento de "${asset}"?`
-        : `Remover todos os ${toDelete.length} lançamentos de "${asset}"?`;
-      if (!confirm(msg)) return;
-      try {
-        for (const e of toDelete) await deletePortfolioEntry(e.id);
-      } catch { toast?.('Erro ao remover.', 'err'); }
+    btn.addEventListener('click', async e => {
+      e.stopPropagation();
+      const singleId = btn.dataset.id;
+      const asset    = btn.dataset.asset;
+      if (singleId && btn.classList.contains('btn-sub-del')) {
+        if (!confirm(`Remover este lançamento de "${asset}"?`)) return;
+        try { await deletePortfolioEntry(singleId); } catch { toast?.('Erro ao remover.', 'err'); }
+      } else {
+        const toDelete = _portfolio.filter(e => e.asset === asset);
+        const msg = toDelete.length === 1
+          ? `Remover o lançamento de "${asset}"?`
+          : `Remover todos os ${toDelete.length} lançamentos de "${asset}"?`;
+        if (!confirm(msg)) return;
+        try { for (const e of toDelete) await deletePortfolioEntry(e.id); }
+        catch { toast?.('Erro ao remover.', 'err'); }
+      }
     });
   });
 }

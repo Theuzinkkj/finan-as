@@ -1775,7 +1775,7 @@
 
 .inv-assets-head {
   display: grid;
-  grid-template-columns: 1.4fr 100px 130px 130px 180px 72px;
+  grid-template-columns: 28px 1.4fr 100px 130px 130px 180px 72px;
   gap: 8px;
   padding: 6px 12px;
   font-size: .65rem;
@@ -1789,15 +1789,145 @@
 
 .inv-asset-row {
   display: grid;
-  grid-template-columns: 1.4fr 100px 130px 130px 180px 72px;
+  grid-template-columns: 28px 1.4fr 100px 130px 130px 180px 72px;
   gap: 8px;
   padding: 11px 12px;
   border-radius: 8px;
   transition: background .12s;
   align-items: center;
+  cursor: default;
 }
 
 .inv-asset-row:hover { background: var(--bg); }
+
+.inv-asset-row.is-expanded {
+  background: var(--bg);
+  border-radius: 8px 8px 0 0;
+}
+
+/* ── Expand button ────────────────────────── */
+.btn-asset-expand {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 3px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color .15s, background .15s;
+}
+
+.btn-asset-expand:hover { color: var(--text); background: var(--border); }
+.btn-asset-expand.single { opacity: .3; pointer-events: none; }
+
+.expand-chevron {
+  transition: transform .2s ease;
+}
+
+.expand-chevron.open { transform: rotate(180deg); }
+
+/* ── Sub-rows (lançamentos expandidos) ────── */
+.inv-asset-sub {
+  background: rgba(99,102,241,.04);
+  border-top: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  padding: 0 12px 8px;
+  margin-bottom: 2px;
+  animation: sub-slide-in .18s ease;
+}
+
+@keyframes sub-slide-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.inv-sub-head {
+  display: grid;
+  grid-template-columns: 110px 70px 80px 100px 100px 64px;
+  gap: 8px;
+  padding: 7px 0 5px;
+  font-size: .62rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+.inv-sub-row {
+  display: grid;
+  grid-template-columns: 110px 70px 80px 100px 100px 64px;
+  gap: 8px;
+  padding: 7px 0;
+  font-size: .78rem;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  transition: background .1s;
+  border-radius: 4px;
+}
+
+.inv-sub-row:last-child { border-bottom: none; }
+.inv-sub-row:hover { background: var(--bg); }
+
+.inv-sub-date  { color: var(--text-2); }
+.inv-sub-qty   { color: var(--text-2); }
+.inv-sub-price { color: var(--text-2); }
+.inv-sub-total { font-weight: 600; color: var(--text); }
+
+.inv-sub-type {
+  font-size: .69rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.inv-sub-type.buy  { background: rgba(16,185,129,.13); color: #10b981; }
+.inv-sub-type.sell { background: rgba(239,68,68,.12);  color: #f87171; }
+
+.inv-sub-actions { display: flex; gap: 4px; }
+
+/* ── Evolution Chart Tooltip ──────────────── */
+.inv-evo-tooltip {
+  position: fixed;
+  background: var(--bg-card);
+  border: 1px solid var(--border-h);
+  border-radius: 10px;
+  padding: 10px 14px;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  min-width: 140px;
+  display: none;
+}
+
+.evo-tip-month {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  margin-bottom: 7px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.evo-tip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: .76rem;
+  color: var(--text-2);
+  padding: 2px 0;
+}
+
+.evo-tip-row span:last-child { font-weight: 600; color: var(--text); }
+.evo-tip-row.gain span:last-child { color: #86efac; }
+.evo-tip-row.total { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 5px; }
+.evo-tip-row.total span { font-weight: 700; color: var(--text); }
 
 .inv-asset-info { min-width: 0; }
 
@@ -1969,14 +2099,14 @@
 
   .inv-assets-head,
   .inv-asset-row {
-    grid-template-columns: 1fr 86px 106px 80px;
+    grid-template-columns: 28px 1fr 86px 106px 80px;
     font-size: .75rem;
   }
 
-  .inv-assets-head span:nth-child(5),
   .inv-assets-head span:nth-child(6),
-  .inv-asset-row > *:nth-child(5),
-  .inv-asset-row > *:nth-child(6) { display: none; }
+  .inv-assets-head span:nth-child(7),
+  .inv-asset-row > *:nth-child(6),
+  .inv-asset-row > *:nth-child(7) { display: none; }
 }
 
 @media (max-width: 520px) {
@@ -1991,11 +2121,14 @@
   .lc-form-grid { grid-template-columns: 1fr; }
 
   .inv-assets-head,
-  .inv-asset-row { grid-template-columns: 1fr 80px 80px 48px; }
+  .inv-asset-row { grid-template-columns: 28px 1fr 80px 80px 48px; }
 
-  .inv-assets-head span:nth-child(3),
-  .inv-assets-head span:nth-child(5),
-  .inv-asset-row > *:nth-child(3),
-  .inv-asset-row > *:nth-child(5) { display: none; }
+  .inv-assets-head span:nth-child(4),
+  .inv-assets-head span:nth-child(6),
+  .inv-asset-row > *:nth-child(4),
+  .inv-asset-row > *:nth-child(6) { display: none; }
+
+  .inv-sub-head,
+  .inv-sub-row { grid-template-columns: 80px 60px 70px 80px 80px 48px; font-size: .72rem; }
 }
 
