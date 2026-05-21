@@ -28,12 +28,12 @@
 
 /* ── Dashboard hero ──────────────────────────── */
 .dash-hero {
-  padding:       28px 32px 0;
-  display:       flex;
-  align-items:   flex-end;
+  padding:        0 0 20px;
+  display:        flex;
+  align-items:    flex-end;
   justify-content:space-between;
-  flex-wrap:     wrap;
-  gap:           12px;
+  flex-wrap:      wrap;
+  gap:            12px;
 }
 .dash-hero-left  {}
 .dash-hero-label {
@@ -155,3 +155,260 @@
 .tx-day-total.neutral { color: var(--text-dim, var(--text-2)); }
 
 .tx-day-items .tx-item:last-child { border-bottom-color: transparent; }
+
+/* ── Dash hero: right side month selector ──────── */
+.dash-hero-right {
+  display: flex;
+  align-items: center;
+}
+
+/* ── Hide floating month on desktop dashboard ───── */
+@media (min-width: 901px) {
+  body.tab-dashboard .month-float { display: none !important; }
+}
+
+/* ── 4th card: Investido ────────────────────────── */
+.card-invested {
+  border: 1px solid transparent;
+  border-left: 3px solid var(--violet, var(--purple));
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+.card-clickable.card-invested:hover {
+  border-left-width: 4px;
+  background: radial-gradient(circle 320px at var(--mx,50%) var(--my,50%), rgba(124,92,255,.38) 0%, rgba(60,20,140,.25) 55%, transparent 80%);
+  box-shadow: 0 0 0 1px rgba(124,92,255,.35), -5px 0 20px rgba(124,92,255,.22);
+  transform: translateY(-1px);
+}
+.card-clickable.card-invested:active {
+  border-left-width: 4px;
+  background: radial-gradient(circle 360px at var(--mx,50%) var(--my,50%), rgba(124,92,255,.55) 0%, rgba(60,20,140,.38) 55%, transparent 80%);
+  box-shadow: 0 0 0 2px rgba(124,92,255,.50), -6px 0 26px rgba(124,92,255,.30);
+  transform: translateY(1px);
+}
+.invested-box {
+  background: rgba(124,92,255,.15);
+  color: var(--violet, var(--purple));
+}
+
+/* ── Dashboard main row (linha chart + direita) ─── */
+.dash-main-row {
+  display:               grid;
+  grid-template-columns: 1fr 320px;
+  gap:                   14px;
+  margin-bottom:         14px;
+}
+
+.dash-right-col {
+  display:        flex;
+  flex-direction: column;
+  gap:            14px;
+}
+
+/* ── Line chart card header ─────────────────────── */
+.dash-line-card { padding: 20px; }
+
+.dash-line-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             12px;
+  margin-bottom:   16px;
+  flex-wrap:       wrap;
+}
+
+.dash-line-period {
+  font-size:  11px;
+  color:      var(--text-mute, var(--text-3));
+  margin-top: 2px;
+}
+
+.dash-line-legend {
+  display:     flex;
+  align-items: center;
+  gap:         5px;
+  font-size:   11px;
+  color:       var(--text-2);
+}
+
+.dash-legend-dot {
+  display:       inline-block;
+  width:         8px;
+  height:        8px;
+  border-radius: 50%;
+  flex-shrink:   0;
+}
+
+.dash-line-filters {
+  display: flex;
+  gap:     4px;
+}
+
+.dash-filter-btn {
+  background:  rgba(255,255,255,.05);
+  border:      1px solid var(--border);
+  border-radius:6px;
+  color:       var(--text-2);
+  cursor:      pointer;
+  font-family: var(--font);
+  font-size:   11px;
+  font-weight: 500;
+  padding:     4px 10px;
+  transition:  all .18s;
+}
+.dash-filter-btn:hover  { background: rgba(255,255,255,.10); color: var(--text); }
+.dash-filter-btn.active { background: var(--violet, var(--purple)); border-color: var(--violet, var(--purple)); color: #fff; }
+
+/* ── AI insight card ────────────────────────────── */
+.dash-ai-card { padding: 18px; flex: 1; min-height: 0; }
+
+.dash-ai-label {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  font-size:     10px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:         var(--violet, var(--purple));
+  font-weight:   600;
+  margin-bottom: 10px;
+}
+
+.dash-ai-dot {
+  width:         7px;
+  height:        7px;
+  border-radius: 50%;
+  background:    var(--violet, var(--purple));
+  animation:     aiPulse 2s ease-in-out infinite;
+  flex-shrink:   0;
+}
+@keyframes aiPulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.85); }
+}
+
+.dash-ai-time {
+  margin-left: auto;
+  font-size:   10px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-mute, var(--text-3));
+  font-weight: 400;
+}
+
+.dash-ai-content {
+  font-size:   13px;
+  color:       var(--text-2);
+  line-height: 1.65;
+}
+
+.dash-ai-content strong { color: var(--text); }
+
+/* ── Goal / meta card ───────────────────────────── */
+.dash-goal-card { padding: 18px; }
+
+.dash-goal-header {
+  display:       flex;
+  align-items:   center;
+  margin-bottom: 10px;
+}
+
+.dash-goal-label-text {
+  font-size:      10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color:          var(--text-mute, var(--text-3));
+  font-weight:    600;
+  flex:           1;
+}
+
+.dash-goal-pct {
+  font-size:   11px;
+  color:       var(--violet, var(--purple));
+  font-weight: 600;
+}
+
+.dash-goal-empty {
+  display:        flex;
+  flex-direction: column;
+  align-items:    center;
+  gap:            8px;
+  padding:        10px 0;
+  color:          var(--text-3);
+  font-size:      12px;
+  text-align:     center;
+}
+
+.dash-goal-name {
+  font-size:   13px;
+  font-weight: 600;
+  color:       var(--text);
+  margin-bottom:6px;
+}
+
+.dash-goal-amounts {
+  font-size:   22px;
+  font-weight: 700;
+  color:       var(--text);
+  margin-bottom:6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-goal-amounts .dash-goal-limit {
+  font-size:   14px;
+  font-weight: 400;
+  color:       var(--text-3);
+}
+
+.dash-goal-track {
+  width:         100%;
+  height:        4px;
+  background:    rgba(255,255,255,.08);
+  border-radius: 3px;
+  overflow:      hidden;
+  margin-bottom: 6px;
+}
+
+.dash-goal-fill {
+  height:        100%;
+  border-radius: 3px;
+  background:    var(--violet, var(--purple));
+  transition:    width .4s ease;
+}
+
+.dash-goal-footer {
+  font-size: 11px;
+  color:     var(--text-3);
+}
+
+/* ── Dashboard bottom row (donut + recent txs) ──── */
+.dash-bottom-row {
+  display:               grid;
+  grid-template-columns: minmax(260px, 360px) 1fr;
+  gap:                   14px;
+  margin-bottom:         18px;
+}
+
+.dash-recent-period {
+  font-size:  11px;
+  color:      var(--text-mute, var(--text-3));
+  margin-top: 2px;
+}
+
+/* ── summary-grid: 4 cols on desktop ────────────── */
+@media (min-width: 901px) {
+  .summary-grid { grid-template-columns: 1.3fr 1fr 1fr 1fr; }
+}
+
+/* ── Responsive: collapse cols on small screens ─── */
+@media (max-width: 1100px) {
+  .dash-main-row  { grid-template-columns: 1fr 280px; }
+}
+@media (max-width: 900px) {
+  .summary-grid   { grid-template-columns: 1fr 1fr; }
+  .card-invested  { display: none; }
+  .dash-main-row  { display: block; }
+  .dash-right-col { display: none; }
+  .dash-bottom-row{ grid-template-columns: 1fr; }
+}

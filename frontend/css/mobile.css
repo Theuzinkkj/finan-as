@@ -554,3 +554,69 @@
   /* ── Main padding with bottom nav ───────────── */
   .main { padding-bottom: 100px !important; }
 }
+
+/* =============================================
+   AUTH SCREEN — MOBILE (≤ 480px)
+   ============================================= */
+@media (max-width: 480px) {
+  #auth-screen {
+    padding:     0;
+    align-items: flex-start;
+    overflow-y:  auto;
+  }
+
+  .auth-bg-glow { display: none; }
+
+  .auth-card {
+    border-radius:   0 !important;
+    border:          none !important;
+    box-shadow:      none !important;
+    background:      var(--bg-0, #0b0b16) !important;
+    backdrop-filter: none !important;
+    padding:         56px 24px 40px !important;
+    min-height:      100dvh;
+    width:           100% !important;
+    max-width:       100% !important;
+    box-sizing:      border-box;
+  }
+
+  .auth-app-icon {
+    width:         80px;
+    height:        80px;
+    border-radius: 22px;
+    margin-bottom: 14px;
+  }
+  .auth-app-icon svg { width: 40px; height: 40px; }
+
+  .auth-logo-name {
+    font-size:     1.75rem;
+    margin-bottom: 5px;
+  }
+
+  .auth-tagline { margin-bottom: 28px; }
+
+  .auth-welcome { margin-bottom: 32px; }
+  .auth-welcome-line1,
+  .auth-welcome-line2 { font-size: 2.7rem; }
+
+  .auth-tabs { margin-bottom: 22px; }
+
+  .auth-submit {
+    padding:       14px !important;
+    font-size:     1rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* Oculta botão demo no mobile — Google/Apple substituem */
+  .auth-demo-divider,
+  #btn-demo { display: none !important; }
+
+  /* Social buttons mais destacados no mobile */
+  .btn-social {
+    padding:       13px 16px;
+    border-radius: 12px;
+    font-size:     .92rem;
+  }
+
+  .auth-legal-links { margin-top: auto; padding-top: 20px; }
+}

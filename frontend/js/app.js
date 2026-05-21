@@ -920,7 +920,10 @@ async function syncFromCloud() {
 //  RENDER — MONTH LABEL
 // =============================================
 function renderMonthLabel() {
-  document.getElementById('current-month-label').textContent = monthLabel(currentDate);
+  const label = monthLabel(currentDate);
+  document.getElementById('current-month-label').textContent = label;
+  const heroLabel = document.getElementById('dash-hero-month-label');
+  if (heroLabel) heroLabel.textContent = label;
 }
 
 // =============================================
@@ -980,6 +983,84 @@ function renderCards(txs) {
   document.getElementById('balance-sub').textContent   = income > 0
     ? `${((expense / income) * 100).toFixed(0)}% da receita gasto`
     : 'Sem receitas no mês';
+
+  // Card Investido (usa dados do portfólio, se disponíveis)
+  const invValueEl = document.getElementById('invested-value');
+  const invSubEl   = document.getElementById('invested-sub');
+  if (invValueEl && typeof _portfolioStats === 'function') {
+    try {
+      const { patrimonio, cdi_gain } = _portfolioStats();
+      invValueEl.textContent = fmt(patrimonio);
+      if (invSubEl) {
+        invSubEl.textContent = cdi_gain > 0
+          ? `+${fmt(cdi_gain)} este mês`
+          : patrimonio > 0 ? 'ver detalhes →' : 'Nenhum investimento';
+        invSubEl.style.color = cdi_gain > 0 ? 'var(--green-l)' : '';
+      }
+    } catch (_) {}
+  }
+
+  // Card IA: insight calculado com base nas despesas do mês
+  _renderDashAiCard(txs);
+
+  // Card Meta: primeiro orçamento definido (se houver)
+  _renderDashGoalCard(txs);
+}
+
+function _renderDashAiCard(txs) {
+  const el = document.getElementById('dash-ai-content');
+  const timeEl = document.getElementById('dash-ai-time');
+  if (!el) return;
+
+  const expTxs = txs.filter(t => t.type === 'despesa');
+  if (!expTxs.length) {
+    el.textContent = 'Sem despesas registradas neste mês para analisar.';
+    return;
+  }
+
+  const catTotals = {};
+  expTxs.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+  const totalExp = expTxs.reduce((s, t) => s + t.amount, 0);
+  const topEntry = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+  if (!topEntry) return;
+
+  const cat = CATEGORIES[topEntry[0]];
+  const pct = ((topEntry[1] / totalExp) * 100).toFixed(1);
+  const catLabel = cat ? cat.label : topEntry[0];
+  el.innerHTML = `<strong>${catLabel}</strong> representa <strong>${pct}%</strong> dos seus gastos no mês (${fmt(topEntry[1])}). Você tem ${expTxs.length} despesa${expTxs.length > 1 ? 's' : ''} registrada${expTxs.length > 1 ? 's' : ''}.`;
+  if (timeEl) {
+    const h = new Date().getHours();
+    timeEl.textContent = `${h}:${String(new Date().getMinutes()).padStart(2,'0')}`;
+  }
+}
+
+function _renderDashGoalCard(txs) {
+  const contentEl   = document.getElementById('dash-goal-content');
+  const labelEl     = document.getElementById('dash-goal-label-text');
+  const pctEl       = document.getElementById('dash-goal-pct');
+  if (!contentEl) return;
+
+  const entries = Object.entries(budgets).filter(([, limit]) => limit > 0);
+  if (!entries.length) return; // mantém estado vazio padrão
+
+  const expTxs    = txs.filter(t => t.type === 'despesa');
+  const catTotals = {};
+  expTxs.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+
+  const [key, limit] = entries[0];
+  const cat   = CATEGORIES[key];
+  const spent = catTotals[key] || 0;
+  const pct   = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
+  const over  = spent > limit;
+  const barColor = over ? '#f87171' : pct >= 80 ? 'var(--yellow,#fbbf24)' : 'var(--violet,var(--purple))';
+
+  if (labelEl) labelEl.textContent = `META · ${cat ? cat.label.toUpperCase() : key.toUpperCase()}`;
+  if (pctEl)   pctEl.textContent   = `${pct.toFixed(0)}%`;
+
+  contentEl.innerHTML = `
+    <div class="dash-goal-amounts">${fmt(spent)}<span class="dash-goal-limit"> / ${fmt(limit)}</span></div>
+    <div class="dash-goal-track"><div class="dash-goal-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
+    <div class="dash-goal-footer">${over ? `+${fmt(spent-limit)} acima do limite` : `Faltam ${fmt(limit-spent)}`}</div>`;
 }
 
 // =============================================
@@ -1977,6 +2058,8 @@ function closeModal(id) {
 //  TAB SWITCHING
 // =============================================
 function switchTab(tabName) {
+  document.body.dataset.tab = tabName;
+  document.body.classList.toggle('tab-dashboard', tabName === 'dashboard');
   document.querySelectorAll('.nav-tab, .mobile-nav-btn').forEach(btn => {
     const isActive = btn.dataset.tab === tabName;
     btn.classList.toggle('active', isActive);
@@ -2072,6 +2155,36 @@ function bindAuthEvents() {
   document.getElementById('tab-signin').addEventListener('click', () => setAuthMode('signin'));
   document.getElementById('tab-signup').addEventListener('click', () => setAuthMode('signup'));
 
+  document.getElementById('btn-forgot-pw')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('auth-email').value.trim();
+    if (!email) {
+      document.getElementById('auth-email').focus();
+      showAuthError('Preencha seu email para redefinir a senha.');
+      return;
+    }
+    clearAuthFeedback();
+    const btn = document.getElementById('btn-forgot-pw');
+    btn.disabled    = true;
+    btn.textContent = 'Enviando...';
+    try {
+      await API.req('POST', '/api/auth/reset-password', { email });
+      showAuthSuccess(`Link de redefinição enviado para ${email}. Verifique sua caixa de entrada.`);
+    } catch (err) {
+      showAuthError(err.message || 'Erro ao enviar email.');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Esqueci a senha';
+    }
+  });
+
+  document.getElementById('btn-google-login')?.addEventListener('click', () => {
+    toast('Login com Google em breve!');
+  });
+  document.getElementById('btn-apple-login')?.addEventListener('click', () => {
+    toast('Login com Apple em breve!');
+  });
+
   document.getElementById('btn-demo').addEventListener('click', () => {
     Demo.enter();
     startApp();
@@ -2122,9 +2235,21 @@ function setAuthMode(mode) {
   document.getElementById('auth-confirm-group').classList.toggle('hidden', !isSignup);
   document.getElementById('auth-terms-group').classList.toggle('hidden', !isSignup);
   if (!isSignup) document.getElementById('auth-terms-check').checked = false;
-  document.getElementById('auth-submit-text').textContent = isSignup ? 'Cadastrar' : 'Entrar';
+  document.getElementById('auth-submit-text').textContent = isSignup ? 'Criar conta' : 'Entrar';
   document.getElementById('btn-demo').classList.toggle('hidden', isSignup);
   document.querySelector('.auth-demo-divider').classList.toggle('hidden', isSignup);
+
+  const forgotRow = document.getElementById('auth-forgot-row');
+  if (forgotRow) forgotRow.classList.toggle('hidden', isSignup);
+
+  const line1 = document.getElementById('auth-welcome-line1');
+  const line2 = document.getElementById('auth-welcome-line2');
+  if (line1) line1.textContent = isSignup ? 'Crie sua conta' : 'Bem-vindo de volta';
+  if (line2) line2.textContent = isSignup ? '' : ' 👋';
+
+  document.getElementById('auth-hint-signin')?.classList.toggle('hidden', isSignup);
+  document.getElementById('auth-hint-signup')?.classList.toggle('hidden', !isSignup);
+
   clearAuthFeedback();
 }
 
@@ -2533,6 +2658,20 @@ function bindEvents() {
   });
 
   document.getElementById('view-all-btn').addEventListener('click', () => switchTab('transactions'));
+
+  // Botão de configurar meta no card do dashboard
+  document.getElementById('btn-budget-setup-dash')?.addEventListener('click', openBudgetConfig);
+
+  // Botões de filtro de período no gráfico de evolução (visual)
+  document.querySelectorAll('.dash-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const labels = { '7': '7 dias', '30': '30 dias', '90': '90 dias', '365': 'Ano' };
+      const periodEl = document.getElementById('dash-line-period');
+      if (periodEl) periodEl.textContent = labels[btn.dataset.range] || '30 dias';
+    });
+  });
 
   // Filtros
   document.getElementById('filter-category').addEventListener('change', renderAllTxs);
@@ -3015,6 +3154,8 @@ async function startApp() {
   appInitialized = true;
 
   hideAuthScreen();
+  document.body.classList.add('tab-dashboard');
+  document.body.dataset.tab = 'dashboard';
   renderMonthLabel();
   loadCustomCategories();
   loadBenefitAllocations();
