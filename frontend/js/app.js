@@ -204,26 +204,90 @@ function removeBudget(key) {
   toast('Meta removida!');
 }
 
-function openBudgetDetail(key) {
-  const cat   = CATEGORIES[key];
-  const limit = budgets[key] || 0;
-  if (!cat || !limit) return;
+// =============================================
+//  BUDGET / BENEFIT DETAIL MODAL (shared)
+// =============================================
+let _bdCtx = { type: '', key: '' };
 
-  const txs       = txOfMonth();
-  const catTxs    = txs.filter(t => t.type === 'despesa' && t.category === key)
-                       .sort((a, b) => b.date.localeCompare(a.date));
-  const spent     = catTxs.reduce((s, t) => s + t.amount, 0);
+function _bdRenderMiniStats(spent, limit, daysElapsed, daysInMonth, prevSpent) {
+  const el = document.getElementById('bd-mini-stats');
+  if (!el) return;
+  const chips = [];
+  const dailyAvg = daysElapsed > 0 && spent > 0 ? spent / daysElapsed : 0;
+  if (dailyAvg > 0) chips.push(`<span class="bd-chip">${fmt(dailyAvg)}/dia</span>`);
+  if (dailyAvg > 0 && limit > 0) {
+    const proj    = dailyAvg * daysInMonth;
+    const projOver = proj > limit;
+    chips.push(`<span class="bd-chip${projOver ? ' bd-chip-warn' : ''}">Projeção: ${fmt(proj)}</span>`);
+  }
+  if (prevSpent > 0) {
+    const diff    = spent - prevSpent;
+    const diffPct = Math.abs(diff / prevSpent * 100).toFixed(0);
+    const up      = diff > 0;
+    chips.push(`<span class="bd-chip ${up ? 'bd-chip-warn' : 'bd-chip-good'}">${up ? '↑' : '↓'} ${diffPct}% vs anterior</span>`);
+  } else if (spent > 0) {
+    chips.push(`<span class="bd-chip bd-chip-neutral">Primeiro registro</span>`);
+  }
+  el.innerHTML = chips.join('');
+}
+
+function _bdPopulate(type, key) {
+  _bdCtx = { type, key };
+  const today      = new Date(currentDate);
+  const daysElapsed = today.getDate();
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const prevDate   = new Date(currentDate);
+  prevDate.setMonth(prevDate.getMonth() - 1);
+  const prevAll    = txOfMonth(prevDate);
+  const curAll     = txOfMonth();
+
+  let icon, name, spent, limit, barColor, overBudget, catTxs, prevSpent, limitDisplay, txsTitle, emptyMsg;
+
+  if (type === 'budget') {
+    const cat = CATEGORIES[key];
+    limit     = budgets[key] || 0;
+    catTxs    = curAll.filter(t => t.type === 'despesa' && t.category === key)
+                      .sort((a, b) => b.date.localeCompare(a.date));
+    spent     = catTxs.reduce((s, t) => s + t.amount, 0);
+    overBudget = spent > limit;
+    const warn = !overBudget && limit > 0 && spent / limit >= 0.8;
+    barColor   = overBudget ? 'var(--red)' : warn ? 'var(--yellow)' : 'var(--purple)';
+    prevSpent  = prevAll.filter(t => t.type === 'despesa' && t.category === key)
+                        .reduce((s, t) => s + t.amount, 0);
+    icon         = cat.icon;
+    name         = cat.label;
+    limitDisplay = fmt(limit);
+    txsTitle     = 'Gastos este mês';
+    emptyMsg     = 'Nenhum gasto nesta categoria este mês.';
+  } else {
+    const bt  = BENEFIT_TYPES[key];
+    limit     = benefitAllocations[key] || 0;
+    catTxs    = curAll.filter(t => t.type === 'beneficio' && t.benefitType === key)
+                      .sort((a, b) => b.date.localeCompare(a.date));
+    spent     = catTxs.reduce((s, t) => s + t.amount, 0);
+    overBudget = spent > limit;
+    barColor   = overBudget ? 'var(--red)' : bt.color;
+    prevSpent  = prevAll.filter(t => t.type === 'beneficio' && t.benefitType === key)
+                        .reduce((s, t) => s + t.amount, 0);
+    icon         = bt.icon;
+    name         = bt.label;
+    limitDisplay = `${fmt(limit)}/mês`;
+    txsTitle     = 'Usos este mês';
+    emptyMsg     = 'Nenhum uso registrado este mês.';
+  }
+
   const pct       = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-  const overBudget = spent > limit;
-  const warning   = !overBudget && spent / limit >= 0.8;
-  const barColor  = overBudget ? 'var(--red)' : warning ? 'var(--yellow)' : 'var(--purple)';
   const remaining = limit - spent;
+  const warn      = !overBudget && pct >= 80;
 
-  document.getElementById('bd-icon').textContent  = cat.icon;
-  document.getElementById('bd-name').textContent  = cat.label;
-  document.getElementById('bd-spent').textContent = fmt(spent);
-  document.getElementById('bd-limit').textContent = fmt(limit);
-  document.getElementById('bd-pct').textContent   = `${pct.toFixed(0)}%`;
+  document.getElementById('bd-icon').textContent      = icon;
+  document.getElementById('bd-name').textContent      = name;
+  document.getElementById('bd-spent').textContent     = fmt(spent);
+  document.getElementById('bd-limit').textContent     = limitDisplay;
+  document.getElementById('bd-pct').textContent       = `${pct.toFixed(0)}%`;
+  document.getElementById('bd-txs-title').textContent = txsTitle;
+  document.getElementById('bd-limit').classList.remove('hidden');
+  document.getElementById('bd-limit-input').classList.add('hidden');
 
   const fill = document.getElementById('bd-progress-fill');
   fill.style.width      = `${pct.toFixed(1)}%`;
@@ -231,29 +295,100 @@ function openBudgetDetail(key) {
 
   const msgEl = document.getElementById('bd-remaining-msg');
   if (overBudget) {
-    msgEl.textContent  = `⚠ ${fmt(spent - limit)} acima do limite`;
-    msgEl.style.color  = 'var(--red)';
+    msgEl.textContent = `⚠ ${fmt(spent - limit)} acima${type === 'benefit' ? ' do saldo' : ' do limite'}`;
+    msgEl.style.color = 'var(--red)';
   } else {
-    msgEl.textContent = `Faltam ${fmt(remaining)} para atingir o limite`;
-    msgEl.style.color = warning ? 'var(--yellow)' : 'var(--text-2)';
+    msgEl.textContent = type === 'benefit'
+      ? `Saldo restante: ${fmt(remaining)}`
+      : `Faltam ${fmt(remaining)} para atingir o limite`;
+    msgEl.style.color = warn ? 'var(--yellow)' : 'var(--text-2)';
   }
+
+  _bdRenderMiniStats(spent, limit, daysElapsed, daysInMonth, prevSpent);
 
   const listEl = document.getElementById('bd-txs-list');
-  if (catTxs.length === 0) {
-    listEl.innerHTML = '<p class="bd-empty">Nenhum gasto nesta categoria este mês.</p>';
-  } else {
-    listEl.innerHTML = catTxs.map(t => `
-      <div class="bd-tx-row">
-        <span class="bd-tx-date">${fmtDate(t.date)}</span>
-        <span class="bd-tx-desc">${t.description || cat.label}</span>
-        <span class="bd-tx-amount">-${fmt(t.amount)}</span>
-      </div>`).join('');
-  }
+  listEl.innerHTML = catTxs.length
+    ? catTxs.map(t => `
+        <div class="bd-tx-row">
+          <span class="bd-tx-date">${fmtDate(t.date)}</span>
+          <span class="bd-tx-desc">${t.description || name}</span>
+          <span class="bd-tx-amount">-${fmt(t.amount)}</span>
+        </div>`).join('')
+    : `<p class="bd-empty">${emptyMsg}</p>`;
 
-  const viewAllBtn = document.getElementById('bd-view-all-btn');
-  viewAllBtn.onclick = () => { closeModal('modal-budget-detail'); goToTransactions('despesa', key); };
+  document.getElementById('bd-view-all-btn').onclick = type === 'budget'
+    ? () => { closeModal('modal-budget-detail'); goToTransactions('despesa', key); }
+    : () => { closeModal('modal-budget-detail'); goToTransactions('beneficio', ''); };
+}
 
+function openBudgetDetail(key) {
+  if (!CATEGORIES[key] || !budgets[key]) return;
+  _bdPopulate('budget', key);
   openModal('modal-budget-detail');
+}
+
+function bd_quickRegister() {
+  closeModal('modal-budget-detail');
+  if (_bdCtx.type === 'benefit') {
+    openBenefitQuickAdd();
+    const k = _bdCtx.key;
+    setTimeout(() => {
+      selectedBenefitType = k;
+      document.querySelectorAll('.benefit-type-btn').forEach(b => b.classList.remove('selected'));
+      const btn = document.querySelector(`.benefit-type-btn[data-benefit="${k}"]`);
+      if (btn) btn.classList.add('selected');
+    }, 80);
+  } else {
+    resetTransactionModal();
+    selectedType = 'despesa';
+    document.querySelectorAll('.type-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.type === 'despesa'));
+    openModal('modal-transaction');
+    const k = _bdCtx.key;
+    setTimeout(() => {
+      renderCategoryGrid();
+      const grid = document.getElementById('category-grid');
+      grid.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
+      const btn = grid.querySelector(`[data-cat="${k}"]`);
+      if (btn) { btn.classList.add('selected'); selectedCat = k; }
+      document.getElementById('cat-error').classList.add('hidden');
+    }, 80);
+  }
+}
+
+function bd_startEditLimit() {
+  const raw = _bdCtx.type === 'budget'
+    ? (budgets[_bdCtx.key] || 0)
+    : (benefitAllocations[_bdCtx.key] || 0);
+  const inputEl = document.getElementById('bd-limit-input');
+  inputEl.value = raw;
+  document.getElementById('bd-limit').classList.add('hidden');
+  inputEl.classList.remove('hidden');
+  inputEl.focus();
+  inputEl.select();
+}
+
+function bd_cancelEditLimit() {
+  document.getElementById('bd-limit').classList.remove('hidden');
+  document.getElementById('bd-limit-input').classList.add('hidden');
+}
+
+function bd_saveEditLimit() {
+  const val = parseFloat(document.getElementById('bd-limit-input').value);
+  if (!isNaN(val) && val > 0) {
+    if (_bdCtx.type === 'budget') {
+      budgets[_bdCtx.key] = val;
+      saveProfile({ budgets });
+      renderBudgets(txOfMonth());
+    } else {
+      benefitAllocations[_bdCtx.key] = val;
+      localStorage.setItem(_benefitKey(), JSON.stringify(benefitAllocations));
+      renderBenefits(txOfMonth());
+    }
+    _bdPopulate(_bdCtx.type, _bdCtx.key);
+  } else {
+    bd_cancelEditLimit();
+  }
 }
 
 function renderBudgets(txs) {
@@ -893,53 +1028,8 @@ function renderAnalysisStats(txs) {
 //  RENDER — BENEFITS
 // =============================================
 function openBenefitDetail(key) {
-  const bt        = BENEFIT_TYPES[key];
-  const allocated = benefitAllocations[key] || 0;
-  if (!bt || !allocated) return;
-
-  const txs      = txOfMonth();
-  const catTxs   = txs.filter(t => t.type === 'beneficio' && t.benefitType === key)
-                      .sort((a, b) => b.date.localeCompare(a.date));
-  const used     = catTxs.reduce((s, t) => s + t.amount, 0);
-  const pct      = allocated > 0 ? Math.min((used / allocated) * 100, 100) : 0;
-  const over     = used > allocated;
-  const barColor = over ? 'var(--red)' : bt.color;
-  const remaining = allocated - used;
-
-  document.getElementById('bd-icon').textContent  = bt.icon;
-  document.getElementById('bd-name').textContent  = bt.label;
-  document.getElementById('bd-spent').textContent = fmt(used);
-  document.getElementById('bd-limit').textContent = `${fmt(allocated)}/mês`;
-  document.getElementById('bd-pct').textContent   = `${pct.toFixed(0)}%`;
-
-  const fill = document.getElementById('bd-progress-fill');
-  fill.style.width      = `${pct.toFixed(1)}%`;
-  fill.style.background = barColor;
-
-  const msgEl = document.getElementById('bd-remaining-msg');
-  if (over) {
-    msgEl.textContent = `⚠ ${fmt(used - allocated)} acima do saldo`;
-    msgEl.style.color = 'var(--red)';
-  } else {
-    msgEl.textContent = `Saldo restante: ${fmt(remaining)}`;
-    msgEl.style.color = 'var(--text-2)';
-  }
-
-  const listEl = document.getElementById('bd-txs-list');
-  if (catTxs.length === 0) {
-    listEl.innerHTML = '<p class="bd-empty">Nenhum uso registrado este mês.</p>';
-  } else {
-    listEl.innerHTML = catTxs.map(t => `
-      <div class="bd-tx-row">
-        <span class="bd-tx-date">${fmtDate(t.date)}</span>
-        <span class="bd-tx-desc">${t.description || bt.label}</span>
-        <span class="bd-tx-amount">-${fmt(t.amount)}</span>
-      </div>`).join('');
-  }
-
-  const viewAllBtn = document.getElementById('bd-view-all-btn');
-  viewAllBtn.onclick = () => { closeModal('modal-budget-detail'); goToTransactions('beneficio', ''); };
-
+  if (!BENEFIT_TYPES[key] || !benefitAllocations[key]) return;
+  _bdPopulate('benefit', key);
   openModal('modal-budget-detail');
 }
 

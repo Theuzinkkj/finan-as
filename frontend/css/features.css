@@ -221,6 +221,68 @@
 
 .bd-empty { font-size: .84rem; color: var(--text-3); text-align: center; padding: 20px 0; }
 
+/* Header actions (register btn + close) */
+.bd-header-actions {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+}
+.bd-register-btn {
+  font-size:     .76rem;
+  font-weight:   600;
+  padding:       5px 12px;
+  border-radius: var(--r-sm);
+  border:        1px solid var(--purple);
+  background:    rgba(99,102,241,.12);
+  color:         var(--purple);
+  cursor:        pointer;
+  transition:    all .15s;
+  white-space:   nowrap;
+  font-family:   var(--font);
+}
+.bd-register-btn:hover { background: rgba(99,102,241,.25); }
+
+/* Inline limit edit */
+.bd-limit {
+  cursor:           pointer;
+  text-decoration:  underline dotted;
+  text-underline-offset: 3px;
+  transition:       opacity .15s;
+}
+.bd-limit:hover { opacity: .7; }
+.bd-limit-input {
+  font-size:     1rem;
+  font-weight:   600;
+  color:         var(--text);
+  background:    rgba(255,255,255,.06);
+  border:        1px solid var(--purple);
+  border-radius: var(--r-sm);
+  padding:       2px 8px;
+  outline:       none;
+  width:         110px;
+  font-family:   var(--font);
+}
+
+/* Mini stats chips */
+.bd-mini-stats {
+  display:    flex;
+  flex-wrap:  wrap;
+  gap:        6px;
+  margin-top: 12px;
+}
+.bd-chip {
+  font-size:     .72rem;
+  padding:       3px 9px;
+  border-radius: 20px;
+  background:    rgba(255,255,255,.06);
+  color:         var(--text-2);
+  border:        1px solid var(--border);
+  white-space:   nowrap;
+}
+.bd-chip-warn    { background: rgba(234,179,8,.12);  color: var(--yellow); border-color: rgba(234,179,8,.3); }
+.bd-chip-good    { background: rgba(34,197,94,.12);  color: var(--green);  border-color: rgba(34,197,94,.3); }
+.bd-chip-neutral { background: rgba(255,255,255,.06); color: var(--text-3); }
+
 /* =============================================
    ANNUAL HISTORY CHART
    ============================================= */
