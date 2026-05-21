@@ -106,6 +106,7 @@ const fe = f => path.join(__dirname, '..', 'frontend', f);
 
 app.get('/',        (_req, res) => res.redirect('/landing'));
 app.get('/landing', (_req, res) => res.sendFile(fe('landing.html')));
+app.get('/login',   (_req, res) => res.sendFile(fe('login.html')));
 app.get('/app',     (_req, res) => res.sendFile(fe('index.html')));
 
 // ── Arquivos estáticos ────────────────────────────────────────────────────────

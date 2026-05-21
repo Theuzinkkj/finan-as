@@ -2241,193 +2241,6 @@ function goToTransactions(type, category) {
   renderAllTxs();
 }
 
-// =============================================
-//  AUTH SCREEN
-// =============================================
-function initPasswordToggles() {
-  document.querySelectorAll('.toggle-pw').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const input   = document.getElementById(btn.dataset.target);
-      const visible = input.type === 'text';
-      input.type    = visible ? 'password' : 'text';
-      btn.querySelector('.eye-open').classList.toggle('hidden', !visible);
-      btn.querySelector('.eye-closed').classList.toggle('hidden', visible);
-      btn.setAttribute('aria-label', visible ? 'Mostrar senha' : 'Esconder senha');
-    });
-  });
-}
-
-function resetPasswordToggles() {
-  document.querySelectorAll('.toggle-pw').forEach(btn => {
-    const input = document.getElementById(btn.dataset.target);
-    if (input) input.type = 'password';
-    btn.querySelector('.eye-open').classList.remove('hidden');
-    btn.querySelector('.eye-closed').classList.add('hidden');
-    btn.setAttribute('aria-label', 'Mostrar senha');
-  });
-}
-
-function showAuthScreen() {
-  document.getElementById('auth-screen').classList.remove('hidden');
-  document.getElementById('auth-email').value    = '';
-  document.getElementById('auth-password').value = '';
-  document.getElementById('auth-confirm').value  = '';
-  resetPasswordToggles();
-  clearAuthFeedback();
-}
-
-function hideAuthScreen() {
-  document.getElementById('auth-screen').classList.add('hidden');
-}
-
-function bindAuthEvents() {
-  document.getElementById('tab-signin').addEventListener('click', () => setAuthMode('signin'));
-  document.getElementById('tab-signup').addEventListener('click', () => setAuthMode('signup'));
-  document.getElementById('link-goto-signup')?.addEventListener('click', e => { e.preventDefault(); setAuthMode('signup'); });
-  document.getElementById('link-goto-signin')?.addEventListener('click', e => { e.preventDefault(); setAuthMode('signin'); });
-
-  document.getElementById('btn-forgot-pw')?.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('auth-email').value.trim();
-    if (!email) {
-      document.getElementById('auth-email').focus();
-      showAuthError('Preencha seu email para redefinir a senha.');
-      return;
-    }
-    clearAuthFeedback();
-    const btn = document.getElementById('btn-forgot-pw');
-    btn.disabled    = true;
-    btn.textContent = 'Enviando...';
-    try {
-      await API.req('POST', '/api/auth/reset-password', { email });
-      showAuthSuccess(`Link de redefinição enviado para ${email}. Verifique sua caixa de entrada.`);
-    } catch (err) {
-      showAuthError(err.message || 'Erro ao enviar email.');
-    } finally {
-      btn.disabled    = false;
-      btn.textContent = 'Esqueci a senha';
-    }
-  });
-
-  document.getElementById('btn-google-login')?.addEventListener('click', () => {
-    toast('Login com Google em breve!');
-  });
-  document.getElementById('btn-apple-login')?.addEventListener('click', () => {
-    toast('Login com Apple em breve!');
-  });
-
-  document.getElementById('btn-demo').addEventListener('click', () => {
-    Demo.enter();
-    startApp();
-  });
-
-  document.getElementById('auth-form').addEventListener('submit', async e => {
-    e.preventDefault();
-    const email    = document.getElementById('auth-email').value.trim();
-    const password = document.getElementById('auth-password').value;
-    const confirm  = document.getElementById('auth-confirm').value;
-    const isSignup = document.getElementById('tab-signup').classList.contains('active');
-
-    clearAuthFeedback();
-
-    if (!email || !password) { showAuthError('Preencha email e senha.'); return; }
-    if (isSignup && password.length < 6) { showAuthError('A senha deve ter pelo menos 6 caracteres.'); return; }
-    if (isSignup && password !== confirm) { showAuthError('As senhas não coincidem.'); return; }
-    if (isSignup && !document.getElementById('auth-terms-check').checked) {
-      showAuthError('Você precisa aceitar os Termos de Uso e a Política de Privacidade para criar uma conta.');
-      return;
-    }
-
-    setAuthLoading(true);
-    try {
-      if (isSignup) {
-        const result = await Auth.signUp(email, password);
-        if (result.confirmEmail) {
-          showAuthSuccess('Cadastro realizado! Verifique seu email para confirmar, depois faça login.');
-          setAuthMode('signin');
-          return;
-        }
-      } else {
-        await Auth.signIn(email, password);
-      }
-      await startApp();
-    } catch (err) {
-      showAuthError(authErrorMsg(err.message));
-    } finally {
-      setAuthLoading(false);
-    }
-  });
-}
-
-function setAuthMode(mode) {
-  const isSignup = mode === 'signup';
-  document.getElementById('tab-signin').classList.toggle('active', !isSignup);
-  document.getElementById('tab-signup').classList.toggle('active', isSignup);
-  document.getElementById('auth-confirm-group').classList.toggle('hidden', !isSignup);
-  document.getElementById('auth-terms-group').classList.toggle('hidden', !isSignup);
-  if (!isSignup) document.getElementById('auth-terms-check').checked = false;
-  document.getElementById('auth-submit-text').textContent = isSignup ? 'Criar conta' : 'Entrar';
-  document.getElementById('btn-demo').classList.toggle('hidden', isSignup);
-  document.querySelector('.auth-demo-divider').classList.toggle('hidden', isSignup);
-
-  const forgotRow = document.getElementById('auth-forgot-row');
-  if (forgotRow) forgotRow.classList.toggle('hidden', isSignup);
-
-  const line1 = document.getElementById('auth-welcome-line1');
-  const line2 = document.getElementById('auth-welcome-line2');
-  if (line1) line1.textContent = isSignup ? 'Crie sua conta' : 'Bem-vindo de volta';
-  if (line2) line2.textContent = isSignup ? '' : ' 👋';
-
-  document.getElementById('auth-hint-signin')?.classList.toggle('hidden', isSignup);
-  document.getElementById('auth-hint-signup')?.classList.toggle('hidden', !isSignup);
-
-  clearAuthFeedback();
-}
-
-function authErrorMsg(raw) {
-  const m = (raw || '').toLowerCase();
-  if (m.includes('invalid login credentials') || m.includes('invalid_grant'))
-    return 'Email ou senha incorretos.';
-  if (m.includes('email not confirmed'))
-    return 'Email não confirmado. Verifique sua caixa de entrada.';
-  if (m.includes('user already registered') || m.includes('user_already_exists'))
-    return 'Este email já está cadastrado. Tente fazer login.';
-  if (m.includes('password should be at least') || m.includes('weak_password'))
-    return 'Senha muito fraca. Use pelo menos 6 caracteres.';
-  if (m.includes('unable to validate email') || m.includes('invalid format') || m.includes('email_address_invalid'))
-    return 'Formato de email inválido.';
-  if (m.includes('over_email_send_rate_limit') || m.includes('rate limit'))
-    return 'Muitas tentativas. Aguarde um momento e tente novamente.';
-  if (m.includes('signup_disabled'))
-    return 'Cadastro desabilitado. Entre em contato com o suporte.';
-  if (m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('failed to load'))
-    return 'Erro de conexão. Verifique sua internet.';
-  return raw;
-}
-
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  el.textContent = msg; el.classList.remove('hidden');
-}
-
-function showAuthSuccess(msg) {
-  const el = document.getElementById('auth-success');
-  el.textContent = msg; el.classList.remove('hidden');
-}
-
-function clearAuthFeedback() {
-  document.getElementById('auth-error').classList.add('hidden');
-  document.getElementById('auth-success').classList.add('hidden');
-}
-
-function setAuthLoading(on) {
-  const btn    = document.getElementById('auth-submit');
-  const text   = document.getElementById('auth-submit-text');
-  const loader = document.getElementById('auth-submit-loader');
-  btn.disabled = on;
-  text.classList.toggle('hidden', on);
-  loader.classList.toggle('hidden', !on);
-}
 
 // =============================================
 //  EVENT BINDING
@@ -3129,84 +2942,11 @@ function initSwipeToDelete() {
 //  INIT
 // =============================================
 
-// Quando o usuário confirma o email, o Supabase redireciona com o token na URL.
-// Enviamos o token ao backend para que ele defina o cookie httpOnly e
-// limpamos o hash imediatamente — o token nunca fica exposto no JS.
-async function handleAuthRedirect() {
-  const hash = window.location.hash.slice(1);
-  if (!hash) return { ok: false, attempted: false, recovery: false };
-
-  const params      = new URLSearchParams(hash);
-  const accessToken = params.get('access_token');
-  if (!accessToken) return { ok: false, attempted: false, recovery: false };
-
-  const isRecovery   = params.get('type') === 'recovery';
-  const refreshToken = params.get('refresh_token');
-  history.replaceState(null, '', window.location.pathname);
-
-  try {
-    await API.req('POST', '/api/auth/confirm', { access_token: accessToken, refresh_token: refreshToken });
-    return { ok: true, attempted: true, recovery: isRecovery };
-  } catch (err) {
-    return { ok: false, attempted: true, recovery: false, expiredRecovery: isRecovery, error: err.message };
-  }
-}
-
-function showResetPasswordForm() {
-  return new Promise((resolve, reject) => {
-    const screen = document.getElementById('reset-password-screen');
-    if (!screen) { reject(new Error('reset-password-screen not found')); return; }
-    screen.classList.remove('hidden');
-    const form      = document.getElementById('reset-pw-form');
-    const errEl     = document.getElementById('reset-pw-error');
-    const btn       = document.getElementById('reset-pw-submit');
-    const btnText   = document.getElementById('reset-pw-submit-text');
-    const btnLoader = document.getElementById('reset-pw-submit-loader');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errEl.classList.add('hidden');
-      const password = document.getElementById('reset-pw-new').value;
-      const confirm  = document.getElementById('reset-pw-confirm').value;
-
-      if (password.length < 6) {
-        errEl.textContent = 'A senha deve ter pelo menos 6 caracteres.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-      if (password !== confirm) {
-        errEl.textContent = 'As senhas não coincidem.';
-        errEl.classList.remove('hidden');
-        return;
-      }
-
-      btn.disabled = true;
-      btnText.classList.add('hidden');
-      btnLoader.classList.remove('hidden');
-
-      try {
-        await API.req('POST', '/api/auth/update-password', { password });
-        screen.classList.add('hidden');
-        toast('Senha atualizada com sucesso!');
-        resolve();
-      } catch (err) {
-        errEl.textContent = err.message;
-        errEl.classList.remove('hidden');
-        btn.disabled = false;
-        btnText.classList.remove('hidden');
-        btnLoader.classList.add('hidden');
-      }
-    });
-  });
-}
-
 async function init() {
   try {
     initTheme();
     bindEvents();
-    bindAuthEvents();
     initCustomSelects();
-    initPasswordToggles();
     initCSVImport();
 
     if (new URLSearchParams(window.location.search).get('demo') === '1') Demo.enter();
@@ -3217,50 +2957,15 @@ async function init() {
       return;
     }
 
-    const redirect = await handleAuthRedirect();
-
-    if (redirect.recovery) {
-      await showResetPasswordForm();
-      await Auth.signOut().catch(() => {});
-      showAuthScreen();
-      showAuthSuccess('Senha redefinida com sucesso! Faça login com a nova senha.');
-      return;
-    }
-
-    if (redirect.expiredRecovery) {
-      showAuthScreen();
-      showAuthError('O link de redefinição expirou. Clique em "Esqueci minha senha" para receber um novo.');
-      return;
-    }
-
-    if (redirect.attempted && !redirect.ok) {
-      showAuthScreen();
-      showAuthError('O link de confirmação expirou ou é inválido. Para receber um novo, cadastre-se novamente com o mesmo email.');
-      return;
-    }
-
-    if (redirect.attempted && redirect.ok) {
-      const loggedIn = await Auth.check();
-      if (loggedIn) { await startApp(); return; }
-      showAuthScreen();
-      showAuthSuccess('Email confirmado! Faça login para continuar.');
-      return;
-    }
-
     const loggedIn = await Auth.check();
     if (!loggedIn) {
-      showAuthScreen();
-      const pendingMode = sessionStorage.getItem('atlas_auth_mode');
-      if (pendingMode) {
-        sessionStorage.removeItem('atlas_auth_mode');
-        setAuthMode(pendingMode);
-      }
+      window.location.href = '/login';
       return;
     }
     await startApp();
   } catch (err) {
     console.error('[init] erro inesperado:', err);
-    try { showAuthScreen(); } catch {}
+    window.location.href = '/login';
   }
 }
 
@@ -3271,10 +2976,7 @@ function showDemoBanner() {
 
   document.getElementById('btn-demo-signup').addEventListener('click', () => {
     Demo.exit();
-    sessionStorage.setItem('atlas_auth_mode', 'signup');
-    const url = new URL(window.location.href);
-    url.searchParams.delete('demo');
-    window.location.replace(url.toString());
+    window.location.href = '/login?signup=1';
   });
 
   document.getElementById('btn-demo-exit').addEventListener('click', () => {
@@ -3291,8 +2993,6 @@ function exitDemoMode() {
 async function startApp() {
   if (appInitialized) return;
   appInitialized = true;
-
-  hideAuthScreen();
   document.body.classList.add('tab-dashboard');
   document.body.dataset.tab = 'dashboard';
   renderMonthLabel();
