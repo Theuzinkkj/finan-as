@@ -101,8 +101,15 @@
 
 /* ── Transactions page header ────────────────── */
 .tx-page-header {
-  padding:    28px 0 20px;
+  padding:         20px 0 16px;
+  display:         flex;
+  align-items:     flex-end;
+  justify-content: space-between;
+  gap:             12px;
 }
+.tx-page-header-left  { flex: 1; }
+.tx-page-header-right { flex-shrink: 0; }
+
 .tx-page-label {
   font-size:     10px;
   letter-spacing:1.2px;
@@ -112,9 +119,9 @@
   font-weight:   500;
 }
 .tx-page-title {
-  font-size:      22px;
+  font-size:      28px;
   font-weight:    600;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.5px;
   margin-top:     4px;
 }
 .tx-page-sub {
@@ -122,11 +129,44 @@
   color:      var(--text-dim, var(--text-2));
   margin-top: 4px;
   display:    flex;
-  gap:        16px;
+  gap:        10px;
   flex-wrap:  wrap;
+  align-items:center;
 }
-.tx-page-sub .inc { color: var(--emerald, var(--green-l)); font-weight: 600; }
-.tx-page-sub .exp { color: var(--coral, #f87171); font-weight: 600; }
+.tx-page-sub .inc   { color: var(--emerald, var(--green-l)); font-weight: 600; }
+.tx-page-sub .exp   { color: var(--coral, #f87171); font-weight: 600; }
+.tx-page-sub .sep   { color: var(--text-mute, var(--text-3)); }
+
+/* ── Hide month-float on transactions desktop ── */
+@media (min-width: 901px) {
+  body.tab-transactions .month-float { display: none !important; }
+}
+
+/* ── Esconde contagem da barra no desktop (vai no subtitle) ── */
+@media (min-width: 901px) {
+  .filter-count { display: none !important; }
+}
+
+/* ── "Nova transação" button in filter bar ───── */
+.btn-add-tx {
+  display:         flex;
+  align-items:     center;
+  gap:             6px;
+  background:      var(--violet, var(--purple));
+  border:          none;
+  border-radius:   999px;
+  color:           #fff;
+  cursor:          pointer;
+  font-family:     var(--font);
+  font-size:       13px;
+  font-weight:     500;
+  padding:         8px 16px;
+  white-space:     nowrap;
+  transition:      all .2s;
+  flex-shrink:     0;
+}
+.btn-add-tx:hover  { background: var(--purple-l, #7c3aed); box-shadow: 0 4px 16px rgba(124,58,237,.4); }
+.btn-add-tx:active { transform: scale(.97); }
 
 /* ── Transaction day grouping ────────────────── */
 .tx-day-group { margin-bottom: 4px; }

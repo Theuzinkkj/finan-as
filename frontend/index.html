@@ -533,24 +533,6 @@
         </div>
       </div>
 
-      <!-- Budget Section -->
-      <div class="benefits-section" id="budget-section">
-        <div class="benefits-header">
-          <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="false">
-            <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            <span class="section-label">Metas de Gasto</span>
-            <span class="budget-summary" id="budget-summary"></span>
-          </button>
-        </div>
-        <div class="benefits-body" id="budget-body">
-          <div class="budget-grid" id="budget-grid"></div>
-          <div class="benefits-empty hidden" id="budget-empty">
-            Defina limites de gasto por categoria
-            <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
-          </div>
-        </div>
-      </div>
-
       <!-- Rodapé de página -->
       <div class="page-footer">
         <div class="page-footer-brand">
@@ -577,30 +559,42 @@
     <!-- ======= TRANSACTIONS ======= -->
     <section class="tab-content" id="tab-transactions" role="tabpanel" aria-labelledby="nav-tab-transactions">
       <div class="tx-page-header" id="tx-page-header">
-        <div class="tx-page-label">Transações</div>
-        <div class="tx-page-title" id="tx-page-month-title"></div>
-        <div class="tx-page-sub" id="tx-page-sub"></div>
+        <div class="tx-page-header-left">
+          <div class="tx-page-label">Transações</div>
+          <div class="tx-page-title" id="tx-page-month-title"></div>
+          <div class="tx-page-sub" id="tx-page-sub"></div>
+        </div>
+        <div class="tx-page-header-right">
+          <div class="month-selector">
+            <button class="month-nav" onclick="document.getElementById('prev-month').click()">‹</button>
+            <span id="tx-month-label">—</span>
+            <button class="month-nav" onclick="document.getElementById('next-month').click()">›</button>
+          </div>
+        </div>
       </div>
       <div class="filters-bar">
         <div class="search-wrap">
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" id="filter-search" class="filter-search" placeholder="Buscar..." autocomplete="off" aria-label="Buscar transações">
+          <input type="search" id="filter-search" class="filter-search" placeholder="Buscar transação, valor ou categoria..." autocomplete="off" aria-label="Buscar transações">
         </div>
-        <select id="filter-category" class="filter-select">
-          <option value="">Todas as categorias</option>
+        <select id="filter-category" class="filter-select" data-prefix="Categoria">
+          <option value="">Todas</option>
         </select>
-        <select id="filter-type" class="filter-select">
-          <option value="">Todos os tipos</option>
+        <select id="filter-type" class="filter-select" data-prefix="Tipo">
+          <option value="">Todos</option>
           <option value="receita">Receitas</option>
           <option value="despesa">Despesas</option>
           <option value="beneficio">Benefícios</option>
         </select>
         <span class="filter-count" id="filter-count"></span>
         <button class="btn-import-csv" id="btn-import-csv" title="Importar extrato CSV">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Importar CSV
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          CSV
         </button>
-        <button class="btn-add-inline" id="btn-add-inline" title="Nova transação">+</button>
+        <button class="btn-add-tx" id="btn-add-inline" title="Nova transação">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova transação
+        </button>
       </div>
       <div class="card">
         <div class="transactions-list" id="all-transactions"></div>

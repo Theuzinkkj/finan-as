@@ -193,7 +193,7 @@ function saveBudgetConfig() {
   budgets = newBudgets;
   saveProfile({ budgets });
   closeModal('modal-budget-config');
-  renderBudgets(txOfMonth());
+  _renderDashGoalCard(txOfMonth());
   toast('Metas salvas!');
 }
 
@@ -823,7 +823,8 @@ function fmtDate(iso) {
 
 function monthLabel(d) {
   return d.toLocaleString('pt-BR', { month: 'long', year: 'numeric' })
-          .replace(/^\w/, c => c.toUpperCase());
+          .replace(/^\w/, c => c.toUpperCase())
+          .replace(' de ', ' · ');
 }
 
 function txOfMonth(d = currentDate) {
@@ -924,6 +925,8 @@ function renderMonthLabel() {
   document.getElementById('current-month-label').textContent = label;
   const heroLabel = document.getElementById('dash-hero-month-label');
   if (heroLabel) heroLabel.textContent = label;
+  const txLabel = document.getElementById('tx-month-label');
+  if (txLabel) txLabel.textContent = label;
 }
 
 // =============================================
@@ -974,7 +977,12 @@ function renderCards(txs) {
   // Transactions page sub header
   const txSub = document.getElementById('tx-page-sub');
   if (txSub) {
-    txSub.innerHTML = `<span>${document.getElementById('filter-count')?.textContent || ''}</span><span class="inc">+${fmt(income)} receitas</span><span class="exp">−${fmt(expense)} despesas</span>`;
+    const count = document.getElementById('filter-count')?.textContent || '';
+    txSub.innerHTML = [
+      count ? `<span>${count}</span>` : '',
+      `<span class="sep">·</span><span class="inc">+${fmt(income)} receitas</span>`,
+      `<span class="sep">·</span><span class="exp">−${fmt(expense)} despesas</span>`,
+    ].join('');
   }
   const txMonthTitle = document.getElementById('tx-page-month-title');
   if (txMonthTitle) {
@@ -1172,8 +1180,22 @@ function renderAllTxs() {
     .filter(t => !search || t.description.toLowerCase().includes(search) || (t.notes || '').toLowerCase().includes(search))
     .sort((a, b) => b.date.localeCompare(a.date));
 
+  const countText = `${list.length} transaç${list.length === 1 ? 'ão' : 'ões'}`;
   const countEl = document.getElementById('filter-count');
-  if (countEl) countEl.textContent = `${list.length} transaç${list.length === 1 ? 'ão' : 'ões'}`;
+  if (countEl) countEl.textContent = countText;
+
+  // Atualiza subtítulo da aba com contagem + receitas + despesas
+  const txSub = document.getElementById('tx-page-sub');
+  if (txSub) {
+    const txs   = txOfMonth();
+    const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+    const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+    txSub.innerHTML = [
+      `<span>${countText}</span>`,
+      `<span class="sep">·</span><span class="inc">+${fmt(income)} receitas</span>`,
+      `<span class="sep">·</span><span class="exp">−${fmt(expense)} despesas</span>`,
+    ].join('');
+  }
 
   if (!list.length) {
     document.getElementById('all-transactions').innerHTML = emptyHTML('Nenhuma transação encontrada.');
@@ -1969,7 +1991,8 @@ function initCustomSelects() {
     const labelEl = trigger.querySelector('.cs-label');
 
     function syncLabel() {
-      labelEl.textContent = sel.options[sel.selectedIndex]?.text || '';
+      const prefix = sel.dataset.prefix ? sel.dataset.prefix + ' ' : '';
+      labelEl.textContent = prefix + (sel.options[sel.selectedIndex]?.text || '');
     }
 
     function buildOptions() {
@@ -2059,7 +2082,8 @@ function closeModal(id) {
 // =============================================
 function switchTab(tabName) {
   document.body.dataset.tab = tabName;
-  document.body.classList.toggle('tab-dashboard', tabName === 'dashboard');
+  document.body.classList.toggle('tab-dashboard',    tabName === 'dashboard');
+  document.body.classList.toggle('tab-transactions', tabName === 'transactions');
   document.querySelectorAll('.nav-tab, .mobile-nav-btn').forEach(btn => {
     const isActive = btn.dataset.tab === tabName;
     btn.classList.toggle('active', isActive);
@@ -2538,9 +2562,9 @@ function bindEvents() {
   // Toggle seção de benefícios
   document.getElementById('btn-benefits-toggle').addEventListener('click', toggleBenefitsSection);
 
-  // Toggle seção de orçamentos
-  document.getElementById('btn-budget-toggle').addEventListener('click', toggleBudgetSection);
-  document.getElementById('btn-budget-setup').addEventListener('click', openBudgetConfig);
+  // Toggle seção de orçamentos (removida do layout, listeners mantidos com guard)
+  document.getElementById('btn-budget-toggle')?.addEventListener('click', toggleBudgetSection);
+  document.getElementById('btn-budget-setup')?.addEventListener('click', openBudgetConfig);
 
   // Configurar benefícios
   document.getElementById('btn-benefits-setup').addEventListener('click', () => {
