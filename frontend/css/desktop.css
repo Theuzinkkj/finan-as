@@ -88,7 +88,7 @@
     font-size:      36px !important;
     font-weight:    600;
     letter-spacing: -1px;
-    color:          var(--emerald, var(--green-l)) !important;
+    color:          var(--emerald, var(--green-l));
   }
   .card-balance .card-label {
     font-size:     10px !important;
