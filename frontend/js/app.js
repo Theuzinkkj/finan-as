@@ -2228,7 +2228,7 @@ function switchTab(tabName) {
     dock.style.display       = '';
     inlineChat.classList.add('hidden');
   }
-  if (tabName === 'analysis')  setTimeout(() => { drawAnalysisChart(txOfMonth()); drawAnnualChart(); _setupAnnualYearNav(); }, 40);
+  if (tabName === 'analysis')  setTimeout(() => { drawAnalysisChart(txOfMonth()); drawAnnualChart(); _setupAnnualYearNav(); autoRunAIOnce(); }, 40);
   if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
 }
 

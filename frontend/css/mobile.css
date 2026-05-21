@@ -31,6 +31,9 @@
 /* ── Mobile section header (hidden on desktop) ── */
 .mob-screen-header { display: none; }
 
+/* ── Mobile IA view (hidden on desktop) ──────── */
+.mob-ia-view { display: none; }
+
 /* ── FAB expand menu (always hidden by default) ─ */
 .mob-fab-menu {
   display:          none;

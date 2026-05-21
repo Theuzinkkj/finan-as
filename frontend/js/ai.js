@@ -3,13 +3,49 @@
 // =============================================
 //  AI — ANALYSIS
 // =============================================
+let _aiAnalysisDone = false;
+
 function setBtnLoading(on) {
   const btn  = document.getElementById('btn-analyze');
   const text = document.getElementById('analyze-text');
   const spin = document.getElementById('analyze-loader');
+  if (!btn) return;
   btn.disabled = on;
   text.classList.toggle('hidden', on);
   spin.classList.toggle('hidden', !on);
+}
+
+function showAISkeleton() {
+  const el = document.getElementById('ai-result');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="ai-skeleton">
+      <div class="ai-skeleton-score">
+        <div class="ai-skel-circle"></div>
+        <div class="ai-skel-lines">
+          <div class="ai-skel-line"></div>
+          <div class="ai-skel-line short"></div>
+        </div>
+      </div>
+      <div class="ai-skel-section"></div>
+      <div class="ai-skel-section"></div>
+      <div class="ai-skeleton-label">
+        <div class="ai-thinking-dots">
+          <span></span><span></span><span></span>
+        </div>
+        Analisando seus dados financeiros…
+      </div>
+    </div>`;
+}
+
+function autoRunAIOnce() {
+  if (_aiAnalysisDone) return;
+  const txs = txOfMonth();
+  if (!txs.filter(t => t.type === 'despesa').length) return;
+  _aiAnalysisDone = true;
+  showAISkeleton();
+  setBtnLoading(true);
+  setTimeout(() => runAI(), 600);
 }
 
 function renderAIResult(a) {
@@ -36,7 +72,10 @@ function renderAIResult(a) {
 }
 
 function resetAIResult() {
-  document.getElementById('ai-result').innerHTML = `
+  _aiAnalysisDone = false;
+  const el = document.getElementById('ai-result');
+  if (!el) return;
+  el.innerHTML = `
     <div class="ai-placeholder">
       <span class="ai-placeholder-icon">🤖</span>
       <p>Os dados foram alterados. Clique em <strong>"Analisar com IA"</strong> para uma nova análise.</p>
@@ -109,9 +148,16 @@ function buildDemoAnalysis(txs) {
 async function runAI() {
   const txs = txOfMonth();
   const exp = txs.filter(t => t.type === 'despesa');
-  if (!exp.length) { toast('Adicione despesas para analisar.', 'err'); return; }
+  if (!exp.length) {
+    setBtnLoading(false);
+    toast('Adicione despesas para analisar.', 'err');
+    return;
+  }
 
+  _aiAnalysisDone = true;
   setBtnLoading(true);
+  const resultEl = document.getElementById('ai-result');
+  if (resultEl && !resultEl.querySelector('.ai-skeleton')) showAISkeleton();
 
   if (Demo.active) {
     await new Promise(r => setTimeout(r, 900));
