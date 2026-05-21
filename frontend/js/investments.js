@@ -216,6 +216,7 @@ function saveGoalModal() {
   localStorage.setItem(_goalKey(), JSON.stringify(_portfolioGoal));
   closeModal('modal-goal');
   renderPortfolioGoal();
+  _renderDashGoalCard?.();
   toast?.('Meta salva!');
 }
 
@@ -225,7 +226,14 @@ function clearGoalModal() {
   localStorage.removeItem(_goalKey());
   closeModal('modal-goal');
   renderPortfolioGoal();
+  _renderDashGoalCard?.();
   toast?.('Meta removida.');
+}
+
+function getPortfolioGoalData() {
+  const buys = _portfolio.filter(e => (e.transaction_type || 'compra') === 'compra');
+  const totalSaved = buys.reduce((s, e) => s + +e.amount, 0);
+  return { goal: _portfolioGoal, totalSaved };
 }
 
 // ── Export CSV ─────────────────────────────────
@@ -313,6 +321,11 @@ function renderInvSummaryGrid() {
   const { buy_total, net_invested, cdi_gain, patrimonio, variation_pct } = _portfolioStats();
   const varDir   = variation_pct >= 0 ? 'up' : 'down';
   const varArrow = variation_pct >= 0 ? '▲' : '▼';
+  const gainSign = cdi_gain >= 0 ? '+' : '';
+  const cdiAnnual = _cachedRates ? _cachedRates.cdi.value.toFixed(2).replace('.', ',') : '0,00';
+  const rentVsCdi = _cachedRates && _cachedRates.cdi.value > 0
+    ? Math.round(variation_pct / _cachedRates.cdi.value * 100)
+    : 0;
 
   el.innerHTML = `
     <div class="inv-scard">
@@ -320,11 +333,12 @@ function renderInvSummaryGrid() {
         <div class="inv-scard-icon-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M6 20V10l6-6 6 6v10"/><path d="M10 20v-5h4v5"/></svg>
         </div>
-        <span class="inv-scard-label">Patrimônio total</span>
+        <span class="inv-scard-label">Patrimônio Total</span>
       </div>
       <div class="inv-scard-value">${fmt(patrimonio)}</div>
       <div class="inv-scard-sub">
-        <span class="inv-scard-badge ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</span>
+        <span class="inv-scard-badge ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}% no ano</span>
+        <span class="inv-scard-badge-secondary ${varDir}">${gainSign}${fmt(cdi_gain)}</span>
       </div>
       <div class="inv-scard-footer">Valor Investido <span>${fmt(net_invested)}</span></div>
     </div>
@@ -334,13 +348,13 @@ function renderInvSummaryGrid() {
         <div class="inv-scard-icon-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
-        <span class="inv-scard-label">Lucro total</span>
+        <span class="inv-scard-label">Lucro Total</span>
       </div>
-      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${fmt(cdi_gain)}</div>
+      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${gainSign}${fmt(cdi_gain)}</div>
       <div class="inv-scard-split">
         <div class="inv-scard-split-item">
           <span class="inv-scard-split-label">Ganho de Capital</span>
-          <span class="inv-scard-split-val">${fmt(cdi_gain)}</span>
+          <span class="inv-scard-split-val">${gainSign}${fmt(cdi_gain)}</span>
         </div>
         <div class="inv-scard-split-item">
           <span class="inv-scard-split-label">Dividendos Recebidos</span>
@@ -366,18 +380,18 @@ function renderInvSummaryGrid() {
           <div class="inv-scard-icon-wrap small">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
           </div>
-          <span class="inv-scard-label">Variação</span>
+          <span class="inv-scard-label">Variação no Mês</span>
         </div>
         <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</div>
-        <div class="inv-scard-footer">${fmt(cdi_gain)}</div>
+        <div class="inv-scard-footer">${gainSign}${fmt(cdi_gain)}</div>
       </div>
       <div class="inv-scard-divider"></div>
       <div class="inv-scard-half">
         <div class="inv-scard-top">
-          <span class="inv-scard-label">Rentabilidade</span>
+          <span class="inv-scard-label">Rentabilidade vs CDI</span>
         </div>
-        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</div>
-        <div class="inv-scard-footer inv-scard-footer-sub">CDI estimado</div>
+        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(rentVsCdi)}% do CDI</div>
+        <div class="inv-scard-footer inv-scard-footer-sub">CDI estimado ${cdiAnnual}% a.a.</div>
       </div>
     </div>
   `;
@@ -420,7 +434,7 @@ function populateTypeFilters() {
     const sel = document.getElementById(id);
     if (!sel) return;
     const cur = sel.value;
-    sel.innerHTML = '<option value="all">Todos os tipos</option>' +
+    sel.innerHTML = '<option value="all">Todos</option>' +
       types.map(t => `<option value="${escHtml(t)}"${t === cur ? ' selected' : ''}>${escHtml(t)}</option>`).join('');
   });
 }
@@ -491,7 +505,7 @@ function drawEvolutionChart() {
 
   canvas.width  = W;
   canvas.height = H;
-  _renderEvoBars(-1);
+  _renderEvoLine(-1);
 
   if (!canvas._evoWired) {
     canvas._evoWired = true;
@@ -500,52 +514,109 @@ function drawEvolutionChart() {
   }
 }
 
-function _renderEvoBars(hovIdx) {
+function _renderEvoLine(hovIdx) {
   if (!_evoCanvas || !_evoData.length) return;
-  const { W, H, pL, pT, pB, maxVal, slotW, bW, bGap } = _evoDraw;
+  const { W, H, pL, pR, pT, pB, maxVal } = _evoDraw;
   const cH  = H - pT - pB;
   const ctx = _evoCanvas.getContext('2d');
   const now = new Date();
+  const n   = _evoData.length;
   ctx.clearRect(0, 0, W, H);
 
-  _evoData.forEach((sl, i) => {
-    const x      = pL + i * slotW + bGap;
-    const totalH = Math.max(((sl.applied + sl.gain) / maxVal) * cH, 3);
-    const gainH  = sl.applied > 0 ? Math.min((sl.gain / (sl.applied + sl.gain)) * totalH, totalH * 0.4) : 0;
-    const appH   = totalH - gainH;
-    const y      = pT + cH - totalH;
-    const isNow  = sl.year === now.getFullYear() && sl.month === now.getMonth();
-    const isHov  = i === hovIdx;
+  const xOf = i => pL + (n === 1 ? (W - pL - pR) / 2 : (i / (n - 1)) * (W - pL - pR));
+  const yOf = v => pT + cH - Math.max((v / maxVal) * cH, 0);
 
-    ctx.globalAlpha = (hovIdx >= 0 && !isHov) ? 0.35 : 1;
+  // Subtle horizontal grid lines
+  ctx.lineWidth = 1; ctx.setLineDash([]);
+  for (let j = 1; j <= 3; j++) {
+    const y = pT + (cH / 4) * j;
+    ctx.beginPath();
+    ctx.moveTo(pL, y); ctx.lineTo(W - pR, y);
+    ctx.strokeStyle = chartFg(0.05);
+    ctx.stroke();
+  }
 
-    const appColor = isHov ? '#22c55e' : (isNow ? '#15803d' : '#166534');
-    ctx.fillStyle = appColor;
-    ctx.beginPath(); rrect(ctx, x, y + gainH, bW, appH, gainH > 1 ? 0 : 3); ctx.fill();
+  if (n >= 2) {
+    // Applied area fill
+    const gradA = ctx.createLinearGradient(0, pT, 0, pT + cH);
+    gradA.addColorStop(0, 'rgba(21,128,61,0.45)');
+    gradA.addColorStop(1, 'rgba(21,128,61,0.03)');
+    ctx.beginPath();
+    ctx.moveTo(xOf(0), pT + cH);
+    _evoData.forEach((sl, i) => ctx.lineTo(xOf(i), yOf(sl.applied)));
+    ctx.lineTo(xOf(n - 1), pT + cH);
+    ctx.closePath();
+    ctx.fillStyle = gradA; ctx.fill();
 
-    if (gainH > 1) {
-      ctx.fillStyle = isHov ? '#bbf7d0' : '#86efac';
-      ctx.beginPath(); rrect(ctx, x, y, bW, gainH + 2, 3); ctx.fill();
-      ctx.fillStyle = appColor;
-      ctx.fillRect(x, y + gainH + 2, bW, appH - 2);
+    // Gain area between applied and total
+    const hasGain = _evoData.some(s => s.gain > 0.01);
+    if (hasGain) {
+      const gradG = ctx.createLinearGradient(0, pT, 0, pT + cH);
+      gradG.addColorStop(0, 'rgba(134,239,172,0.35)');
+      gradG.addColorStop(1, 'rgba(134,239,172,0.03)');
+      ctx.beginPath();
+      _evoData.forEach((sl, i) => {
+        if (i === 0) ctx.moveTo(xOf(i), yOf(sl.applied));
+        else         ctx.lineTo(xOf(i), yOf(sl.applied));
+      });
+      for (let i = n - 1; i >= 0; i--) {
+        ctx.lineTo(xOf(i), yOf(_evoData[i].applied + _evoData[i].gain));
+      }
+      ctx.closePath();
+      ctx.fillStyle = gradG; ctx.fill();
+
+      // Estimated gain line (dotted)
+      ctx.beginPath();
+      _evoData.forEach((sl, i) => {
+        if (i === 0) ctx.moveTo(xOf(i), yOf(sl.applied + sl.gain));
+        else         ctx.lineTo(xOf(i), yOf(sl.applied + sl.gain));
+      });
+      ctx.strokeStyle = '#86efac'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
     }
 
-    ctx.globalAlpha = 1;
-    ctx.fillStyle    = chartFg(isNow ? 0.85 : 0.4);
-    ctx.font         = isNow ? 'bold 9px Inter' : '9px Inter';
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'top';
+    // Applied line — smooth bezier curves
+    ctx.beginPath();
+    _evoData.forEach((sl, i) => {
+      const x = xOf(i), y = yOf(sl.applied);
+      if (i === 0) { ctx.moveTo(x, y); return; }
+      const px = xOf(i - 1), py = yOf(_evoData[i - 1].applied);
+      const cpx = (px + x) / 2;
+      ctx.bezierCurveTo(cpx, py, cpx, y, x, y);
+    });
+    ctx.strokeStyle = '#15803d'; ctx.lineWidth = 2.5;
+    ctx.setLineDash([]); ctx.stroke();
+  }
+
+  // Hover indicator
+  if (hovIdx >= 0 && _evoData[hovIdx]) {
+    const sl = _evoData[hovIdx];
+    const x  = xOf(hovIdx), ya = yOf(sl.applied);
+    ctx.beginPath(); ctx.moveTo(x, pT); ctx.lineTo(x, pT + cH);
+    ctx.strokeStyle = chartFg(0.18); ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(x, ya, 4.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#22c55e'; ctx.fill();
+    ctx.strokeStyle = chartBg(); ctx.lineWidth = 2; ctx.stroke();
+    if (sl.gain > 0.01) {
+      const yt = yOf(sl.applied + sl.gain);
+      ctx.beginPath(); ctx.arc(x, yt, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#86efac'; ctx.fill();
+      ctx.strokeStyle = chartBg(); ctx.lineWidth = 2; ctx.stroke();
+    }
+  }
+
+  // X-axis labels
+  const step = Math.max(1, Math.ceil(n / 8));
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  _evoData.forEach((sl, i) => {
+    const isNow = sl.year === now.getFullYear() && sl.month === now.getMonth();
+    if (i !== 0 && i !== n - 1 && i % step !== 0 && !isNow) return;
     const mo = String(sl.month + 1).padStart(2, '0');
     const yr = String(sl.year).slice(2);
-    ctx.fillText(`${mo}/${yr}`, x + bW / 2, H - pB + 4);
-
-    if (bW >= 20 && sl.applied >= 100) {
-      const fmtV = v => v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0);
-      ctx.fillStyle    = chartFg(isHov ? 0.7 : 0.45);
-      ctx.font         = isHov ? 'bold 8px Inter' : '8px Inter';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(fmtV(sl.applied + sl.gain), x + bW / 2, y - 2);
-    }
+    ctx.fillStyle = isNow ? chartFg(0.85) : chartFg(0.4);
+    ctx.font      = isNow ? 'bold 9px Inter' : '9px Inter';
+    ctx.fillText(`${mo}/${yr}`, xOf(i), H - pB + 4);
   });
 }
 
@@ -553,17 +624,23 @@ function _onEvoMove(e) {
   const canvas = e.currentTarget;
   const r  = canvas.getBoundingClientRect();
   const mx = (e.clientX - r.left) * (canvas.width / r.width);
-  const { pL, slotW, bW, bGap } = _evoDraw;
+  const { pL, pR, W } = _evoDraw;
+  const n = _evoData.length;
 
   let newHov = -1;
-  _evoData.forEach((_, i) => {
-    const x = pL + i * slotW + bGap;
-    if (mx >= x - 4 && mx <= x + bW + 4) newHov = i;
-  });
+  if (n > 0) {
+    let minDist = Infinity;
+    _evoData.forEach((_, i) => {
+      const x = pL + (n === 1 ? (W - pL - pR) / 2 : (i / (n - 1)) * (W - pL - pR));
+      const d = Math.abs(mx - x);
+      if (d < minDist) { minDist = d; newHov = i; }
+    });
+    if (minDist > 30) newHov = -1;
+  }
 
   if (newHov !== _evoHovIdx) {
     _evoHovIdx = newHov;
-    _renderEvoBars(newHov);
+    _renderEvoLine(newHov);
   }
   if (newHov >= 0) _showEvoTooltip(e, newHov);
   else _hideEvoTooltip();
@@ -571,7 +648,7 @@ function _onEvoMove(e) {
 
 function _onEvoLeave() {
   _evoHovIdx = -1;
-  _renderEvoBars(-1);
+  _renderEvoLine(-1);
   _hideEvoTooltip();
 }
 

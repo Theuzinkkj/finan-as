@@ -193,7 +193,7 @@ function saveBudgetConfig() {
   budgets = newBudgets;
   saveProfile({ budgets });
   closeModal('modal-budget-config');
-  _renderDashGoalCard(txOfMonth());
+  renderBudgets(txOfMonth());
   toast('Metas salvas!');
 }
 
@@ -1011,8 +1011,8 @@ function renderCards(txs) {
   // Card IA: insight calculado com base nas despesas do mês
   _renderDashAiCard(txs);
 
-  // Card Meta: primeiro orçamento definido (se houver)
-  _renderDashGoalCard(txs);
+  // Card Meta: reserva de emergência / meta de poupança
+  _renderDashGoalCard();
 }
 
 function _renderDashAiCard(txs) {
@@ -1042,33 +1042,35 @@ function _renderDashAiCard(txs) {
   }
 }
 
-function _renderDashGoalCard(txs) {
-  const contentEl   = document.getElementById('dash-goal-content');
-  const labelEl     = document.getElementById('dash-goal-label-text');
-  const pctEl       = document.getElementById('dash-goal-pct');
+function _renderDashGoalCard() {
+  const contentEl = document.getElementById('dash-goal-content');
+  const labelEl   = document.getElementById('dash-goal-label-text');
+  const pctEl     = document.getElementById('dash-goal-pct');
   if (!contentEl) return;
 
-  const entries = Object.entries(budgets).filter(([, limit]) => limit > 0);
-  if (!entries.length) return; // mantém estado vazio padrão
+  if (typeof getPortfolioGoalData !== 'function') return;
+  const { goal, totalSaved } = getPortfolioGoalData();
+  if (!goal) {
+    contentEl.innerHTML = `<div class="dash-goal-empty"><span>Nenhuma meta de reserva definida</span><button class="btn-link" id="btn-budget-setup-dash" onclick="openGoalModal()">Configurar →</button></div>`;
+    if (labelEl) labelEl.textContent = 'META';
+    if (pctEl)   pctEl.textContent   = '';
+    return;
+  }
 
-  const expTxs    = txs.filter(t => t.type === 'despesa');
-  const catTotals = {};
-  expTxs.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+  const { name, amount, date } = goal;
+  const pct       = Math.min((totalSaved / amount) * 100, 100);
+  const remaining = Math.max(amount - totalSaved, 0);
+  const barColor  = pct >= 100 ? 'var(--green-l)' : pct >= 80 ? 'var(--yellow,#fbbf24)' : 'var(--violet,var(--purple))';
+  const target    = new Date(date + 'T12:00:00');
+  const dateLabel = target.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
 
-  const [key, limit] = entries[0];
-  const cat   = CATEGORIES[key];
-  const spent = catTotals[key] || 0;
-  const pct   = limit > 0 ? Math.min((spent / limit) * 100, 100) : 0;
-  const over  = spent > limit;
-  const barColor = over ? '#f87171' : pct >= 80 ? 'var(--yellow,#fbbf24)' : 'var(--violet,var(--purple))';
-
-  if (labelEl) labelEl.textContent = `META · ${cat ? cat.label.toUpperCase() : key.toUpperCase()}`;
+  if (labelEl) labelEl.textContent = `META · ${name.toUpperCase()}`;
   if (pctEl)   pctEl.textContent   = `${pct.toFixed(0)}%`;
 
   contentEl.innerHTML = `
-    <div class="dash-goal-amounts">${fmt(spent)}<span class="dash-goal-limit"> / ${fmt(limit)}</span></div>
+    <div class="dash-goal-amounts">${fmt(totalSaved)}<span class="dash-goal-limit"> / ${fmt(amount)}</span></div>
     <div class="dash-goal-track"><div class="dash-goal-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
-    <div class="dash-goal-footer">${over ? `+${fmt(spent-limit)} acima do limite` : `Faltam ${fmt(limit-spent)}`}</div>`;
+    <div class="dash-goal-footer">${pct >= 100 ? 'Meta atingida! 🎉' : `Faltam ${fmt(remaining)}`}<span class="dash-goal-date">Concluída em ~${dateLabel}</span></div>`;
 }
 
 // =============================================
@@ -1110,13 +1112,116 @@ function toggleTxSelection(id, event) {
   if (event.target.closest('.tx-menu-btn')) return;
   if (event.currentTarget.closest('#tab-dashboard')) return;
   if (window.innerWidth <= 900) { openMobTxSheet(id); return; }
-  if (selectedTxIds.has(id)) selectedTxIds.delete(id);
-  else selectedTxIds.add(id);
-  document.querySelectorAll(`.tx-item[data-id="${id}"]`).forEach(el => {
-    el.classList.toggle('tx-selected', selectedTxIds.has(id));
-    el.querySelector('.tx-select-check')?.classList.toggle('checked', selectedTxIds.has(id));
-  });
-  renderSelectionBar();
+  openTxDetailPanel(id);
+}
+
+// =============================================
+//  DESKTOP — TRANSACTION DETAIL PANEL
+// =============================================
+const PAYMENT_LABELS = {
+  dinheiro:    '💵 Dinheiro',
+  pix:         '⚡ PIX',
+  debito:      '💳 Cartão de débito',
+  credito:     '💳 Cartão de crédito',
+};
+
+function openTxDetailPanel(id) {
+  const tx = transactions.find(t => t.id === id);
+  if (!tx) return;
+
+  const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;
+  const isIncome  = tx.type === 'receita';
+  const isBenefit = tx.type === 'beneficio';
+  const amtSign   = isIncome ? '+' : '−';
+  const amtColor  = isIncome ? 'var(--emerald)' : isBenefit ? '#a78bfa' : 'var(--coral)';
+  const amtBg     = isIncome ? 'rgba(20,195,142,.12)' : isBenefit ? 'rgba(124,92,255,.12)' : 'rgba(255,90,106,.12)';
+  const amtBorder = isIncome ? 'rgba(20,195,142,.25)' : isBenefit ? 'rgba(124,92,255,.25)' : 'rgba(255,90,106,.25)';
+  const typeLabel = isIncome ? 'Receita' : isBenefit ? 'Benefício' : 'Despesa';
+  const icon      = isIncome ? '💰' : cat.icon;
+  const payLabel  = PAYMENT_LABELS[tx.paymentMethod] || '—';
+  const recLabel  = tx.fixed ? '🔄 Fixo mensal' : 'Não recorrente';
+
+  const bt = isBenefit && tx.benefitType ? BENEFIT_TYPES[tx.benefitType] : null;
+  const catLabel = isIncome ? 'Receita' : bt ? bt.label : cat.label;
+  const catIcon  = isIncome ? '💰' : bt ? bt.icon : cat.icon;
+
+  document.getElementById('tx-detail-content').innerHTML = `
+    <div class="tx-detail-body">
+      <div class="tx-detail-icon-row">
+        <div class="tx-detail-icon" style="background:${cat.color}22;border:1px solid ${cat.color}44">${icon}</div>
+        <div>
+          <div class="tx-detail-name">${escHtml(tx.description)}</div>
+          <div class="tx-detail-date">${fmtDate(tx.date)}${tx.notes ? ' · 📝' : ''}</div>
+        </div>
+      </div>
+      <div class="tx-detail-value-box" style="background:${amtBg};border-color:${amtBorder}">
+        <div class="tx-detail-value-label" style="color:${amtColor}88">Valor</div>
+        <div class="tx-detail-value-amount" style="color:${amtColor}">${amtSign}${fmt(tx.amount)}</div>
+      </div>
+      <div class="tx-detail-fields">
+        <div class="tx-detail-field">
+          <span class="tx-detail-field-key">Tipo</span>
+          <span class="tx-detail-field-val">${typeLabel}</span>
+        </div>
+        <div class="tx-detail-field">
+          <span class="tx-detail-field-key">Categoria</span>
+          <span class="tx-detail-field-val">${catIcon} ${catLabel}</span>
+        </div>
+        ${tx.paymentMethod ? `
+        <div class="tx-detail-field">
+          <span class="tx-detail-field-key">Forma</span>
+          <span class="tx-detail-field-val">${payLabel}</span>
+        </div>` : ''}
+        <div class="tx-detail-field">
+          <span class="tx-detail-field-key">Recorrência</span>
+          <span class="tx-detail-field-val">${recLabel}</span>
+        </div>
+        <div class="tx-detail-field">
+          <span class="tx-detail-field-key">Notas</span>
+          <span class="tx-detail-field-val">${tx.notes ? escHtml(tx.notes) : '—'}</span>
+        </div>
+      </div>
+      ${_buildTxInsight(tx, cat)}
+    </div>`;
+
+  const editBtn   = document.getElementById('tx-detail-edit-btn');
+  const deleteBtn = document.getElementById('tx-detail-delete-btn');
+  editBtn.onclick   = () => { closeTxDetailPanel(); activeTxId = id; openRenameModal(); };
+  deleteBtn.onclick = () => { if (confirm('Excluir esta transação?')) { closeTxDetailPanel(); deleteTx(id); } };
+
+  document.getElementById('tx-detail-overlay').classList.add('open');
+  document.getElementById('tx-detail-panel').classList.add('open');
+}
+
+function closeTxDetailPanel() {
+  document.getElementById('tx-detail-overlay')?.classList.remove('open');
+  document.getElementById('tx-detail-panel')?.classList.remove('open');
+}
+
+function _buildTxInsight(tx, cat) {
+  if (tx.type !== 'despesa') return '';
+  const catTxs = transactions.filter(t =>
+    t.type === 'despesa' && t.category === tx.category &&
+    t.date.slice(0, 7) === tx.date.slice(0, 7)
+  );
+  const totalMonth = catTxs.reduce((s, t) => s + t.amount, 0);
+  const allMonthExp = transactions.filter(t =>
+    t.type === 'despesa' && t.date.slice(0, 7) === tx.date.slice(0, 7)
+  ).reduce((s, t) => s + t.amount, 0);
+  const pct = allMonthExp > 0 ? ((totalMonth / allMonthExp) * 100).toFixed(1) : 0;
+  const weeks = catTxs.length > 0 ? (totalMonth / 4).toFixed(0) : 0;
+
+  return `
+    <div class="tx-detail-insight">
+      <div class="tx-detail-insight-label">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Insight IA
+      </div>
+      <div class="tx-detail-insight-text">
+        <strong>${cat.label}</strong> representa <strong>${pct}%</strong> dos seus gastos no mês.
+        ${weeks > 0 ? `Você gastou em média <strong>${fmt(Number(weeks))}</strong> por semana nessa categoria.` : ''}
+      </div>
+    </div>`;
 }
 
 function clearTxSelection() {
@@ -2562,7 +2667,7 @@ function bindEvents() {
   // Toggle seção de benefícios
   document.getElementById('btn-benefits-toggle').addEventListener('click', toggleBenefitsSection);
 
-  // Toggle seção de orçamentos (removida do layout, listeners mantidos com guard)
+  // Toggle seção de Meta de Gastos
   document.getElementById('btn-budget-toggle')?.addEventListener('click', toggleBudgetSection);
   document.getElementById('btn-budget-setup')?.addEventListener('click', openBudgetConfig);
 
@@ -2663,11 +2768,13 @@ function bindEvents() {
   document.getElementById('prev-month').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     selectedTxIds.clear();
+    closeTxDetailPanel();
     renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
   document.getElementById('next-month').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     selectedTxIds.clear();
+    closeTxDetailPanel();
     renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
 
@@ -2684,7 +2791,7 @@ function bindEvents() {
   document.getElementById('view-all-btn').addEventListener('click', () => switchTab('transactions'));
 
   // Botão de configurar meta no card do dashboard
-  document.getElementById('btn-budget-setup-dash')?.addEventListener('click', openBudgetConfig);
+  document.getElementById('btn-budget-setup-dash')?.addEventListener('click', openGoalModal);
 
   // Botões de filtro de período no gráfico de evolução (visual)
   document.querySelectorAll('.dash-filter-btn').forEach(btn => {
@@ -2914,6 +3021,8 @@ function bindEvents() {
     if (profileOverlay && !profileOverlay.classList.contains('hidden')) { closeProfilePanel(); return; }
     const chat = document.getElementById('chat-panel');
     if (chat && !chat.classList.contains('hidden')) { chat.classList.add('hidden'); return; }
+    const detailPanel = document.getElementById('tx-detail-panel');
+    if (detailPanel && detailPanel.classList.contains('open')) { closeTxDetailPanel(); return; }
     const menu = document.getElementById('tx-context-menu');
     if (menu && !menu.classList.contains('hidden')) closeTxMenu();
   });

@@ -28,6 +28,9 @@
 /* ── Mobile balance split (hidden on desktop) ── */
 .mob-balance-split { display: none; }
 
+/* ── Mobile section header (hidden on desktop) ── */
+.mob-screen-header { display: none; }
+
 /* ── FAB expand menu (always hidden by default) ─ */
 .mob-fab-menu {
   display:          none;

@@ -1529,6 +1529,14 @@
 .inv-scard-badge.up   { background: rgba(16,185,129,.13); color: #059669; }
 .inv-scard-badge.down { background: rgba(239,68,68,.13);  color: #dc2626; }
 
+.inv-scard-badge-secondary {
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.inv-scard-badge-secondary.up   { color: #059669; }
+.inv-scard-badge-secondary.down { color: #dc2626; }
+
 .inv-scard-footer {
   font-size: .71rem;
   color: var(--text-3);

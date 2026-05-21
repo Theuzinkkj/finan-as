@@ -486,8 +486,8 @@
             </div>
             <div id="dash-goal-content">
               <div class="dash-goal-empty">
-                <span>Nenhuma meta de gasto definida</span>
-                <button class="btn-link" id="btn-budget-setup-dash">Configurar →</button>
+                <span>Nenhuma meta de reserva definida</span>
+                <button class="btn-link" id="btn-budget-setup-dash" onclick="openGoalModal()">Configurar →</button>
               </div>
             </div>
           </div>
@@ -512,6 +512,24 @@
             <button class="btn-link" id="view-all-btn">Ver todas →</button>
           </div>
           <div class="transactions-list" id="recent-transactions"></div>
+        </div>
+      </div>
+
+      <!-- Budget / Meta de Gastos Section -->
+      <div class="benefits-section" id="budget-section">
+        <div class="benefits-header">
+          <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="false">
+            <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span class="section-label">Meta de Gastos</span>
+            <span class="budget-summary" id="budget-summary"></span>
+          </button>
+        </div>
+        <div class="benefits-body" id="budget-body">
+          <div class="budget-grid" id="budget-grid"></div>
+          <div class="benefits-empty hidden" id="budget-empty">
+            Defina limites de gasto por categoria
+            <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
+          </div>
         </div>
       </div>
 
@@ -661,71 +679,117 @@
         <div class="mob-ia-proj-note" id="mob-ia-proj-note"></div>
       </div>
 
-      <div class="card analysis-main-card">
-        <div class="analysis-chart-header">
-          <span class="chart-title-main">Análise de Gastos</span>
-          <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
-            <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/>
-                <rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/>
-                <rect x="1" y="10" width="10" height="2.5" rx="1.2"/>
-              </svg>
-              Barras
-            </button>
-            <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="7" cy="7" r="5.5"/>
-                <path d="M7 7V1.5M7 7L11.7 4.2"/>
-              </svg>
-              Pizza
-            </button>
-            <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1,11 4,5 7,8 10,3 13,6"/>
-                <circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/>
-                <circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/>
-              </svg>
-              Linha
-            </button>
-            <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/>
-                <polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/>
-                <circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/>
-              </svg>
-              Radar
-            </button>
+      <!-- ═══ DESKTOP ANALYSIS LAYOUT ═══ -->
+
+      <!-- Analysis Hero (desktop only) -->
+      <div class="analysis-hero" id="analysis-hero">
+        <div class="analysis-hero-left">
+          <div class="analysis-hero-eyebrow">Inteligência Atlas</div>
+          <div class="analysis-hero-title">Análise IA</div>
+          <div class="analysis-hero-sub">Padrões, insights e projeções financeiras do mês</div>
+        </div>
+        <div class="analysis-hero-right">
+          <div class="ai-auto-badge" id="ai-auto-badge">
+            <span class="ai-auto-dot"></span>Análise automática
+          </div>
+          <button class="btn-icon-chat hidden" id="btn-chat-inline" title="Perguntar à IA">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
+          <button class="btn-primary" id="btn-analyze">
+            <span id="analyze-text">✦ Analisar com IA</span>
+            <span id="analyze-loader" class="loader hidden"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Row -->
+      <div class="analysis-kpi-row">
+        <div class="card analysis-kpi-card">
+          <div class="kpi-icon expense-box">↓</div>
+          <div>
+            <div class="stat-label">Despesas registradas</div>
+            <div class="stat-value" id="stat-count">0</div>
           </div>
         </div>
-
-        <div class="analysis-body">
-          <div class="analysis-chart-area">
-            <canvas id="analysis-chart"></canvas>
-            <div id="analysis-legend" class="analysis-legend"></div>
+        <div class="card analysis-kpi-card">
+          <div class="kpi-icon kpi-icon-warn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 19h20L12 2z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="16.5" r=".8" fill="currentColor"/></svg>
           </div>
-          <div class="analysis-info-panel">
-            <div class="stat-box">
-              <span class="stat-label">Despesas registradas</span>
-              <span class="stat-value" id="stat-count">0</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Maior gasto único</span>
-              <span class="stat-value" id="stat-max">R$ 0,00</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Média por dia ativo</span>
-              <span class="stat-value" id="stat-avg">R$ 0,00</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-label">Categoria líder</span>
-              <span class="stat-value" id="stat-top-cat">—</span>
-            </div>
+          <div>
+            <div class="stat-label">Maior gasto único</div>
+            <div class="stat-value" id="stat-max">—</div>
+          </div>
+        </div>
+        <div class="card analysis-kpi-card">
+          <div class="kpi-icon kpi-icon-avg">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="14 6 20 12 14 18"/></svg>
+          </div>
+          <div>
+            <div class="stat-label">Média por dia ativo</div>
+            <div class="stat-value" id="stat-avg">—</div>
+          </div>
+        </div>
+        <div class="card analysis-kpi-card analysis-kpi-leader">
+          <div class="kpi-icon kpi-icon-leader">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div>
+            <div class="stat-label">Categoria líder</div>
+            <div class="stat-value" id="stat-top-cat">—</div>
           </div>
         </div>
       </div>
 
-      <!-- Annual History -->
+      <!-- Main Row: Chart + AI Side by Side -->
+      <div class="analysis-main-row">
+
+        <!-- Gráfico de Gastos -->
+        <div class="card analysis-chart-col">
+          <div class="analysis-chart-header">
+            <span class="chart-title-main">Análise de Gastos</span>
+            <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
+              <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/><rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/><rect x="1" y="10" width="10" height="2.5" rx="1.2"/></svg>
+                Barras
+              </button>
+              <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="M7 7V1.5M7 7L11.7 4.2"/></svg>
+                Pizza
+              </button>
+              <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 4,5 7,8 10,3 13,6"/><circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/></svg>
+                Linha
+              </button>
+              <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/><polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
+                Radar
+              </button>
+            </div>
+          </div>
+          <canvas id="analysis-chart"></canvas>
+          <div id="analysis-legend" class="analysis-legend"></div>
+        </div>
+
+        <!-- Análise IA (resultado) -->
+        <div class="card analysis-ai-col">
+          <div class="ai-col-header">
+            <div class="ai-title-group">
+              <span class="ai-badge">✨ IA</span>
+              <h3>Análise Financeira</h3>
+            </div>
+          </div>
+          <div id="ai-result">
+            <div class="ai-placeholder">
+              <span class="ai-placeholder-icon">🤖</span>
+              <p>Clique em <strong>"Analisar com IA"</strong> para uma análise personalizada dos seus gastos deste mês.</p>
+              <p class="ai-placeholder-sub">A IA identifica padrões, gastos desnecessários e onde você pode economizar.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Histórico Anual (full width) -->
       <div class="card" id="annual-history-card">
         <div class="card-header">
           <div class="annual-header-left">
@@ -736,12 +800,8 @@
             </div>
           </div>
           <div class="annual-legend">
-            <span class="annual-legend-item">
-              <span class="annual-dot" style="background:var(--green)"></span>Receitas
-            </span>
-            <span class="annual-legend-item">
-              <span class="annual-dot" style="background:#f87171"></span>Despesas
-            </span>
+            <span class="annual-legend-item"><span class="annual-dot" style="background:var(--green)"></span>Receitas</span>
+            <span class="annual-legend-item"><span class="annual-dot" style="background:#f87171"></span>Despesas</span>
           </div>
         </div>
         <div class="annual-chart-wrap">
@@ -751,50 +811,28 @@
         <div id="annual-summary" class="annual-summary"></div>
       </div>
 
-      <div class="card ai-card">
-        <div class="ai-header">
-          <div class="ai-title-group">
-            <span class="ai-badge">✨ IA</span>
-            <h3>Análise Financeira Inteligente</h3>
-          </div>
-          <div class="ai-header-actions">
-            <button class="btn-icon-chat hidden" id="btn-chat-inline" title="Perguntar à IA">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </button>
-            <button class="btn-primary" id="btn-analyze">
-              <span id="analyze-text">Analisar com IA</span>
-              <span id="analyze-loader" class="loader hidden"></span>
-            </button>
-          </div>
-        </div>
-        <div id="ai-result">
-          <div class="ai-placeholder">
-            <span class="ai-placeholder-icon">🤖</span>
-            <p>Clique em <strong>"Analisar com IA"</strong> para uma análise personalizada dos seus gastos deste mês.</p>
-            <p class="ai-placeholder-sub">A IA lê suas anotações e identifica padrões, gastos desnecessários e onde você pode economizar.</p>
-          </div>
-        </div>
-      </div>
+      <!-- Bottom Row: Projeção + Score -->
+      <div class="analysis-bottom-row">
 
-      <!-- Projection Card -->
-      <div class="card projection-card" id="projection-card">
-        <div class="projection-header">
-          <h3>Projeção Financeira</h3>
-          <span class="projection-badge">Estimativa</span>
+        <div class="card projection-card" id="projection-card">
+          <div class="projection-header">
+            <h3>Projeção Financeira</h3>
+            <span class="projection-badge">Estimativa</span>
+          </div>
+          <div class="projection-grid" id="projection-grid"></div>
+          <p class="projection-note" id="projection-note"></p>
         </div>
-        <div class="projection-grid" id="projection-grid"></div>
-        <p class="projection-note" id="projection-note"></p>
-      </div>
 
-      <!-- Score History Card -->
-      <div class="card score-history-card" id="score-history-card">
-        <div class="score-history-header">
-          <h3>Evolução do Score</h3>
-          <span style="font-size:.8rem;color:var(--text-3)" id="score-history-subtitle"></span>
+        <div class="card score-history-card" id="score-history-card">
+          <div class="score-history-header">
+            <h3>Evolução do Score</h3>
+            <span style="font-size:.8rem;color:var(--text-3)" id="score-history-subtitle"></span>
+          </div>
+          <div id="score-history-content">
+            <div class="score-history-empty">Execute a análise IA para registrar seu score e acompanhar a evolução.</div>
+          </div>
         </div>
-        <div id="score-history-content">
-          <div class="score-history-empty">Execute a análise IA para registrar seu score e acompanhar a evolução.</div>
-        </div>
+
       </div>
 
       <!-- Rodapé de página -->
