@@ -439,6 +439,51 @@
     <!-- ======= ANALYSIS ======= -->
     <section class="tab-content" id="tab-analysis" role="tabpanel" aria-labelledby="nav-tab-analysis">
 
+      <!-- Mobile IA view (oculto no desktop) -->
+      <div class="mob-ia-view" id="mob-ia-view">
+        <!-- Header -->
+        <div class="mob-screen-header">
+          <div class="mob-screen-header-left">
+            <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="ia-g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9B7DFF"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#4FB6FF"/></linearGradient></defs><path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#ia-g)"/><path d="M16 2 L29 12 L16 14 L3 12 Z" fill="rgba(255,255,255,.18)"/><path d="M16 14 L29 12 L16 30 Z" fill="rgba(0,0,0,.12)"/></svg>
+            <div>
+              <div class="mob-screen-title">Análise IA</div>
+              <div class="mob-screen-sub">Inteligência Atlas</div>
+            </div>
+          </div>
+          <div class="mob-screen-header-right">
+            <span class="mob-status-dot"></span>
+            <div class="mob-avatar" id="mob-ia-avatar">?</div>
+          </div>
+        </div>
+        <!-- Hero card -->
+        <div class="mob-ia-hero">
+          <div class="mob-ia-hero-icon">✦</div>
+          <div class="mob-ia-hero-title">Pergunte. A IA responde.</div>
+          <div class="mob-ia-hero-sub">A IA lê suas anotações, identifica padrões e mostra onde você pode economizar.</div>
+          <button class="mob-ia-btn" id="mob-ia-analyze">✦ Analisar com IA</button>
+        </div>
+        <!-- Common questions -->
+        <div class="mob-section-label">Perguntas comuns</div>
+        <div class="mob-ia-questions">
+          <button class="mob-ia-q" data-q="Onde estou gastando mais?">Onde estou gastando mais?<span>→</span></button>
+          <button class="mob-ia-q" data-q="Como reduzir gastos com alimentação?">Como reduzir gastos com alimentação?<span>→</span></button>
+          <button class="mob-ia-q" data-q="Quanto posso economizar por mês?">Quanto posso economizar por mês?<span>→</span></button>
+          <button class="mob-ia-q" data-q="Quais são meus gastos recorrentes?">Quais são meus gastos recorrentes?<span>→</span></button>
+        </div>
+        <!-- Projection -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:20px;">
+          <div class="mob-section-label" style="padding:0 16px;">Projeção financeira</div>
+          <span class="mob-estimate-badge">Estimativa</span>
+        </div>
+        <div class="mob-ia-projection">
+          <div class="mob-ia-proj-row"><span>Saldo este mês</span><span class="income" id="mob-proj-month">+R$ 0,00</span></div>
+          <div class="mob-ia-proj-row"><span>Em 6 meses</span><span class="income" id="mob-proj-6m">+R$ 0</span></div>
+          <div class="mob-ia-proj-row"><span>Em 12 meses</span><span class="income" id="mob-proj-12m">+R$ 0</span></div>
+          <div class="mob-ia-proj-row"><span>Taxa de poupança</span><span class="violet" id="mob-proj-rate">0%</span></div>
+        </div>
+        <div class="mob-ia-proj-note" id="mob-ia-proj-note"></div>
+      </div>
+
       <div class="card analysis-main-card">
         <div class="analysis-chart-header">
           <span class="chart-title-main">Análise de Gastos</span>
@@ -591,6 +636,21 @@
 
     <!-- ======= INVESTMENTS ======= -->
     <section class="tab-content" id="tab-investments" role="tabpanel" aria-labelledby="nav-tab-investments">
+
+      <!-- Header mobile investimentos -->
+      <div class="mob-screen-header">
+        <div class="mob-screen-header-left">
+          <svg width="22" height="22" viewBox="0 0 32 32" fill="none"><defs><linearGradient id="inv-g" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9B7DFF"/><stop offset=".55" stop-color="#7C5CFF"/><stop offset="1" stop-color="#4FB6FF"/></linearGradient></defs><path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#inv-g)"/><path d="M16 2 L29 12 L16 14 L3 12 Z" fill="rgba(255,255,255,.18)"/><path d="M16 14 L29 12 L16 30 Z" fill="rgba(0,0,0,.12)"/></svg>
+          <div>
+            <div class="mob-screen-title">Investimentos</div>
+            <div class="mob-screen-sub" id="mob-inv-month"></div>
+          </div>
+        </div>
+        <div class="mob-screen-header-right">
+          <span class="mob-status-dot"></span>
+          <div class="mob-avatar" id="mob-inv-avatar">?</div>
+        </div>
+      </div>
 
       <!-- ── Sub-nav ── -->
       <div class="inv-subnav">
@@ -851,6 +911,17 @@
     </div>
   </div>
   <div class="mob-fab-overlay" id="mob-fab-overlay"></div>
+
+  <!-- Mobile transaction detail bottom sheet -->
+  <div class="mob-tx-overlay" id="mob-tx-overlay"></div>
+  <div class="mob-tx-sheet" id="mob-tx-sheet">
+    <div class="mob-tx-handle"></div>
+    <div class="mob-tx-top">
+      <div class="mono" style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-mute);font-weight:500;">Detalhe da transação</div>
+      <button class="mob-tx-close" id="mob-tx-close">×</button>
+    </div>
+    <div id="mob-tx-content"></div>
+  </div>
 
   <!-- Context menu: Transaction options -->
   <div id="tx-context-menu" class="tx-context-menu hidden">

@@ -709,6 +709,14 @@ function updateProfileUI() {
   const mobAvatar    = document.getElementById('mob-avatar');
   if (mobGreetName) mobGreetName.textContent = name !== '—' ? name + ' 👋' : '👋';
   if (mobAvatar)    mobAvatar.textContent    = initial;
+  // Avatares extras (IA e Invest.)
+  const mobIaAvatar  = document.getElementById('mob-ia-avatar');
+  const mobInvAvatar = document.getElementById('mob-inv-avatar');
+  if (mobIaAvatar)  mobIaAvatar.textContent  = initial;
+  if (mobInvAvatar) mobInvAvatar.textContent = initial;
+  // Mês na tela de investimentos
+  const mobInvMonth = document.getElementById('mob-inv-month');
+  if (mobInvMonth) mobInvMonth.textContent = currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase());
   if (mobGreetSub) {
     const h = new Date().getHours();
     mobGreetSub.textContent = h < 12 ? 'Bom dia,' : h < 18 ? 'Boa tarde,' : 'Boa noite,';
@@ -946,6 +954,20 @@ function renderCards(txs) {
     }
   }
 
+  // Mobile IA projection
+  const projMonth = document.getElementById('mob-proj-month');
+  const proj6m    = document.getElementById('mob-proj-6m');
+  const proj12m   = document.getElementById('mob-proj-12m');
+  const projRate  = document.getElementById('mob-proj-rate');
+  const projNote  = document.getElementById('mob-ia-proj-note');
+  if (projMonth) projMonth.textContent = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance));
+  if (proj6m)    proj6m.textContent    = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance * 6));
+  if (proj12m)   proj12m.textContent   = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance * 12));
+  if (projRate && income > 0) projRate.textContent = ((balance / income) * 100).toFixed(1) + '%';
+  if (projNote)  projNote.textContent  = balance >= 0
+    ? '✓ Atualmente suas receitas superam suas despesas — você está no verde.'
+    : '⚠ Suas despesas superaram as receitas neste mês.';
+
   // Transactions page sub header
   const txSub = document.getElementById('tx-page-sub');
   if (txSub) {
@@ -998,6 +1020,7 @@ function txHTML(t) {
 function toggleTxSelection(id, event) {
   if (event.target.closest('.tx-menu-btn')) return;
   if (event.currentTarget.closest('#tab-dashboard')) return;
+  if (window.innerWidth <= 900) { openMobTxSheet(id); return; }
   if (selectedTxIds.has(id)) selectedTxIds.delete(id);
   else selectedTxIds.add(id);
   document.querySelectorAll(`.tx-item[data-id="${id}"]`).forEach(el => {
@@ -1456,6 +1479,51 @@ function openTxMenu(id, event) {
 function closeTxMenu() {
   document.getElementById('tx-context-menu').classList.add('hidden');
   activeTxId = null;
+}
+
+// =============================================
+//  MOBILE — TRANSACTION BOTTOM SHEET
+// =============================================
+function openMobTxSheet(id) {
+  const tx = transactions.find(t => t.id === id);
+  if (!tx) return;
+  const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;
+  const isIncome  = tx.type === 'receita';
+  const isBenefit = tx.type === 'beneficio';
+  const amtSign   = isIncome ? '+' : '−';
+  const amtColor  = isIncome ? 'var(--emerald)' : 'var(--coral)';
+  const amtBg     = isIncome ? 'rgba(20,195,142,.15)' : 'rgba(255,90,106,.15)';
+  const amtBorder = isIncome ? 'rgba(20,195,142,.25)' : 'rgba(255,90,106,.25)';
+  const typeLabel = isIncome ? 'Receita' : isBenefit ? 'Benefício' : 'Despesa';
+
+  document.getElementById('mob-tx-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+      <div style="width:52px;height:52px;border-radius:12px;background:${cat.color}22;border:1px solid ${cat.color}55;display:flex;align-items:center;justify-content:center;font-size:24px;">${isIncome ? '💰' : cat.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:600;letter-spacing:-0.3px;">${escHtml(tx.description)}</div>
+        <div style="font-size:12px;color:var(--text-dim);">${fmtDate(tx.date)}</div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,${amtBg},transparent);border:1px solid ${amtBorder};border-radius:14px;padding:18px;margin-bottom:16px;">
+      <div style="font-size:10px;letter-spacing:1.2px;color:var(--text-mute);text-transform:uppercase;font-family:monospace;font-weight:600;">Valor</div>
+      <div style="font-size:32px;font-weight:700;color:${amtColor};letter-spacing:-1px;">${amtSign}${fmt(tx.amount)}</div>
+    </div>
+    <div class="mob-tx-field"><span>Tipo</span><span>${typeLabel}</span></div>
+    <div class="mob-tx-field"><span>Categoria</span><span>${isIncome ? '💰' : cat.icon} ${isIncome ? 'Receita' : cat.label}</span></div>
+    ${tx.notes ? `<div class="mob-tx-field"><span>Nota</span><span>${escHtml(tx.notes)}</span></div>` : ''}
+    ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span>🔄 Fixo mensal</span></div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">✎ Editar</button>
+      <button onclick="closeMobTxSheet();if(confirm('Excluir esta transação?'))deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">🗑 Excluir</button>
+    </div>`;
+
+  document.getElementById('mob-tx-overlay').classList.add('open');
+  document.getElementById('mob-tx-sheet').classList.add('open');
+}
+
+function closeMobTxSheet() {
+  document.getElementById('mob-tx-overlay')?.classList.remove('open');
+  document.getElementById('mob-tx-sheet')?.classList.remove('open');
 }
 
 function hideTxMenu() {
@@ -2169,6 +2237,25 @@ function bindEvents() {
   document.getElementById('mob-opt-invest')?.addEventListener('click', () => {
     toggleMobFab(false);
     switchTab('investments');
+  });
+
+  // Mobile bottom sheet close
+  document.getElementById('mob-tx-close')?.addEventListener('click', closeMobTxSheet);
+  document.getElementById('mob-tx-overlay')?.addEventListener('click', closeMobTxSheet);
+
+  // Mobile IA — botão analisar e perguntas comuns
+  document.getElementById('mob-ia-analyze')?.addEventListener('click', () => {
+    document.getElementById('btn-chat').click();
+  });
+  document.querySelectorAll('.mob-ia-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const q = btn.dataset.q;
+      document.getElementById('btn-chat').click();
+      setTimeout(() => {
+        const inp = document.querySelector('.chat-input-area input, #chat-input');
+        if (inp) { inp.value = q; inp.dispatchEvent(new Event('input', { bubbles: true })); }
+      }, 300);
+    });
   });
 
   // Botão inline na aba de transações
