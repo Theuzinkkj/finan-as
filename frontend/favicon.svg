@@ -1,35 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#070e1e"/>
-      <stop offset="100%" stop-color="#0e1d34"/>
-    </linearGradient>
-    <linearGradient id="gr" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0%" stop-color="#10b981"/>
-      <stop offset="100%" stop-color="#38bdf8"/>
-    </linearGradient>
-    <linearGradient id="globe-fill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#38bdf8"/>
-      <stop offset="100%" stop-color="#7dd3fc"/>
-    </linearGradient>
+    <radialGradient id="bg" cx="35%" cy="30%" r="80%">
+      <stop offset="0%"   stop-color="#7c3aed"/>
+      <stop offset="55%"  stop-color="#4338ca"/>
+      <stop offset="100%" stop-color="#1e1448"/>
+    </radialGradient>
   </defs>
 
-  <!-- Background rounded square -->
+  <!-- Fundo roxo gradiente — espelha o glow do site -->
   <rect width="32" height="32" rx="7" fill="url(#bg)"/>
 
-  <!-- A — left leg -->
-  <line x1="16" y1="7.5" x2="6.5" y2="27" stroke="url(#gr)" stroke-width="2.6" stroke-linecap="round"/>
-  <!-- A — right leg -->
-  <line x1="16" y1="7.5" x2="25.5" y2="27" stroke="url(#gr)" stroke-width="2.6" stroke-linecap="round"/>
-  <!-- A — crossbar -->
-  <line x1="11" y1="19.5" x2="21" y2="19.5" stroke="url(#gr)" stroke-width="2" stroke-linecap="round"/>
-
-  <!-- Globe at apex — Atlas sustentando o mundo -->
-  <circle cx="16" cy="7.5" r="3.2" fill="url(#globe-fill)"/>
-  <!-- Globe grid: equator -->
-  <line x1="12.8" y1="7.5" x2="19.2" y2="7.5" stroke="#070e1e" stroke-width="0.7" opacity="0.6"/>
-  <!-- Globe grid: meridian -->
-  <line x1="16" y1="4.3" x2="16" y2="10.7" stroke="#070e1e" stroke-width="0.7" opacity="0.6"/>
-  <!-- Globe outer ring (light outline) -->
-  <circle cx="16" cy="7.5" r="3.2" fill="none" stroke="#e0f2fe" stroke-width="0.4" opacity="0.35"/>
+  <!-- "A" branco sólido, geométrico e limpo -->
+  <path fill-rule="evenodd" fill="rgba(255,255,255,0.95)"
+    d="M16,6 L25,27 L21.5,27 L19.5,20.5 L12.5,20.5 L10.5,27 L7,27 Z
+       M16,10 L19.5,20.5 L12.5,20.5 Z"/>
 </svg>
