@@ -91,11 +91,12 @@ app.use((req, res, next) => {
 app.use((_req, res, next) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com",
+    "style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com",
+    "font-src 'self' blob: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https:",
+    "connect-src 'self' blob: https:",
+    "worker-src 'self' blob:",
   ].join('; '));
   next();
 });
