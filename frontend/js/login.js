@@ -201,10 +201,10 @@ function bindAuthEvents() {
   });
 
   document.getElementById('btn-google-login')?.addEventListener('click', () => {
-    showAuthError('Login com Google em breve!');
+    window.location.href = '/api/auth/oauth/google';
   });
   document.getElementById('btn-apple-login')?.addEventListener('click', () => {
-    showAuthError('Login com Apple em breve!');
+    window.location.href = '/api/auth/oauth/apple';
   });
 
   document.getElementById('btn-demo').addEventListener('click', () => {
@@ -323,6 +323,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (redirect.attempted && redirect.ok) {
     window.location.href = '/app';
     return;
+  }
+
+  const oauthError = new URLSearchParams(window.location.search).get('error');
+  if (oauthError) {
+    const msgs = {
+      oauth_failed:     'Falha no login social. Tente novamente.',
+      invalid_provider: 'Provedor inválido.',
+      access_denied:    'Login cancelado.',
+    };
+    showAuthError(msgs[oauthError] || `Erro no login: ${oauthError}`);
+    history.replaceState(null, '', window.location.pathname);
   }
 
   const loggedIn = await Auth.check();

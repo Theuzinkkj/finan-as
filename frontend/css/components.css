@@ -1035,8 +1035,9 @@
   font-size:     .88rem;
   outline:       none;
   transition:    border-color .2s, box-shadow .2s;
-  resize:        vertical;
+  resize:        none;
 }
+.form-group textarea { resize: vertical; }
 .form-group input:focus,
 .form-group textarea:focus {
   border-color: var(--purple);

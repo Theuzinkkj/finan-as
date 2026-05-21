@@ -1,8 +1,9 @@
 'use strict';
 
-const express    = require('express');
-const path       = require('path');
-const nodemailer = require('nodemailer');
+const express                   = require('express');
+const path                      = require('path');
+const nodemailer                = require('nodemailer');
+const { randomBytes, createHash } = require('crypto');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
@@ -346,6 +347,79 @@ app.get('/api/auth/me', requireAuth, async (req, res, next) => {
     }
     res.status(200).json({ id: req.userId, email });
   } catch (err) { next(err); }
+});
+
+// ── OAuth (Google / Apple via Supabase PKCE) ──────────────────────────────────
+
+const OAUTH_VERIFIER_COOKIE = 'atlas_ov';
+
+app.get('/api/auth/oauth/:provider', (req, res) => {
+  const { provider } = req.params;
+  if (!['google', 'apple'].includes(provider)) {
+    return res.redirect('/login?error=invalid_provider');
+  }
+
+  const verifier  = randomBytes(32).toString('base64url');
+  const challenge = createHash('sha256').update(verifier).digest('base64url');
+
+  res.cookie(OAUTH_VERIFIER_COOKIE, verifier, {
+    httpOnly: true,
+    secure:   IS_PROD,
+    sameSite: 'lax',
+    path:     '/',
+    maxAge:   10 * 60 * 1000,
+  });
+
+  const appUrl      = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3000}`).replace(/\/+$/, '');
+  const callbackUrl = `${appUrl}/api/auth/callback`;
+
+  const oauthUrl = new URL(`${SUPA_URL}/auth/v1/authorize`);
+  oauthUrl.searchParams.set('provider',              provider);
+  oauthUrl.searchParams.set('redirect_to',           callbackUrl);
+  oauthUrl.searchParams.set('code_challenge',        challenge);
+  oauthUrl.searchParams.set('code_challenge_method', 'S256');
+  oauthUrl.searchParams.set('flow_type',             'pkce');
+
+  res.redirect(oauthUrl.toString());
+});
+
+app.get('/api/auth/callback', async (req, res) => {
+  const { code, error } = req.query;
+
+  if (error) {
+    return res.redirect(`/login?error=${encodeURIComponent(error)}`);
+  }
+
+  const cookies  = parseCookies(req);
+  const verifier = cookies[OAUTH_VERIFIER_COOKIE];
+
+  res.clearCookie(OAUTH_VERIFIER_COOKIE, { path: '/', secure: IS_PROD, sameSite: 'lax' });
+
+  if (!code || !verifier) {
+    return res.redirect('/login?error=oauth_failed');
+  }
+
+  try {
+    const { ok, data } = await proxyFetch(
+      `${SUPA_URL}/auth/v1/token?grant_type=pkce`,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+        body:    JSON.stringify({ auth_code: code, code_verifier: verifier }),
+      }
+    );
+
+    if (!ok || !data?.access_token) {
+      console.error('[Atlas OAuth] Token exchange failed:', data);
+      return res.redirect('/login?error=oauth_failed');
+    }
+
+    setSessionCookies(res, data.access_token, data.refresh_token);
+    res.redirect('/app');
+  } catch (err) {
+    console.error('[Atlas OAuth] Callback error:', err);
+    res.redirect('/login?error=oauth_failed');
+  }
 });
 
 // ── Transactions ──────────────────────────────────────────────────────────────
