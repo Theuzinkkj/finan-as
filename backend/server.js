@@ -585,13 +585,25 @@ app.post('/api/portfolio', requireAuth, async (req, res, next) => {
       other_costs: other_costs != null ? +other_costs : null,
       user_id: req.userId,
     };
-    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/rest/v1/portfolio_entries`, {
+    let r = await proxyFetch(`${SUPA_URL}/rest/v1/portfolio_entries`, {
       method:  'POST',
       headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
       body:    JSON.stringify(body),
     });
-    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
-    res.status(201).json(Array.isArray(data) ? data[0] : data);
+    // Fallback: if schema cache rejects extended columns, retry with core fields only
+    if (!r.ok) {
+      const msg = (supaErrorMsg(r.data) || '').toLowerCase();
+      if (msg.includes('column') || msg.includes('schema') || msg.includes('relation')) {
+        const coreBody = { date: body.date, asset: body.asset, amount: body.amount, notes: body.notes, user_id: body.user_id };
+        r = await proxyFetch(`${SUPA_URL}/rest/v1/portfolio_entries`, {
+          method:  'POST',
+          headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
+          body:    JSON.stringify(coreBody),
+        });
+      }
+    }
+    if (!r.ok) return res.status(r.status).json({ message: supaErrorMsg(r.data) });
+    res.status(201).json(Array.isArray(r.data) ? r.data[0] : r.data);
   } catch (err) { next(err); }
 });
 
@@ -612,13 +624,29 @@ app.patch('/api/portfolio/:id', requireAuth, async (req, res, next) => {
     const url = `${SUPA_URL}/rest/v1/portfolio_entries`
               + `?id=eq.${encodeURIComponent(req.params.id)}`
               + `&user_id=eq.${encodeURIComponent(req.userId)}`;
-    const { ok, status, data } = await proxyFetch(url, {
+    let rp = await proxyFetch(url, {
       method:  'PATCH',
       headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
       body:    JSON.stringify(updates),
     });
-    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
-    res.json(Array.isArray(data) ? data[0] : data);
+    // Fallback: retry without extended columns if schema cache error
+    if (!rp.ok) {
+      const msg = (supaErrorMsg(rp.data) || '').toLowerCase();
+      if (msg.includes('column') || msg.includes('schema') || msg.includes('relation')) {
+        const coreUpdates = {};
+        if (updates.date)   coreUpdates.date   = updates.date;
+        if (updates.asset)  coreUpdates.asset  = updates.asset;
+        if (updates.amount != null) coreUpdates.amount = updates.amount;
+        if (updates.notes  !== undefined) coreUpdates.notes = updates.notes;
+        rp = await proxyFetch(url, {
+          method:  'PATCH',
+          headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=representation' },
+          body:    JSON.stringify(coreUpdates),
+        });
+      }
+    }
+    if (!rp.ok) return res.status(rp.status).json({ message: supaErrorMsg(rp.data) });
+    res.json(Array.isArray(rp.data) ? rp.data[0] : rp.data);
   } catch (err) { next(err); }
 });
 
