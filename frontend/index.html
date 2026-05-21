@@ -1089,6 +1089,26 @@
   </div>
   <div class="mob-fab-overlay" id="mob-fab-overlay"></div>
 
+  <!-- Desktop transaction detail side panel -->
+  <div class="tx-detail-overlay" id="tx-detail-overlay" onclick="closeTxDetailPanel()"></div>
+  <div class="tx-detail-panel" id="tx-detail-panel" role="dialog" aria-modal="true" aria-label="Detalhe da transação">
+    <div class="tx-detail-header">
+      <span class="tx-detail-label mono">Detalhe da transação</span>
+      <div class="tx-detail-header-btns">
+        <button class="tx-detail-action-btn" id="tx-detail-edit-btn" title="Editar">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="tx-detail-action-btn tx-detail-action-delete" id="tx-detail-delete-btn" title="Excluir">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+        </button>
+        <button class="tx-detail-close-btn" onclick="closeTxDetailPanel()" title="Fechar">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="tx-detail-content"></div>
+  </div>
+
   <!-- Mobile transaction detail bottom sheet -->
   <div class="mob-tx-overlay" id="mob-tx-overlay"></div>
   <div class="mob-tx-sheet" id="mob-tx-sheet">
