@@ -925,7 +925,7 @@ function openPortfolioModal(editId) {
     if (!entry) return;
     _setLcTab(entry.transaction_type || 'compra');
     const assetType = entry.asset_type || 'Ações';
-    document.getElementById('pf-asset-type').value = assetType;
+    _setAssetType(assetType);
     populateAssetOptions(assetType, entry.asset);
     document.getElementById('pf-date').value        = entry.date;
     document.getElementById('pf-quantity').value    = entry.quantity   ?? 1;
@@ -933,7 +933,7 @@ function openPortfolioModal(editId) {
     document.getElementById('pf-other-costs').value = entry.other_costs ?? 0;
   } else {
     _setLcTab('compra');
-    document.getElementById('pf-asset-type').value = 'Ações';
+    _setAssetType('Ações');
     populateAssetOptions('Ações');
     document.getElementById('pf-date').value        = new Date().toISOString().slice(0, 10);
     document.getElementById('pf-quantity').value    = '1';
@@ -958,39 +958,101 @@ function _setLcTab(type) {
   if (dateLabel) dateLabel.textContent = type === 'venda' ? 'Data da venda' : 'Data da compra';
 }
 
+const _typeIcons = {
+  'Ações': '📈', 'FIIs': '🏢', 'Stock': '🌎', 'Reit': '🏗️',
+  'BDRs': '🌐', 'ETFs': '📊', 'ETFs Internacionais': '🌍',
+  'Tesouro Direto': '🏦', 'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': '💰', 'Outros': '📦',
+};
+
+const _typeShortLabels = {
+  'Renda Fixa (CDB/LCI/LCA/LC/LF/RDB)': 'Renda Fixa',
+  'ETFs Internacionais': 'ETFs Int.',
+};
+
+function _setAssetType(value) {
+  const hidden = document.getElementById('pf-asset-type');
+  const iconEl = document.getElementById('lc-type-sel-icon');
+  const textEl = document.getElementById('lc-type-sel-text');
+  if (hidden) hidden.value = value;
+  if (iconEl) iconEl.textContent = _typeIcons[value] || '📦';
+  if (textEl) textEl.textContent = _typeShortLabels[value] || value;
+  document.querySelectorAll('#lc-type-drop .lc-type-opt').forEach(b =>
+    b.classList.toggle('selected', b.dataset.value === value)
+  );
+}
+
+function _closeLcTypePicker() {
+  document.getElementById('lc-type-drop')?.classList.add('hidden');
+  document.getElementById('lc-type-picker')?.classList.remove('open');
+}
+
 function populateAssetOptions(type, selectedVal) {
-  const oldEl = document.getElementById('pf-asset');
-  if (!oldEl) return;
+  const hidden    = document.getElementById('pf-asset');
+  const textInput = document.getElementById('pf-asset-input');
+  const drop      = document.getElementById('pf-asset-drop');
+  const pickerEl  = document.getElementById('pf-asset-picker');
+  const iconEl    = document.getElementById('ap-icon');
+  if (!hidden || !textInput || !drop) return;
+
   const opts = ASSET_OPTIONS_BY_TYPE[type] || [];
+  if (iconEl) iconEl.textContent = _typeIcons[type] || '📦';
+
+  hidden.value    = selectedVal || '';
+  textInput.value = selectedVal || '';
+  textInput.oninput  = null;
+  textInput.onfocus  = null;
+  drop.innerHTML  = '';
+  drop.classList.add('hidden');
+  pickerEl?.classList.remove('open');
 
   if (type === 'Outros' || opts.length === 0) {
-    if (oldEl.tagName !== 'INPUT') {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id   = 'pf-asset';
-      input.className = 'form-select';
-      input.placeholder = 'Ex: XPTO3, CDB XYZ...';
-      input.value = selectedVal || '';
-      input.autocomplete = 'off';
-      input.addEventListener('input', _updateTotalDisplay);
-      oldEl.replaceWith(input);
-    } else {
-      oldEl.value = selectedVal || '';
-    }
+    textInput.placeholder = 'Ex: XPTO3, CDB XYZ...';
+    textInput.oninput = () => { hidden.value = textInput.value.trim(); };
     return;
   }
 
-  let selEl = oldEl;
-  if (oldEl.tagName === 'INPUT') {
-    const select = document.createElement('select');
-    select.id = 'pf-asset';
-    select.className = 'form-select';
-    select.addEventListener('change', _updateTotalDisplay);
-    oldEl.replaceWith(select);
-    selEl = document.getElementById('pf-asset');
+  textInput.placeholder = 'Buscar ativo...';
+
+  function renderOpts(filter) {
+    const q       = (filter || '').toLowerCase();
+    const matches = q ? opts.filter(o => o.toLowerCase().includes(q)) : opts;
+    if (!matches.length) {
+      drop.innerHTML = '<div class="asset-picker-empty">Nenhum resultado</div>';
+    } else {
+      drop.innerHTML = matches.map(o =>
+        `<button class="asset-option" type="button" data-val="${escHtml(o)}"><span class="asset-opt-badge">${escHtml(o)}</span><span class="asset-opt-name">${escHtml(o)}</span></button>`
+      ).join('');
+      drop.querySelectorAll('.asset-option').forEach(btn => {
+        btn.addEventListener('mousedown', e => {
+          e.preventDefault();
+          hidden.value    = btn.dataset.val;
+          textInput.value = btn.dataset.val;
+          drop.classList.add('hidden');
+          pickerEl?.classList.remove('open');
+        });
+      });
+    }
   }
-  selEl.innerHTML = '<option value="">Selecionar</option>' +
-    opts.map(o => `<option value="${escHtml(o)}"${o === selectedVal ? ' selected' : ''}>${escHtml(o)}</option>`).join('');
+
+  textInput.oninput = () => {
+    hidden.value = textInput.value.trim();
+    renderOpts(textInput.value.trim());
+    drop.classList.remove('hidden');
+    pickerEl?.classList.add('open');
+  };
+
+  textInput.onfocus = () => {
+    renderOpts(textInput.value.trim());
+    drop.classList.remove('hidden');
+    pickerEl?.classList.add('open');
+  };
+
+  textInput.onblur = () => {
+    setTimeout(() => {
+      drop.classList.add('hidden');
+      pickerEl?.classList.remove('open');
+    }, 150);
+  };
 }
 
 function _updateTotalDisplay() {
@@ -1107,10 +1169,33 @@ async function initInvestments() {
     btn.addEventListener('click', () => _setLcTab(btn.dataset.type));
   });
 
-  // Asset type change → repopulate asset list
-  document.getElementById('pf-asset-type')?.addEventListener('change', e => {
-    populateAssetOptions(e.target.value);
-    _updateTotalDisplay();
+  // Type picker — toggle
+  document.getElementById('lc-type-trigger')?.addEventListener('click', () => {
+    const drop = document.getElementById('lc-type-drop');
+    const picker = document.getElementById('lc-type-picker');
+    const isOpen = !drop?.classList.contains('hidden');
+    if (isOpen) _closeLcTypePicker();
+    else { drop?.classList.remove('hidden'); picker?.classList.add('open'); }
+  });
+
+  // Type picker — select option
+  document.querySelectorAll('.lc-type-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.dataset.value;
+      _setAssetType(val);
+      _closeLcTypePicker();
+      populateAssetOptions(val);
+      _updateTotalDisplay();
+    });
+  });
+
+  // Close pickers on outside click
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#lc-type-picker'))  _closeLcTypePicker();
+    if (!e.target.closest('#pf-asset-picker')) {
+      document.getElementById('pf-asset-drop')?.classList.add('hidden');
+      document.getElementById('pf-asset-picker')?.classList.remove('open');
+    }
   });
 
   // Price/qty/costs → recalculate total

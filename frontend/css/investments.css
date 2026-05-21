@@ -2005,6 +2005,99 @@
 
 .inv-empty-state strong { color: var(--text); }
 
+/* ── Type Picker (Tipo de Ativo) ─────────── */
+.lc-type-picker {
+  position: relative;
+}
+
+.lc-type-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-h);
+  border-radius: var(--r-sm);
+  padding: 9px 12px;
+  font-family: var(--font);
+  font-size: .875rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .18s, box-shadow .18s;
+}
+
+.lc-type-trigger:hover {
+  border-color: var(--purple-l);
+}
+
+.lc-type-picker.open .lc-type-trigger,
+.lc-type-trigger:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+  outline: none;
+}
+
+.lc-type-sel-icon { font-size: 1.05rem; line-height: 1; flex-shrink: 0; }
+.lc-type-sel-text { flex: 1; font-weight: 500; }
+
+.lc-type-chevron {
+  flex-shrink: 0;
+  color: var(--text-3);
+  transition: transform .2s, color .18s;
+}
+
+.lc-type-picker.open .lc-type-chevron {
+  transform: rotate(180deg);
+  color: var(--purple-l);
+}
+
+.lc-type-drop {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0; right: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-h);
+  border-radius: var(--r-sm);
+  box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  z-index: 400;
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+  animation: picker-in .15s ease;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-h) transparent;
+}
+
+.lc-type-drop::-webkit-scrollbar { width: 4px; }
+.lc-type-drop::-webkit-scrollbar-thumb { background: var(--border-h); border-radius: 4px; }
+
+.lc-type-opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: .875rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: background .12s;
+}
+
+.lc-type-opt span:first-child { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
+.lc-type-opt span:last-child  { flex: 1; }
+
+.lc-type-opt:hover  { background: rgba(99,102,241,.1); }
+.lc-type-opt.selected {
+  background: rgba(99,102,241,.14);
+  color: #818cf8;
+  font-weight: 600;
+}
+
 /* ── Modal Adicionar Lançamento ─────────── */
 .modal-lancamento { width: min(520px, 96vw) !important; }
 
