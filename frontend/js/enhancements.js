@@ -167,23 +167,24 @@ function checkAchievements() {
 }
 
 function renderAchievements() {
-  const section = document.getElementById('achievements-section');
-  const grid    = document.getElementById('achievements-grid');
-  const count   = document.getElementById('achievements-count');
-  if (!section || !grid) return;
-
   const key      = _achievementsKey();
   const unlocked = new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  const count    = unlocked.size;
 
-  const unlockedDefs = ACHIEVEMENTS_DEF.filter(a => unlocked.has(a.id));
-  if (!unlockedDefs.length) { section.classList.add('hidden'); return; }
+  const badge = document.getElementById('achievements-profile-badge');
+  if (badge) {
+    badge.textContent = `${count}/${ACHIEVEMENTS_DEF.length}`;
+  }
 
-  section.classList.remove('hidden');
-  if (count) count.textContent = `${unlockedDefs.length}/${ACHIEVEMENTS_DEF.length} conquistadas`;
+  const modalGrid  = document.getElementById('achievements-modal-grid');
+  const modalCount = document.getElementById('achievements-modal-count');
+  if (!modalGrid) return;
 
-  grid.innerHTML = [
+  if (modalCount) modalCount.textContent = `${count}/${ACHIEVEMENTS_DEF.length} conquistadas`;
+
+  modalGrid.innerHTML = [
     ...ACHIEVEMENTS_DEF.filter(a => unlocked.has(a.id)),
-    ...ACHIEVEMENTS_DEF.filter(a => !unlocked.has(a.id)).slice(0, 2),
+    ...ACHIEVEMENTS_DEF.filter(a => !unlocked.has(a.id)),
   ].map(a => {
     const isUnlocked = unlocked.has(a.id);
     return `<div class="achievement-badge ${isUnlocked ? 'unlocked' : 'locked'}" title="${a.desc}">
@@ -194,6 +195,23 @@ function renderAchievements() {
       </div>
     </div>`;
   }).join('');
+}
+
+function openAchievementsModal() {
+  renderAchievements();
+  const overlay = document.getElementById('achievements-modal-overlay');
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeAchievementsModal() {
+  const overlay = document.getElementById('achievements-modal-overlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
 }
 
 function showAchievementToast(achievement) {

@@ -2336,6 +2336,93 @@
 }
 
 /* =============================================
+   ACHIEVEMENTS MODAL
+   ============================================= */
+.achievements-modal-overlay {
+  position:        fixed;
+  inset:           0;
+  background:      rgba(0,0,0,.65);
+  backdrop-filter: blur(6px);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  z-index:         1200;
+  animation:       fadeIn .18s ease;
+}
+.achievements-modal-overlay.hidden { display: none; }
+
+.achievements-modal {
+  position:        relative;
+  width:           100%;
+  max-width:       380px;
+  max-height:      88vh;
+  background:      #0f0f1e;
+  border:          1px solid var(--border-h);
+  border-radius:   24px;
+  display:         flex;
+  flex-direction:  column;
+  overflow:        hidden;
+  box-shadow:      0 24px 64px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.04);
+  animation:       profileCardIn .22s cubic-bezier(.4,0,.2,1);
+}
+
+.achievements-modal-header {
+  display:         flex;
+  align-items:     center;
+  gap:             12px;
+  padding:         18px 18px 14px;
+  border-bottom:   1px solid var(--border);
+  flex-shrink:     0;
+}
+.achievements-modal-title {
+  flex:        1;
+  font-size:   1rem;
+  font-weight: 700;
+  color:       var(--text);
+  margin:      0;
+  text-align:  center;
+}
+.achievements-modal-count {
+  font-size:   .78rem;
+  color:       var(--text-3);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.achievements-modal-grid {
+  display:         flex;
+  flex-direction:  column;
+  gap:             8px;
+  padding:         14px 16px 20px;
+  overflow-y:      auto;
+}
+.achievements-modal-grid .achievement-badge {
+  width:       100%;
+  padding:     13px 14px;
+  border-radius: 13px;
+  gap:         13px;
+}
+.achievements-modal-grid .achievement-badge-icon {
+  font-size:   1.4rem;
+  flex-shrink: 0;
+}
+.achievements-modal-grid .achievement-badge-name { font-size: .88rem; }
+.achievements-modal-grid .achievement-badge-desc { font-size: .78rem; }
+
+.profile-menu-badge {
+  background:    rgba(99,102,241,.18);
+  color:         var(--purple-l);
+  font-size:     .72rem;
+  font-weight:   700;
+  padding:       2px 8px;
+  border-radius: 20px;
+  border:        1px solid rgba(99,102,241,.3);
+  white-space:   nowrap;
+}
+
+[data-theme="light"] .achievements-modal { background: #fdf8f0; }
+
+/* =============================================
    SETTINGS MODAL — redesign
    ============================================= */
 .settings-header {

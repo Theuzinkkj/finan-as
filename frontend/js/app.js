@@ -2355,6 +2355,22 @@ function bindEvents() {
     openSettingsModal();
   });
 
+  // Abrir modal de conquistas
+  document.getElementById('btn-open-achievements').addEventListener('click', () => {
+    closeProfilePanel();
+    if (typeof openAchievementsModal === 'function') openAchievementsModal();
+  });
+
+  // Fechar modal de conquistas
+  document.getElementById('btn-achievements-close').addEventListener('click', () => {
+    if (typeof closeAchievementsModal === 'function') closeAchievementsModal();
+  });
+  document.getElementById('achievements-modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('achievements-modal-overlay')) {
+      if (typeof closeAchievementsModal === 'function') closeAchievementsModal();
+    }
+  });
+
   // Logout do painel de perfil
   document.getElementById('btn-profile-logout').addEventListener('click', async () => {
     closeProfilePanel();
@@ -2519,6 +2535,11 @@ function bindEvents() {
   // Escape — fecha modal, painel de perfil, chat ou menu de contexto (nessa ordem)
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    const achievementsOverlay = document.getElementById('achievements-modal-overlay');
+    if (achievementsOverlay && !achievementsOverlay.classList.contains('hidden')) {
+      if (typeof closeAchievementsModal === 'function') closeAchievementsModal();
+      return;
+    }
     const visible = [...document.querySelectorAll('.modal-overlay:not(.hidden)')];
     if (visible.length) { closeModal(visible[visible.length - 1].id); return; }
     const profileOverlay = document.getElementById('profile-panel-overlay');
