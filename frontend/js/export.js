@@ -103,7 +103,7 @@ tr:nth-child(even) td{background:#f9f9fb}
 @media print{body{padding:16px}.no-print{display:none}}
 </style></head><body>
 <div class="header">
-  <div><div class="logo">💎 Atlas Finance</div>
+  <div><div class="logo"><svg viewBox="0 0 32 32" width="1em" height="1em" aria-hidden="true" style="vertical-align:middle;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="inv-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5b4fc"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#3730a3"/></linearGradient></defs><path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#inv-g)"/></svg> Atlas Finance</div>
   <div class="meta">Extrato · Gerado em ${fmtDate(todayLocal())} · ${txs.length} transações</div></div>
   <button class="no-print" onclick="window.print()" style="padding:8px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600">🖨 Imprimir / PDF</button>
 </div>
