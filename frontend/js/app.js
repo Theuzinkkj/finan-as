@@ -2283,6 +2283,8 @@ function hideAuthScreen() {
 function bindAuthEvents() {
   document.getElementById('tab-signin').addEventListener('click', () => setAuthMode('signin'));
   document.getElementById('tab-signup').addEventListener('click', () => setAuthMode('signup'));
+  document.getElementById('link-goto-signup')?.addEventListener('click', e => { e.preventDefault(); setAuthMode('signup'); });
+  document.getElementById('link-goto-signin')?.addEventListener('click', e => { e.preventDefault(); setAuthMode('signin'); });
 
   document.getElementById('btn-forgot-pw')?.addEventListener('click', async (e) => {
     e.preventDefault();
