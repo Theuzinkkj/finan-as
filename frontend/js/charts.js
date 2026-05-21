@@ -1053,10 +1053,11 @@ function drawAnalysisChart(txs, type) {
 // =============================================
 //  ANNUAL HISTORY CHART
 // =============================================
-let annualDisplayYear   = null;
-let _annualHoveredMonth = -1;
-let _annualAnimState    = Array.from({ length: 12 }, () => 0);
-let _annualAnimRaf      = null;
+let annualDisplayYear    = null;
+let _annualHoveredMonth  = -1;
+let _annualSelectedMonth = -1;
+let _annualAnimState     = Array.from({ length: 12 }, () => 0);
+let _annualAnimRaf       = null;
 
 function _redrawAnnualCanvas(canvas) {
   const s = canvas._annualFull;
@@ -1072,6 +1073,12 @@ function _redrawAnnualCanvas(canvas) {
   if (curM >= 0) {
     ctx.fillStyle = 'rgba(99,102,241,.08)';
     ctx.fillRect(padL + curM * groupW, padT, groupW, cH);
+  }
+
+  // Selected-month column highlight
+  if (_annualSelectedMonth >= 0) {
+    ctx.fillStyle = isDark ? 'rgba(99,102,241,0.18)' : 'rgba(99,102,241,0.13)';
+    ctx.fillRect(padL + _annualSelectedMonth * groupW, padT, groupW, cH);
   }
 
   // Animated hover-column highlight
@@ -1100,11 +1107,13 @@ function _redrawAnnualCanvas(canvas) {
   }
 
   // Bars with grow + glow on hover
+  const hasSel = _annualSelectedMonth >= 0;
   for (let i = 0; i < 12; i++) {
     const { income, expense, isFuture } = data[i];
     const p      = _annualAnimState[i];
     const scaleY = 1 + p * 0.10;
-    const alpha  = isFuture ? 0.28 : 1;
+    const isSel  = i === _annualSelectedMonth;
+    const alpha  = isFuture ? 0.28 : (hasSel && !isSel ? 0.22 : 1);
     const groupX = padL + i * groupW + groupW / 2;
 
     ctx.globalAlpha = alpha;
@@ -1135,10 +1144,13 @@ function _redrawAnnualCanvas(canvas) {
 
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = curM === i ? chartFg(.75) : textClr;
-    ctx.font      = curM === i ? 'bold 10px Inter, sans-serif' : '10px Inter, sans-serif';
-    ctx.textAlign = 'center';
+    const labelBright = curM === i || isSel;
+    ctx.globalAlpha = hasSel && !isSel ? 0.35 : 1;
+    ctx.fillStyle   = labelBright ? chartFg(.9) : textClr;
+    ctx.font        = labelBright ? 'bold 10px Inter, sans-serif' : '10px Inter, sans-serif';
+    ctx.textAlign   = 'center';
     ctx.fillText(monthNames[i], groupX, padT + cH + 16);
+    ctx.globalAlpha = 1;
   }
 }
 
@@ -1318,6 +1330,8 @@ function _initAnnualInteractions(canvas, data, monthNames, year) {
   const onClick = (e) => {
     const mi = getMonthIndex(e);
     if (mi < 0 || mi >= 12) return;
+    _annualSelectedMonth = _annualSelectedMonth === mi ? -1 : mi;
+    _redrawAnnualCanvas(canvas);
     currentDate = new Date(year, mi, 1);
     renderMonthLabel();
     renderAll();
@@ -1337,11 +1351,13 @@ function _setupAnnualYearNav() {
   btnPrev.addEventListener('click', () => {
     if (annualDisplayYear === null) annualDisplayYear = currentDate.getFullYear();
     annualDisplayYear--;
+    _annualSelectedMonth = -1;
     drawAnnualChart();
   });
   btnNext.addEventListener('click', () => {
     if (annualDisplayYear === null) annualDisplayYear = currentDate.getFullYear();
     annualDisplayYear++;
+    _annualSelectedMonth = -1;
     drawAnnualChart();
   });
 }

@@ -1323,13 +1323,18 @@
     <div class="modal modal-budget-detail" role="dialog" aria-modal="true" aria-labelledby="budget-detail-title">
       <div class="modal-header">
         <h2 id="budget-detail-title"><span id="bd-icon"></span> <span id="bd-name"></span></h2>
-        <button class="modal-close" data-close="modal-budget-detail">✕</button>
+        <div class="bd-header-actions">
+          <button class="bd-register-btn" id="bd-register-btn" onclick="bd_quickRegister()" title="Registrar novo lançamento">+ Registrar</button>
+          <button class="modal-close" data-close="modal-budget-detail">✕</button>
+        </div>
       </div>
       <div class="bd-stats">
         <div class="bd-amounts">
           <span class="bd-spent" id="bd-spent"></span>
           <span class="bd-sep">/</span>
-          <span class="bd-limit" id="bd-limit"></span>
+          <span class="bd-limit" id="bd-limit" onclick="bd_startEditLimit()" title="Clique para editar"></span>
+          <input class="bd-limit-input hidden" id="bd-limit-input" type="number" step="10" min="0"
+                 onblur="bd_saveEditLimit()" onkeydown="if(event.key==='Enter')bd_saveEditLimit();if(event.key==='Escape')bd_cancelEditLimit();">
         </div>
         <div class="bd-progress-track">
           <div class="bd-progress-fill" id="bd-progress-fill"></div>
@@ -1338,9 +1343,10 @@
           <span id="bd-remaining-msg"></span>
           <span class="bd-pct" id="bd-pct"></span>
         </div>
+        <div class="bd-mini-stats" id="bd-mini-stats"></div>
       </div>
       <div class="bd-txs-section">
-        <p class="bd-txs-title">Gastos este mês</p>
+        <p class="bd-txs-title" id="bd-txs-title">Gastos este mês</p>
         <div id="bd-txs-list" class="bd-txs-list"></div>
       </div>
       <div class="form-actions">
