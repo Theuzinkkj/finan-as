@@ -2678,8 +2678,12 @@ function bindEvents() {
   document.getElementById('filter-type').addEventListener('change', renderAllTxs);
   document.getElementById('filter-search').addEventListener('input', renderAllTxs);
 
-  // Abrir painel de perfil
+  // Abrir painel de perfil (desktop e avatares mobile)
   document.getElementById('btn-profile').addEventListener('click', openProfilePanel);
+  ['mob-avatar', 'mob-ia-avatar', 'mob-inv-avatar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', openProfilePanel);
+  });
 
   // Fechar painel de perfil
   document.getElementById('btn-profile-close').addEventListener('click', closeProfilePanel);

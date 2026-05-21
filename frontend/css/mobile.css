@@ -149,6 +149,10 @@
     font-size:       13px;
     font-weight:     600;
     color:           #fff;
+    cursor:          pointer;
+    border:          none;
+    padding:         0;
+    flex-shrink:     0;
   }
 
   /* ── Month selector ──────────────────────── */
