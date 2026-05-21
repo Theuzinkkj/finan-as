@@ -2011,26 +2011,6 @@
   z-index: 360;
 }
 
-/* Escurece o modal quando o picker está aberto */
-.modal-lancamento {
-  position: relative;
-}
-
-.modal-lancamento:has(#lc-type-picker.open)::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, .6);
-  border-radius: inherit;
-  z-index: 350;
-  pointer-events: none;
-  animation: lc-dim-in .15s ease;
-}
-
-@keyframes lc-dim-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
 
 .lc-type-trigger {
   width: 100%;
