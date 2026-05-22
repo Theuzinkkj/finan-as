@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'atlas-v4';
+const CACHE_NAME = 'atlas-v5';
 const OFFLINE_URL = '/app';
 
 // Arquivos essenciais para funcionar offline
@@ -29,6 +29,8 @@ const PRECACHE = [
   '/js/csv-import.js',
   '/js/enhancements.js',
   '/favicon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
   '/icon-512.svg',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap',
 ];
