@@ -7,8 +7,10 @@
   },
   "dependencies": {
     "@sentry/node": "^10.53.1",
+    "compression": "^1.8.1",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.7"
   }
 }

@@ -5,6 +5,8 @@ const path                      = require('path');
 const nodemailer                = require('nodemailer');
 const { randomBytes, createHash } = require('crypto');
 const Sentry                    = require('@sentry/node');
+const compression               = require('compression');
+const cron                      = require('node-cron');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
@@ -54,6 +56,9 @@ if (MISSING.length) {
 
 // ── Middleware global ─────────────────────────────────────────────────────────
 
+// Compressão gzip/brotli em todas as respostas (reduz ~70% do payload)
+app.use(compression());
+
 app.use(express.json());
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
@@ -99,7 +104,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Content-Security-Policy ───────────────────────────────────────────────────
+// ── Security headers ──────────────────────────────────────────────────────────
 app.use((_req, res, next) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
@@ -110,6 +115,11 @@ app.use((_req, res, next) => {
     "connect-src 'self' blob: https:",
     "worker-src 'self' blob:",
   ].join('; '));
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   next();
 });
 
@@ -451,8 +461,8 @@ app.get('/api/transactions', requireAuth, async (req, res, next) => {
       url += `&date=gte.${since}`;
     }
 
-    // Paginação: ?limit=N&offset=N  (padrão 1000, máx 5000)
-    const limit  = Math.min(parseInt(req.query.limit)  || 1000, 5000);
+    // Paginação: ?limit=N&offset=N  (padrão 200, máx 5000)
+    const limit  = Math.min(parseInt(req.query.limit)  || 200, 5000);
     const offset = Math.max(parseInt(req.query.offset) || 0,    0);
     url += `&limit=${limit}&offset=${offset}`;
 
@@ -806,9 +816,10 @@ app.delete('/api/portfolio/:id', requireAuth, async (req, res, next) => {
 
 // ── Market Stocks (Yahoo Finance proxy) ──────────────────────────────────────
 
-let _stocksCache = null;
-let _stocksAt    = 0;
-const STOCKS_TTL = 15 * 60 * 1000; // 15 min
+let _stocksCache    = null;
+let _stocksAt       = 0;
+let _stocksInflight = null; // deduplicação: evita N chamadas simultâneas na expiração do cache
+const STOCKS_TTL    = 15 * 60 * 1000; // 15 min
 
 const STOCK_NAMES = {
   'PETR4': 'Petrobras PN',
@@ -824,8 +835,10 @@ app.get('/api/market-stocks', async (req, res, next) => {
     const now = Date.now();
     if (_stocksCache && now - _stocksAt < STOCKS_TTL) return res.json(_stocksCache);
 
-    // Yahoo Finance chart API — funciona sem autenticação, uma req por ticker
-    const TICKERS = ['^BVSP', 'PETR4.SA', 'VALE3.SA', 'ITUB4.SA', 'ABEV3.SA', 'BBDC4.SA'];
+    // Deduplicação: se já há uma busca em andamento, aguarda o mesmo Promise
+    if (_stocksInflight) return res.json(await _stocksInflight);
+
+    const TICKERS    = ['^BVSP', 'PETR4.SA', 'VALE3.SA', 'ITUB4.SA', 'ABEV3.SA', 'BBDC4.SA'];
     const YF_HEADERS = { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' };
 
     const fetchChart = async (symbol) => {
@@ -848,60 +861,70 @@ app.get('/api/market-stocks', async (req, res, next) => {
       };
     };
 
-    const results = await Promise.all(TICKERS.map(t => fetchChart(t).catch(() => null)));
-    const rawResults = results.filter(Boolean);
+    _stocksInflight = Promise.all(TICKERS.map(t => fetchChart(t).catch(() => null)))
+      .then(results => {
+        const rawResults = results.filter(Boolean);
+        if (rawResults.length) {
+          _stocksCache = rawResults.map(q => ({
+            symbol: q.symbol,
+            name:   STOCK_NAMES[q.symbol] || q.shortName || q.symbol,
+            price:  q.price,
+            change: q.change,
+            pct:    q.pct,
+            prev:   q.prev,
+            high:   q.high,
+            low:    q.low,
+            volume: q.volume,
+          }));
+          _stocksAt = Date.now();
+        }
+        return _stocksCache;
+      })
+      .finally(() => { _stocksInflight = null; });
 
-    if (!rawResults.length) return res.status(502).json({ message: 'Mercado indisponível.' });
-
-    _stocksCache = rawResults.map(q => ({
-      symbol: q.symbol,
-      name:   STOCK_NAMES[q.symbol] || q.shortName || q.symbol,
-      price:  q.price,
-      change: q.change,
-      pct:    q.pct,
-      prev:   q.prev,
-      high:   q.high,
-      low:    q.low,
-      volume: q.volume,
-    }));
-    _stocksAt = now;
-    res.json(_stocksCache);
+    const data = await _stocksInflight;
+    if (!data?.length) return res.status(502).json({ message: 'Mercado indisponível.' });
+    res.json(data);
   } catch (err) { next(err); }
 });
 
 // ── Market Rates (BCB proxy) ──────────────────────────────────────────────────
 
-let _ratesCache = null;
-let _ratesAt    = 0;
-const RATES_TTL = 4 * 60 * 60 * 1000; // 4 h
+let _ratesCache    = null;
+let _ratesAt       = 0;
+let _ratesInflight = null; // deduplicação para taxa BCB
+const RATES_TTL    = 4 * 60 * 60 * 1000; // 4 h
 
 app.get('/api/market-rates', async (req, res, next) => {
   try {
     const now = Date.now();
     if (_ratesCache && now - _ratesAt < RATES_TTL) return res.json(_ratesCache);
 
+    if (_ratesInflight) return res.json(await _ratesInflight);
+
     const bcb = s => proxyFetch(
       `https://api.bcb.gov.br/dados/serie/bcdata.sgs.${s}/dados/ultimos/1?formato=json`,
       { headers: { Accept: 'application/json' } }
     );
 
-    const [selicR, cdiR, ipcaR] = await Promise.all([
+    _ratesInflight = Promise.all([
       bcb(4390),  // Meta SELIC % a.a.
       bcb(4391),  // CDI anualizado base 252 % a.a.
       bcb(13522), // IPCA acumulado 12 meses %
-    ]);
+    ]).then(([selicR, cdiR, ipcaR]) => {
+      const parseVal  = r => parseFloat((r.data?.[0]?.valor || '0').replace(',', '.'));
+      const dateOf    = r => r.data?.[0]?.data || '';
+      const annualize = m => +((Math.pow(1 + m / 100, 12) - 1) * 100).toFixed(2);
+      _ratesCache = {
+        selic: { value: annualize(parseVal(selicR)), date: dateOf(selicR), unit: '% a.a.' },
+        cdi:   { value: annualize(parseVal(cdiR)),   date: dateOf(cdiR),   unit: '% a.a.' },
+        ipca:  { value: parseVal(ipcaR),             date: dateOf(ipcaR),  unit: '% 12m'  },
+      };
+      _ratesAt = Date.now();
+      return _ratesCache;
+    }).finally(() => { _ratesInflight = null; });
 
-    const parseVal   = r => parseFloat((r.data?.[0]?.valor || '0').replace(',', '.'));
-    const dateOf     = r => r.data?.[0]?.data || '';
-    const annualize  = m => +((Math.pow(1 + m / 100, 12) - 1) * 100).toFixed(2);
-
-    _ratesCache = {
-      selic: { value: annualize(parseVal(selicR)), date: dateOf(selicR), unit: '% a.a.' },
-      cdi:   { value: annualize(parseVal(cdiR)),   date: dateOf(cdiR),   unit: '% a.a.' },
-      ipca:  { value: parseVal(ipcaR),             date: dateOf(ipcaR),  unit: '% 12m'  },
-    };
-    _ratesAt = now;
-    res.json(_ratesCache);
+    res.json(await _ratesInflight);
   } catch (err) { next(err); }
 });
 
@@ -1032,6 +1055,108 @@ app.post('/api/notify/monthly-summary', notifLimiter, requireAuth, async (req, r
     res.json({ ok: true });
   } catch (err) { next(err); }
 });
+
+// ── Cron: resumo mensal automático ───────────────────────────────────────────
+// Executa todo dia 1 às 08:00 — envia o resumo do mês anterior a todos os usuários.
+// Requer: SMTP configurado + SUPABASE_SERVICE_KEY com acesso ao auth admin.
+
+async function sendMonthlySummariesToAllUsers() {
+  if (!_mailer || !SUPA_SERVICE) return;
+
+  const now      = new Date();
+  const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const year     = prevDate.getFullYear();
+  const month    = prevDate.getMonth() + 1;
+  const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+  const lastDay  = new Date(year, month, 0).getDate();
+  const since    = `${monthStr}-01`;
+  const until    = `${monthStr}-${String(lastDay).padStart(2, '0')}`;
+  const fmtMonth = prevDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  let users = [];
+  try {
+    const { ok, data } = await proxyFetch(
+      `${SUPA_URL}/auth/v1/admin/users?per_page=1000`,
+      { headers: { 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}` } }
+    );
+    users = ok ? (data?.users || []) : [];
+  } catch (err) {
+    console.error('[Atlas Cron] Falha ao listar usuários:', err.message);
+    return;
+  }
+
+  console.log(`[Atlas Cron] Enviando resumo de ${fmtMonth} para ${users.length} usuário(s)...`);
+
+  for (const user of users) {
+    if (!user.email) continue;
+    try {
+      const txUrl = `${SUPA_URL}/rest/v1/transactions`
+        + `?user_id=eq.${user.id}&date=gte.${since}&date=lte.${until}&select=type,amount&limit=5000`;
+      const { ok, data: txs } = await proxyFetch(txUrl, {
+        headers: { 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}` },
+      });
+      if (!ok || !Array.isArray(txs) || !txs.length) continue;
+
+      const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + parseFloat(t.amount), 0);
+      const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + parseFloat(t.amount), 0);
+      const balance = income - expense;
+
+      const fmtBRL  = v => `R$ ${Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+      const positive = balance >= 0;
+      const subject  = `📊 Resumo Atlas — ${fmtMonth}`;
+      const html = `
+        <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#0f0e17;color:#f1f5f9;border-radius:16px">
+          <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;margin-bottom:4px">💎 Atlas</div>
+          <div style="color:#94a3b8;font-size:.85rem;margin-bottom:24px">Resumo Mensal Automático</div>
+          <div style="font-size:1.3rem;font-weight:700;margin-bottom:20px">Seu mês de <strong style="color:#7c3aed">${fmtMonth}</strong></div>
+          <div style="display:grid;gap:12px;margin-bottom:20px">
+            <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:14px 18px">
+              <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Saldo</div>
+              <div style="font-size:1.4rem;font-weight:800;color:${positive ? '#10b981' : '#ef4444'}">${positive ? '+' : ''}${fmtBRL(balance)}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+              <div style="background:rgba(16,185,129,.08);border-radius:10px;padding:14px 18px">
+                <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Receitas</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#10b981">${fmtBRL(income)}</div>
+              </div>
+              <div style="background:rgba(239,68,68,.08);border-radius:10px;padding:14px 18px">
+                <div style="color:#94a3b8;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Despesas</div>
+                <div style="font-size:1.1rem;font-weight:700;color:#ef4444">${fmtBRL(expense)}</div>
+              </div>
+            </div>
+          </div>
+          <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=analysis"
+             style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
+            Ver análise completa →
+          </a>
+          <div style="margin-top:32px;color:#4a5568;font-size:.75rem;border-top:1px solid rgba(255,255,255,.08);padding-top:16px">
+            Atlas Finance — seus dados, seu controle.
+          </div>
+        </div>`;
+
+      await sendEmail({ to: user.email, subject, html });
+    } catch (err) {
+      console.error(`[Atlas Cron] Erro ao processar ${user.email}:`, err.message);
+    }
+  }
+
+  console.log(`[Atlas Cron] Resumo mensal concluído.`);
+}
+
+// Todo dia 1 do mês às 08:00 (timezone configurável via TZ env var)
+if (process.env.ENABLE_MONTHLY_CRON !== 'false') {
+  cron.schedule('0 8 1 * *', sendMonthlySummariesToAllUsers, {
+    timezone: process.env.TZ || 'America/Sao_Paulo',
+  });
+}
+
+// ── Graceful shutdown ─────────────────────────────────────────────────────────
+function shutdown(signal) {
+  console.log(`[Atlas] ${signal} recebido — encerrando graciosamente...`);
+  process.exit(0);
+}
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
 
 // ── Error handler global ──────────────────────────────────────────────────────
 // Centraliza todos os erros não tratados — CORS, proxy, runtime.
