@@ -547,6 +547,8 @@ function bindEvents() {
       document.getElementById('benefit-type-group').classList.toggle('hidden', !isBeneficio);
       if (!isDespesa) {
         document.getElementById('invoice-group').classList.add('hidden');
+        document.getElementById('amount-group').style.display = '';
+        document.getElementById('desc-group').style.display   = '';
         invoiceItems    = [];
         selectedPayment = '';
         document.querySelectorAll('.payment-btn').forEach(b => b.classList.remove('selected'));
@@ -608,6 +610,8 @@ function bindEvents() {
     }
     const isCredito = selectedPayment === 'credito';
     document.getElementById('invoice-group').classList.toggle('hidden', !isCredito);
+    document.getElementById('amount-group').style.display = isCredito ? 'none' : '';
+    document.getElementById('desc-group').style.display   = isCredito ? 'none' : '';
     if (!isCredito) {
       invoiceItems = [];
       document.getElementById('invoice-items-list').innerHTML = '';

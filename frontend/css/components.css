@@ -228,12 +228,13 @@
   border:         1px solid rgba(139,92,246,.25);
   color:          var(--purple);
   cursor:         pointer;
-  padding:        1px 5px;
+  padding:        4px 10px;
   border-radius:  5px;
-  font-size:      .72rem;
+  font-size:      .8rem;
   line-height:    1.4;
   vertical-align: middle;
-  margin-left:    5px;
+  margin-left:    6px;
+  min-height:     26px;
   transition:     all .2s;
 }
 .tx-fatura-btn:hover { background: rgba(139,92,246,.25); border-color: rgba(139,92,246,.5); }
@@ -2170,6 +2171,7 @@
 
 @media (max-width: 600px) {
   .selection-bar { bottom: 72px; padding: 10px 14px; min-width: 0; width: calc(100vw - 24px); }
+  .tx-fatura-btn { padding: 6px 12px; font-size: .85rem; min-height: 32px; }
 }
 
 /* =============================================
