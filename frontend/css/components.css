@@ -238,6 +238,7 @@
   transition:     all .2s;
 }
 .tx-fatura-btn:hover { background: rgba(139,92,246,.25); border-color: rgba(139,92,246,.5); }
+.tx-fatura-mob { display: none; flex-shrink: 0; }
 
 .view-fatura-date-label { font-size: .75rem; color: var(--text-3); display: block; margin-top: 2px; }
 .view-fatura-item {
@@ -2171,7 +2172,8 @@
 
 @media (max-width: 600px) {
   .selection-bar { bottom: 72px; padding: 10px 14px; min-width: 0; width: calc(100vw - 24px); }
-  .tx-fatura-btn { padding: 6px 12px; font-size: .85rem; min-height: 32px; }
+  .tx-fatura-inline { display: none; }
+  .tx-fatura-mob { display: inline-flex; padding: 6px 10px; font-size: .85rem; min-height: 32px; }
 }
 
 /* =============================================

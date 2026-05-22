@@ -168,8 +168,12 @@ function txHTML(t) {
   const fixedBadge  = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
   const benefitBadge = bt ? `<span class="badge-benefit">${bt.label}</span>` : '';
   const isSel       = selectedTxIds.has(t.id);
-  const faturaBtn   = (t.invoiceItems && t.invoiceItems.length > 0)
-    ? `<button class="tx-fatura-btn" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
+  const hasFatura   = t.invoiceItems && t.invoiceItems.length > 0;
+  const faturaBtn   = hasFatura
+    ? `<button class="tx-fatura-btn tx-fatura-inline" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
+    : '';
+  const faturaMobBtn = hasFatura
+    ? `<button class="tx-fatura-btn tx-fatura-mob" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
     : '';
   const amtClass  = isIncome ? 'income' : isBenefit ? 'benefit' : 'expense';
   const amtPrefix = isIncome ? '+' : '−';
@@ -187,12 +191,13 @@ function txHTML(t) {
       <div class="tx-amount ${amtClass}">
         ${amtPrefix}${fmt(t.amount)}
       </div>
+      ${faturaMobBtn}
       <button class="tx-menu-btn" onclick="openTxMenu('${t.id}', event)" title="Opções">⋮</button>
     </div>`;
 }
 
 function toggleTxSelection(id, event) {
-  if (event.target.closest('.tx-menu-btn')) return;
+  if (event.target.closest('.tx-menu-btn, .tx-fatura-btn')) return;
   if (event.currentTarget.closest('#tab-dashboard')) return;
   if (window.innerWidth <= 900) { openMobTxSheet(id); return; }
   openTxDetailPanel(id);
