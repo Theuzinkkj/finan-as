@@ -274,6 +274,98 @@ function drawDonut(txs) {
 }
 
 // =============================================
+//  EVOLUTION CHART — últimos 6 meses
+// =============================================
+function drawEvolutionChart() {
+  const canvas = document.getElementById('evol-chart');
+  if (!canvas) return;
+
+  const W = canvas.parentElement.clientWidth || 500;
+  canvas.width  = W;
+  canvas.height = 140;
+  const H   = 140;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+
+  const MONTHS = 6;
+  const now    = new Date();
+  const labels = [];
+  const income = [];
+  const expense = [];
+
+  for (let i = MONTHS - 1; i >= 0; i--) {
+    const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    labels.push(d.toLocaleString('pt-BR', { month: 'short' }));
+    const monthTxs = (typeof transactions !== 'undefined' ? transactions : [])
+      .filter(t => !t.fixed && t.date.startsWith(key));
+    income.push(monthTxs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0));
+    expense.push(monthTxs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0));
+  }
+
+  const maxVal = Math.max(...income, ...expense, 1);
+  const pL = 48, pR = 12, pT = 14, pB = 28;
+  const cW = W - pL - pR;
+  const cH = H - pT - pB;
+  const barW    = Math.max(8, (cW / MONTHS) * 0.32);
+  const groupW  = cW / MONTHS;
+  const gap     = barW * 0.3;
+
+  ctx.font      = '10px Inter, sans-serif';
+  ctx.fillStyle = chartFg(0.4);
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+
+  // Gridlines
+  for (let i = 0; i <= 3; i++) {
+    const y = pT + (cH / 3) * i;
+    ctx.strokeStyle = chartFg(0.07);
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke();
+    const v = maxVal * (1 - i / 3);
+    ctx.fillText(v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0), pL - 4, y);
+  }
+
+  labels.forEach((lbl, i) => {
+    const cx     = pL + i * groupW + groupW / 2;
+    const incH   = (income[i]  / maxVal) * cH;
+    const expH   = (expense[i] / maxVal) * cH;
+    const incY   = pT + cH - incH;
+    const expY   = pT + cH - expH;
+    const r      = 3;
+
+    // Barra receita (verde)
+    ctx.fillStyle = '#34d399';
+    roundedRect(ctx, cx - barW - gap / 2, incY, barW, incH, r);
+    ctx.fill();
+
+    // Barra despesa (vermelho)
+    ctx.fillStyle = '#f87171';
+    roundedRect(ctx, cx + gap / 2, expY, barW, expH, r);
+    ctx.fill();
+
+    // Rótulo do mês
+    ctx.fillStyle = chartFg(0.5);
+    ctx.textAlign = 'center';
+    ctx.fillText(lbl, cx, H - pB + 14);
+    ctx.textAlign = 'right';
+  });
+}
+
+function roundedRect(ctx, x, y, w, h, r) {
+  if (h < r) r = h;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// =============================================
 //  LINE CHART
 // =============================================
 let _lineChartPts     = [];

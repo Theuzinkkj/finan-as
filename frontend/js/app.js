@@ -480,38 +480,58 @@ function renderBudgets(txs) {
 // =============================================
 async function autoGenerateRecurring() {
   if (Demo.active) return;
-  const currentKey = mkKey(new Date());
+  const now        = new Date();
+  const currentKey = mkKey(now);
 
   const templates = transactions.filter(t => t.fixed && t.date.slice(0, 7) < currentKey);
   if (!templates.length) return;
 
-  const [ty, tm] = currentKey.split('-').map(Number);
-  const daysInMonth = new Date(ty, tm, 0).getDate();
+  // Calcula todos os meses desde a criação do template até o mês atual
+  function monthsBetween(startKey, endKey) {
+    const [sy, sm] = startKey.split('-').map(Number);
+    const [ey, em] = endKey.split('-').map(Number);
+    const months = [];
+    let y = sy, m = sm + 1; // começa no mês seguinte ao template
+    while (y < ey || (y === ey && m <= em)) {
+      months.push(`${y}-${pad2(m)}`);
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+    return months;
+  }
+
   const created = [];
 
   for (const tpl of templates) {
-    const exists = transactions.some(t => t.recurringId === tpl.id && t.date.startsWith(currentKey));
-    if (exists) continue;
+    const tplKey  = tpl.date.slice(0, 7);
+    const pending = monthsBetween(tplKey, currentKey);
 
-    const day   = Math.min(parseInt(tpl.date.slice(8, 10), 10), daysInMonth);
-    const newTx = {
-      ...tpl,
-      id:          genId(),
-      date:        `${currentKey}-${pad2(day)}`,
-      fixed:       false,
-      recurringId: tpl.id,
-    };
-    try {
-      await DB.put(newTx);
-      transactions.push(newTx);
-      created.push(newTx);
-    } catch { /* ignore */ }
+    for (const key of pending) {
+      const exists = transactions.some(t => t.recurringId === tpl.id && t.date.startsWith(key));
+      if (exists) continue;
+
+      const [ty, tm]    = key.split('-').map(Number);
+      const daysInMonth = new Date(ty, tm, 0).getDate();
+      const day         = Math.min(parseInt(tpl.date.slice(8, 10), 10), daysInMonth);
+      const newTx = {
+        ...tpl,
+        id:          genId(),
+        date:        `${key}-${pad2(day)}`,
+        fixed:       false,
+        recurringId: tpl.id,
+      };
+      try {
+        await DB.put(newTx);
+        transactions.push(newTx);
+        created.push(newTx);
+      } catch { /* ignore */ }
+    }
   }
 
   if (created.length) {
     Promise.all(created.map(tx => CloudDB.add(tx))).catch(() => {});
     const n = created.length;
-    toast(`🔄 ${n} transaç${n === 1 ? 'ão fixa criada' : 'ões fixas criadas'} automaticamente para ${monthLabel(new Date())}!`);
+    toast(`🔄 ${n} transaç${n === 1 ? 'ão fixa criada' : 'ões fixas criadas'} automaticamente!`);
     renderAll();
   }
 }
@@ -1185,7 +1205,7 @@ function openTxDetailPanel(id) {
   const editBtn   = document.getElementById('tx-detail-edit-btn');
   const deleteBtn = document.getElementById('tx-detail-delete-btn');
   editBtn.onclick   = () => { closeTxDetailPanel(); activeTxId = id; openRenameModal(); };
-  deleteBtn.onclick = () => { if (confirm('Excluir esta transação?')) { closeTxDetailPanel(); deleteTx(id); } };
+  deleteBtn.onclick = () => { closeTxDetailPanel(); deleteTx(id); };
 
   document.getElementById('tx-detail-overlay').classList.add('open');
   document.getElementById('tx-detail-panel').classList.add('open');
@@ -1267,11 +1287,32 @@ function emptyHTML(msg = 'Nenhuma transação ainda.') {
   </div>`;
 }
 
+function welcomeEmptyHTML() {
+  return `<div class="empty-state empty-state-welcome">
+    <span class="empty-icon">👋</span>
+    <p><strong>Bem-vindo ao Atlas!</strong></p>
+    <p class="empty-sub">Comece registrando sua primeira receita ou despesa.<br>Seus gráficos e resumos aparecerão aqui automaticamente.</p>
+    <button class="btn-primary empty-state-cta" onclick="openModal('modal-add-tx')">+ Adicionar primeira transação</button>
+  </div>`;
+}
+
 function renderRecent(txs) {
   const recent = [...txs].sort((a, b) => b.date.localeCompare(a.date));
-  document.getElementById('recent-transactions').innerHTML =
-    recent.length ? recent.map(txHTML).join('') : emptyHTML();
+  const el = document.getElementById('recent-transactions');
+  if (!el) return;
+  if (recent.length) {
+    el.innerHTML = recent.map(txHTML).join('');
+  } else if (transactions.length === 0) {
+    el.innerHTML = welcomeEmptyHTML();
+  } else {
+    el.innerHTML = emptyHTML('Nenhuma transação neste mês.');
+  }
 }
+
+const TX_DAYS_PER_PAGE = 10;
+let _txDayPage = 1;
+
+function resetTxPagination() { _txDayPage = 1; }
 
 function renderAllTxs() {
   const catF   = document.getElementById('filter-category').value;
@@ -1287,10 +1328,9 @@ function renderAllTxs() {
   const countEl = document.getElementById('filter-count');
   if (countEl) countEl.textContent = countText;
 
-  // Atualiza subtítulo da aba com contagem + receitas + despesas
   const txSub = document.getElementById('tx-page-sub');
   if (txSub) {
-    const txs   = txOfMonth();
+    const txs    = txOfMonth();
     const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
     const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
     txSub.innerHTML = [
@@ -1305,24 +1345,37 @@ function renderAllTxs() {
     return;
   }
 
-  // Agrupa por data
+  // Agrupa por data e ordena
   const groups = {};
   list.forEach(t => { (groups[t.date] = groups[t.date] || []).push(t); });
+  const sortedDays = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
+
+  const visibleDays  = sortedDays.slice(0, _txDayPage * TX_DAYS_PER_PAGE);
+  const remainingDays = sortedDays.length - visibleDays.length;
 
   const DIAS = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
   let html = '';
-  for (const [date, txs] of Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]))) {
-    const d       = new Date(date + 'T12:00:00');
-    const [,mo,dy]= date.split('-');
-    const total   = txs.reduce((s, t) => s + (t.type === 'receita' ? t.amount : t.type === 'despesa' ? -t.amount : 0), 0);
-    const totCls  = total > 0 ? 'income' : total < 0 ? 'expense' : 'neutral';
-    const totStr  = (total >= 0 ? '+' : '−') + fmt(Math.abs(total));
+  for (const [date, txs] of visibleDays) {
+    const d        = new Date(date + 'T12:00:00');
+    const [,mo,dy] = date.split('-');
+    const total    = txs.reduce((s, t) => s + (t.type === 'receita' ? t.amount : t.type === 'despesa' ? -t.amount : 0), 0);
+    const totCls   = total > 0 ? 'income' : total < 0 ? 'expense' : 'neutral';
+    const totStr   = (total >= 0 ? '+' : '−') + fmt(Math.abs(total));
     html += `<div class="tx-day-group">
       <div class="tx-day-header">
         <div><span class="tx-day-name">${DIAS[d.getDay()]}</span><span class="tx-day-date"> · ${dy}/${mo}</span><span class="tx-day-count">${txs.length} ${txs.length === 1 ? 'item' : 'itens'}</span></div>
         <span class="tx-day-total ${totCls}">${totStr}</span>
       </div>
       <div class="tx-day-items">${txs.map(txHTML).join('')}</div>
+    </div>`;
+  }
+
+  if (remainingDays > 0) {
+    const remainingTxCount = sortedDays.slice(_txDayPage * TX_DAYS_PER_PAGE).reduce((s, [, txs]) => s + txs.length, 0);
+    html += `<div class="tx-load-more-wrap">
+      <button class="tx-load-more-btn" onclick="_txDayPage++;renderAllTxs()">
+        Carregar mais <span class="tx-load-more-count">(+${remainingTxCount} transaç${remainingTxCount === 1 ? 'ão' : 'ões'})</span>
+      </button>
     </div>`;
   }
 
@@ -1485,6 +1538,7 @@ function renderAll() {
   renderAnalysisStats(txs);
   drawDonut(txs);
   drawLine(txs);
+  drawEvolutionChart();
   drawAnalysisChart(txs);
   if (typeof renderProjection === 'function')  renderProjection();
   if (typeof checkAchievements === 'function') checkAchievements();
@@ -1577,6 +1631,19 @@ async function handleFormSubmit(e) {
     invoiceItems:  selectedPayment === 'credito' && invoiceItems.length > 0 ? [...invoiceItems] : null,
     benefitType:   selectedType === 'beneficio' ? selectedBenefitType : null,
   };
+
+  // Detecta duplicata: mesma descrição + valor + data + tipo nos últimos 30s ou mesmo dia
+  const isDuplicate = transactions.some(t =>
+    t.type === tx.type &&
+    t.amount === tx.amount &&
+    t.date === tx.date &&
+    t.description.trim().toLowerCase() === tx.description.trim().toLowerCase()
+  );
+
+  if (isDuplicate) {
+    const confirmed = await _confirmDuplicate();
+    if (!confirmed) return;
+  }
 
   closeModal('modal-transaction');
   resetTransactionModal();
@@ -1720,7 +1787,7 @@ function openMobTxSheet(id) {
     ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span>🔄 Fixo mensal</span></div>` : ''}
     <div style="display:flex;gap:8px;margin-top:18px;">
       <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">✎ Editar</button>
-      <button onclick="closeMobTxSheet();if(confirm('Excluir esta transação?'))deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">🗑 Excluir</button>
+      <button onclick="closeMobTxSheet();deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">🗑 Excluir</button>
     </div>`;
 
   document.getElementById('mob-tx-overlay').classList.add('open');
@@ -2582,12 +2649,14 @@ function bindEvents() {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     selectedTxIds.clear();
     closeTxDetailPanel();
+    resetTxPagination();
     renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
   document.getElementById('next-month').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     selectedTxIds.clear();
     closeTxDetailPanel();
+    resetTxPagination();
     renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
   });
 
@@ -2622,10 +2691,10 @@ function bindEvents() {
     });
   });
 
-  // Filtros
-  document.getElementById('filter-category').addEventListener('change', renderAllTxs);
-  document.getElementById('filter-type').addEventListener('change', renderAllTxs);
-  document.getElementById('filter-search').addEventListener('input', renderAllTxs);
+  // Filtros — reseta paginação ao filtrar
+  document.getElementById('filter-category').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
+  document.getElementById('filter-type').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
+  document.getElementById('filter-search').addEventListener('input', () => { resetTxPagination(); renderAllTxs(); });
 
   // Abrir painel de perfil (desktop e avatares mobile)
   document.getElementById('btn-profile').addEventListener('click', openProfilePanel);
@@ -2821,7 +2890,7 @@ function bindEvents() {
     const active = document.querySelector('.tab-content.active');
     if (!active) return;
     const txs = txOfMonth();
-    if (active.id === 'tab-dashboard') drawLine(txs);
+    if (active.id === 'tab-dashboard') { drawLine(txs); drawEvolutionChart(); }
     if (active.id === 'tab-analysis')  { drawAnalysisChart(txs); drawAnnualChart(); _setupAnnualYearNav(); }
   });
 
@@ -2958,9 +3027,72 @@ function initSwipeToDelete() {
 //  INIT
 // =============================================
 
+async function shareMonthlyReport() {
+  const txs     = txOfMonth();
+  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+  const balance = income - expense;
+  const mes     = currentDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+  const sign    = balance >= 0 ? '+' : '';
+
+  const catTotals = {};
+  txs.filter(t => t.type === 'despesa').forEach(t => {
+    catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
+  });
+  const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
+  const topCatLine = topCat
+    ? `\n🏷 Maior gasto: ${CATEGORIES[topCat[0]]?.label || topCat[0]} (${fmt(topCat[1])})`
+    : '';
+
+  const text = [
+    `📊 Resumo financeiro — ${mes}`,
+    ``,
+    `💰 Receitas:  ${fmt(income)}`,
+    `💸 Despesas:  ${fmt(expense)}`,
+    `📈 Saldo:     ${sign}${fmt(balance)}${topCatLine}`,
+    ``,
+    `Gerado pelo Atlas Finance`,
+  ].join('\n');
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `Resumo ${mes}`, text });
+    } catch (err) {
+      if (err.name !== 'AbortError') toast('Erro ao compartilhar.', 'err');
+    }
+  } else {
+    await navigator.clipboard.writeText(text);
+    toast('Resumo copiado para a área de transferência!');
+  }
+}
+
+function _confirmDuplicate() {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('modal-duplicate-confirm');
+    if (!overlay) { resolve(true); return; }
+    overlay.classList.remove('hidden');
+    const yes = overlay.querySelector('#btn-dup-yes');
+    const no  = overlay.querySelector('#btn-dup-no');
+    const close = val => { overlay.classList.add('hidden'); resolve(val); };
+    yes.onclick = () => close(true);
+    no.onclick  = () => close(false);
+  });
+}
+
+function initOfflineBanner() {
+  const banner = document.getElementById('offline-banner');
+  if (!banner) return;
+  const show = () => banner.classList.remove('hidden');
+  const hide = () => banner.classList.add('hidden');
+  window.addEventListener('offline', show);
+  window.addEventListener('online',  hide);
+  if (!navigator.onLine) show();
+}
+
 async function init() {
   try {
     initTheme();
+    initOfflineBanner();
     bindEvents();
     initCustomSelects();
     initCSVImport();

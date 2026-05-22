@@ -95,7 +95,41 @@ function authErrorMsg(raw) {
     return 'Cadastro desabilitado. Entre em contato com o suporte.';
   if (m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('failed to load'))
     return 'Erro de conexão. Verifique sua internet.';
-  return raw;
+  if (m.includes('too many requests') || m.includes('429'))
+    return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.';
+  if (m.includes('email_exists') || m.includes('email already'))
+    return 'Este email já está cadastrado. Tente fazer login.';
+  if (m.includes('token') || m.includes('expired') || m.includes('jwt'))
+    return 'Sessão expirada. Faça login novamente.';
+  // Se a mensagem original estiver em inglês, retorna um fallback genérico
+  const hasPtChars = /[áéíóúãõâêîôûçàèìòùÁÉÍÓÚÃÕÂÊÎÔÛÇ]/.test(raw) || /\b(erro|falha|inválid|obrigat)\b/i.test(raw);
+  return hasPtChars ? raw : 'Ocorreu um erro inesperado. Tente novamente.';
+}
+
+// ─── Reenvio de confirmação ───────────────────────────────────────────────────
+function showResendConfirmation(email) {
+  const el = document.getElementById('auth-success');
+  el.innerHTML = `
+    <span>Cadastro realizado! Verifique <strong>${escHtmlLogin(email)}</strong> para confirmar sua conta.</span>
+    <button id="btn-resend-confirm" style="margin-top:8px;display:block;background:none;border:none;color:inherit;text-decoration:underline;cursor:pointer;font-size:inherit;padding:0;">Não recebeu? Reenviar email</button>
+  `;
+  el.classList.remove('hidden');
+
+  document.getElementById('btn-resend-confirm').addEventListener('click', async function () {
+    this.disabled = true;
+    this.textContent = 'Enviando...';
+    try {
+      await API.req('POST', '/api/auth/resend-confirmation', { email });
+      this.textContent = 'Email reenviado! Verifique sua caixa de entrada.';
+    } catch (err) {
+      this.textContent = 'Erro ao reenviar. Tente novamente.';
+      this.disabled = false;
+    }
+  });
+}
+
+function escHtmlLogin(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ─── Reset password form ──────────────────────────────────────────────────────
@@ -234,7 +268,7 @@ function bindAuthEvents() {
       if (isSignup) {
         const result = await Auth.signUp(email, password);
         if (result.confirmEmail) {
-          showAuthSuccess('Cadastro realizado! Verifique seu email para confirmar, depois faça login.');
+          showResendConfirmation(email);
           setAuthMode('signin');
           return;
         }
@@ -317,7 +351,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (redirect.attempted && !redirect.ok) {
-    showAuthError('O link de confirmação expirou ou é inválido. Para receber um novo, cadastre-se novamente com o mesmo email.');
+    const el = document.getElementById('auth-error');
+    el.innerHTML = `
+      <span>O link de confirmação expirou ou é inválido.</span>
+      <button id="btn-resend-expired" style="margin-top:6px;display:block;background:none;border:none;color:inherit;text-decoration:underline;cursor:pointer;font-size:inherit;padding:0;">Reenviar email de confirmação</button>
+    `;
+    el.classList.remove('hidden');
+    document.getElementById('btn-resend-expired').addEventListener('click', async function () {
+      const email = document.getElementById('auth-email').value.trim();
+      if (!email) { showAuthError('Preencha seu email para reenviar a confirmação.'); return; }
+      this.disabled = true;
+      this.textContent = 'Enviando...';
+      try {
+        await API.req('POST', '/api/auth/resend-confirmation', { email });
+        this.textContent = 'Email reenviado! Verifique sua caixa de entrada.';
+      } catch (err) {
+        this.textContent = 'Erro ao reenviar. Tente novamente.';
+        this.disabled = false;
+      }
+    });
     return;
   }
 

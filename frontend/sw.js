@@ -26,8 +26,10 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', event => {
+  // Não chama skipWaiting aqui — deixa o SW novo em "waiting"
+  // para que o cliente possa exibir o aviso de atualização.
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
   );
 });
 

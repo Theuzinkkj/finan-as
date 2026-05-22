@@ -196,6 +196,21 @@
 
 .tx-day-items .tx-item:last-child { border-bottom-color: transparent; }
 
+.tx-load-more-wrap { text-align: center; padding: 20px 0 8px; }
+.tx-load-more-btn {
+  background:    transparent;
+  border:        1px solid var(--border-h);
+  color:         var(--text-2);
+  border-radius: 100px;
+  padding:       9px 24px;
+  font-size:     .83rem;
+  font-weight:   500;
+  cursor:        pointer;
+  transition:    border-color .15s, color .15s;
+}
+.tx-load-more-btn:hover { border-color: var(--purple-l); color: var(--purple-l); }
+.tx-load-more-count { opacity: .7; font-size: .8rem; }
+
 /* ── Dash hero: right side month selector ──────── */
 .dash-hero-right {
   display: flex;
@@ -420,6 +435,25 @@
 .dash-goal-footer {
   font-size: 11px;
   color:     var(--text-3);
+}
+
+/* ── Evolution chart card ────────────────────────── */
+.dash-evolution-card {
+  margin-bottom: 14px;
+  padding:       20px 20px 16px;
+}
+.dash-evol-legend {
+  display:     flex;
+  align-items: center;
+  gap:         4px;
+  font-size:   11px;
+  color:       var(--text-2);
+}
+.dash-evol-dot {
+  width:         9px;
+  height:        9px;
+  border-radius: 2px;
+  flex-shrink:   0;
 }
 
 /* ── Dashboard bottom row (donut + recent txs) ──── */

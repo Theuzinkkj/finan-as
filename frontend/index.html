@@ -271,6 +271,18 @@
         </div>
       </div>
 
+      <!-- Evolução 6 meses (full width) -->
+      <div class="card dash-evolution-card">
+        <div class="card-header">
+          <h3>Evolução — Últimos 6 Meses</h3>
+          <div class="dash-evol-legend">
+            <span class="dash-evol-dot" style="background:var(--green)"></span><span>Receitas</span>
+            <span class="dash-evol-dot" style="background:#f87171;margin-left:12px"></span><span>Despesas</span>
+          </div>
+        </div>
+        <canvas id="evol-chart" height="140"></canvas>
+      </div>
+
       <!-- Linha inferior: categoria donut (esq) + transações recentes (dir) -->
       <div class="dash-bottom-row">
         <div class="card chart-card">
@@ -306,6 +318,10 @@
           <button class="page-footer-btn page-footer-btn-chat" onclick="document.getElementById('btn-chat').click()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             Perguntar à IA
+          </button>
+          <button class="page-footer-btn page-footer-btn-share" id="btn-share-report" onclick="shareMonthlyReport()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Compartilhar
           </button>
         </div>
         <button class="page-footer-totop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
@@ -1246,6 +1262,22 @@
     </div>
   </div>
 
+  <!-- Modal: Transação duplicada -->
+  <div class="modal-overlay hidden" id="modal-duplicate-confirm">
+    <div class="modal modal-sm" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h2>Possível duplicata</h2>
+      </div>
+      <p style="font-size:.88rem;color:var(--text-2);line-height:1.65;margin-bottom:22px">
+        Já existe uma transação com o mesmo valor, descrição e data. Deseja adicionar mesmo assim?
+      </p>
+      <div class="form-actions">
+        <button class="btn-secondary" id="btn-dup-no">Cancelar</button>
+        <button class="btn-primary" id="btn-dup-yes">Adicionar mesmo assim</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Confirmar exclusão de conta -->
   <div class="modal-overlay hidden" id="modal-confirm-delete">
     <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-confirm-delete-title">
@@ -1615,6 +1647,19 @@
   <!-- Toast -->
   <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
+  <!-- Banner offline -->
+  <div id="offline-banner" class="offline-banner hidden" role="alert" aria-live="assertive">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.56 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+    Sem internet — trabalhando offline
+  </div>
+
+  <!-- PWA Update Banner -->
+  <div id="pwa-update-banner" class="pwa-update-banner hidden" role="alert">
+    <span>Nova versão disponível.</span>
+    <button id="btn-pwa-update" class="pwa-update-btn">Atualizar agora</button>
+    <button id="btn-pwa-dismiss" class="pwa-dismiss-btn" aria-label="Fechar">✕</button>
+  </div>
+
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -1676,8 +1721,37 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          reg.addEventListener('updatefound', () => {
+            const newSW = reg.installing;
+            if (!newSW) return;
+            newSW.addEventListener('statechange', () => {
+              if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+                showPwaUpdateBanner(newSW);
+              }
+            });
+          });
+        }).catch(() => {});
+
+        // Detecta SW atualizado após reload controlado
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) { refreshing = true; window.location.reload(); }
+        });
       });
+    }
+
+    function showPwaUpdateBanner(newSW) {
+      const banner = document.getElementById('pwa-update-banner');
+      if (!banner) return;
+      banner.classList.remove('hidden');
+      banner.querySelector('#btn-pwa-update').onclick = () => {
+        banner.classList.add('hidden');
+        newSW.postMessage('skipWaiting');
+      };
+      banner.querySelector('#btn-pwa-dismiss').onclick = () => {
+        banner.classList.add('hidden');
+      };
     }
   </script>
   <!-- Corner Widget: Meta de Gastos + Benefícios -->

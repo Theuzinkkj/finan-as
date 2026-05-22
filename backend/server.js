@@ -4,6 +4,7 @@ const express                   = require('express');
 const path                      = require('path');
 const nodemailer                = require('nodemailer');
 const { randomBytes, createHash } = require('crypto');
+const Sentry                    = require('@sentry/node');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const app          = express();
@@ -12,6 +13,15 @@ const SUPA_ANON    = process.env.SUPABASE_KEY         || '';
 const SUPA_SERVICE = process.env.SUPABASE_SERVICE_KEY || SUPA_ANON;
 const GROQ_KEY     = process.env.GROQ_KEY             || '';
 const IS_PROD      = process.env.NODE_ENV === 'production';
+
+// ── Sentry ────────────────────────────────────────────────────────────────────
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn:              process.env.SENTRY_DSN,
+    environment:      process.env.NODE_ENV || 'development',
+    tracesSampleRate: IS_PROD ? 0.1 : 0,
+  });
+}
 
 // ── Email (Nodemailer) ────────────────────────────────────────────────────────
 // Suporta SMTP genérico (Gmail, Outlook, Brevo, etc.) via variáveis de ambiente.
@@ -608,6 +618,23 @@ app.post('/api/auth/reset-password', authLimiter, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// Reenvia email de confirmação de cadastro
+app.post('/api/auth/resend-confirmation', authLimiter, async (req, res, next) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ message: 'Email obrigatório.' });
+
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/resend`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPA_ANON },
+      body:    JSON.stringify({ type: 'signup', email }),
+    });
+
+    if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
+    res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
 // Atualiza senha do usuário autenticado (chamado após fluxo de recovery)
 app.post('/api/auth/update-password', requireAuth, async (req, res, next) => {
   try {
@@ -997,7 +1024,10 @@ app.post('/api/notify/monthly-summary', notifLimiter, requireAuth, async (req, r
 app.use((err, req, res, _next) => {
   const status  = err.status || 500;
   const message = err.status ? err.message : 'Erro interno do servidor.';
-  if (!err.status) console.error('[Atlas] Erro interno:', err);
+  if (!err.status) {
+    console.error('[Atlas] Erro interno:', err);
+    if (process.env.SENTRY_DSN) Sentry.captureException(err);
+  }
   res.status(status).json({ message });
 });
 
