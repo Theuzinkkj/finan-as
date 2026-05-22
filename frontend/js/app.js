@@ -3184,6 +3184,7 @@ async function startApp() {
       toast(`${legacy.length} transações migradas.`);
     }
 
+    DB.purgeOld().catch(() => {});
     transactions = await DB.getAll();
     setDbStatus('connected');
   } catch (err) {

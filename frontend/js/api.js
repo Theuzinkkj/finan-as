@@ -59,6 +59,30 @@ const DB = {
       req.onerror   = ({ target: { error } }) => reject(error);
     });
   },
+
+  purgeOld() {
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 12);
+    const cutoffStr = cutoff.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+    return new Promise((resolve, reject) => {
+      const tx    = this._db.transaction(this.STORE, 'readwrite');
+      const store = tx.objectStore(this.STORE);
+      const index = store.index('date');
+      // IDBKeyRange: tudo com date < cutoffStr
+      const range = IDBKeyRange.upperBound(cutoffStr, true);
+      const req   = index.openCursor(range);
+
+      let count = 0;
+      req.onsuccess = ({ target: { result: cursor } }) => {
+        if (!cursor) { resolve(count); return; }
+        cursor.delete();
+        count++;
+        cursor.continue();
+      };
+      req.onerror = ({ target: { error } }) => reject(error);
+    });
+  },
 };
 
 // =============================================
