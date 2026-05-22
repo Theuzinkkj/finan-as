@@ -2603,6 +2603,11 @@ function bindEvents() {
 
   document.getElementById('view-all-btn').addEventListener('click', () => switchTab('transactions'));
 
+  // Goal modal — listeners aqui para funcionar mesmo antes de visitar a aba Investimentos
+  document.getElementById('btn-goal-cancel')?.addEventListener('click', () => closeModal('modal-goal'));
+  document.getElementById('btn-goal-save')?.addEventListener('click', saveGoalModal);
+  document.getElementById('btn-goal-clear')?.addEventListener('click', clearGoalModal);
+
   // Botão de configurar meta no card do dashboard
   document.getElementById('btn-budget-setup-dash')?.addEventListener('click', openGoalModal);
 

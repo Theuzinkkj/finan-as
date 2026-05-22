@@ -1229,11 +1229,8 @@ async function initInvestments() {
     btn.addEventListener('click', () => _switchInvTab(btn.dataset.invTab));
   });
 
-  // Goal modal (from Metas tab)
+  // Goal modal (from Metas tab) — btn-goal-* listeners live in bindEvents (app.js) so they work before this tab loads
   document.getElementById('btn-metas-goal-add')?.addEventListener('click', openGoalModal);
-  document.getElementById('btn-goal-cancel')?.addEventListener('click', () => closeModal('modal-goal'));
-  document.getElementById('btn-goal-save')?.addEventListener('click', saveGoalModal);
-  document.getElementById('btn-goal-clear')?.addEventListener('click', clearGoalModal);
 
   // Export CSV
   document.getElementById('btn-portfolio-export')?.addEventListener('click', exportPortfolioCSV);
