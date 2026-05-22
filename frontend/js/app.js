@@ -1213,7 +1213,7 @@ async function startApp() {
   if (appInitialized) return;
   appInitialized = true;
   sessionStorage.removeItem('atlas_app_error');
-  document.body.style.visibility = '';
+  document.body.classList.add('app-loaded');
   document.body.classList.add('tab-dashboard');
   document.body.dataset.tab = 'dashboard';
   renderMonthLabel();

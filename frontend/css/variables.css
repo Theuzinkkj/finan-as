@@ -129,3 +129,46 @@ body::before {
     orb-a 12s ease-in-out infinite alternate,
     orb-b 15s ease-in-out infinite alternate-reverse;
 }
+
+/* =============================================
+   SKELETON LOADING — exibe shimmer nos valores
+   até o app terminar de carregar (.app-loaded)
+   ============================================= */
+@keyframes skel {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+body:not(.app-loaded) .card-value,
+body:not(.app-loaded) .card-sub,
+body:not(.app-loaded) .mob-split-value,
+body:not(.app-loaded) .mob-greeting-name {
+  color:            transparent !important;
+  background:       linear-gradient(90deg,
+                      rgba(255,255,255,.04) 25%,
+                      rgba(255,255,255,.10) 50%,
+                      rgba(255,255,255,.04) 75%) !important;
+  background-size:  200% 100% !important;
+  animation:        skel 1.4s linear infinite;
+  border-radius:    4px;
+  min-width:        70px;
+  display:          inline-block;
+  pointer-events:   none;
+}
+
+[data-theme="light"] body:not(.app-loaded) .card-value,
+[data-theme="light"] body:not(.app-loaded) .card-sub,
+[data-theme="light"] body:not(.app-loaded) .mob-split-value,
+[data-theme="light"] body:not(.app-loaded) .mob-greeting-name {
+  background: linear-gradient(90deg,
+                rgba(0,0,0,.05) 25%,
+                rgba(0,0,0,.12) 50%,
+                rgba(0,0,0,.05) 75%) !important;
+}
+
+body.app-loaded .card-value,
+body.app-loaded .card-sub,
+body.app-loaded .mob-split-value,
+body.app-loaded .mob-greeting-name {
+  transition: color .35s ease, background .35s ease;
+}
