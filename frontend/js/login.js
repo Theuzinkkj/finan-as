@@ -241,6 +241,7 @@ function bindAuthEvents() {
       } else {
         await Auth.signIn(email, password);
       }
+      sessionStorage.removeItem('atlas_app_error');
       window.location.href = '/app';
     } catch (err) {
       showAuthError(authErrorMsg(err.message));
@@ -338,11 +339,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const loggedIn = await Auth.check();
   if (loggedIn) {
-    // Detecta loop de redirecionamento: se viemos do /app com falha, força logout
-    if (sessionStorage.getItem('atlas_app_error')) {
+    const appError = sessionStorage.getItem('atlas_app_error');
+    if (appError) {
       sessionStorage.removeItem('atlas_app_error');
-      await Auth.signOut().catch(() => {});
-      showAuthError('Sua sessão expirou ou houve um erro ao carregar o app. Faça login novamente.');
+      showAuthError(`Erro ao carregar o app: ${appError}. Tente fazer login novamente.`);
       return;
     }
     window.location.href = '/app';

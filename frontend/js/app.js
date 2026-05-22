@@ -2478,14 +2478,14 @@ function bindEvents() {
   });
 
   // Toggle seção de benefícios
-  document.getElementById('btn-benefits-toggle').addEventListener('click', toggleBenefitsSection);
+  document.getElementById('btn-benefits-toggle')?.addEventListener('click', toggleBenefitsSection);
 
   // Toggle seção de Meta de Gastos
   document.getElementById('btn-budget-toggle')?.addEventListener('click', toggleBudgetSection);
   document.getElementById('btn-budget-setup')?.addEventListener('click', openBudgetConfig);
 
   // Configurar benefícios
-  document.getElementById('btn-benefits-setup').addEventListener('click', () => {
+  document.getElementById('btn-benefits-setup')?.addEventListener('click', () => {
     document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
     document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';
     openModal('modal-benefits-config');
@@ -2976,8 +2976,7 @@ async function init() {
     await startApp();
   } catch (err) {
     console.error('[init] erro inesperado:', err);
-    // Sinaliza que /app falhou para que /login quebre o loop e force logout
-    sessionStorage.setItem('atlas_app_error', '1');
+    sessionStorage.setItem('atlas_app_error', err.message || 'Erro desconhecido');
     window.location.href = '/login';
   }
 }
