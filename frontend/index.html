@@ -130,7 +130,9 @@
         <button class="nav-tab" data-tab="investments" role="tab" aria-selected="false" aria-controls="tab-investments" id="nav-tab-investments">Investimentos</button>
       </nav>
       <div class="header-right">
-        <span class="db-dot db-offline" id="db-status-dot-header" title="Sem banco de dados"></span>
+        <span class="db-dot db-offline" id="db-status-dot-header" title="Sem banco de dados" style="position:relative">
+          <span class="sync-pending-badge hidden" id="sync-pending-badge"></span>
+        </span>
         <span class="header-greeting hidden" id="header-greeting">Olá, <strong id="header-greeting-name"></strong></span>
         <button class="btn-profile" id="btn-profile" title="Meu perfil" aria-label="Abrir perfil">
           <div class="profile-avatar-mini" id="profile-avatar-mini">
@@ -362,6 +364,11 @@
           <option value="beneficio">Benefícios</option>
         </select>
         <span class="filter-count" id="filter-count"></span>
+        <button class="btn-filters-toggle" id="btn-filters-toggle" type="button" title="Filtros avançados">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filtros
+          <span class="fadv-badge" id="fadv-badge" hidden>0</span>
+        </button>
         <button class="btn-import-csv" id="btn-import-csv" title="Importar extrato CSV">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           CSV
@@ -370,6 +377,33 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Nova transação
         </button>
+      </div>
+      <div class="filters-advanced" id="filters-advanced" hidden>
+        <div class="fadv-row">
+          <div class="fadv-group">
+            <span class="fadv-label">Período</span>
+            <div class="fadv-range-wrap">
+              <input type="date" id="filter-date-from" class="fadv-date-input" aria-label="Data inicial">
+              <span class="fadv-sep">até</span>
+              <input type="date" id="filter-date-to" class="fadv-date-input" aria-label="Data final">
+            </div>
+          </div>
+          <div class="fadv-group">
+            <span class="fadv-label">Valor (R$)</span>
+            <div class="fadv-range-wrap">
+              <input type="number" id="filter-amount-min" class="fadv-amount-input" placeholder="Mínimo" min="0" step="0.01" aria-label="Valor mínimo">
+              <span class="fadv-sep">até</span>
+              <input type="number" id="filter-amount-max" class="fadv-amount-input" placeholder="Máximo" min="0" step="0.01" aria-label="Valor máximo">
+            </div>
+          </div>
+          <div class="fadv-group fadv-cats-group">
+            <span class="fadv-label">Categorias</span>
+            <div class="fadv-cats" id="fadv-cats"></div>
+          </div>
+        </div>
+        <div class="fadv-footer">
+          <button class="fadv-clear-btn" id="fadv-clear" type="button">Limpar filtros avançados</button>
+        </div>
       </div>
       <div class="card">
         <div class="transactions-list" id="all-transactions"></div>
@@ -1116,8 +1150,9 @@
       <form id="transaction-form" novalidate>
         <div class="form-group" id="amount-group">
           <label for="input-amount">Valor (R$)</label>
-          <input type="number" id="input-amount" step="0.01" min="0.01" placeholder="0,00">
+          <input type="number" id="input-amount" step="0.01" min="0.01" placeholder="0,00" autocomplete="off">
           <span id="amount-preview" class="amount-preview"></span>
+          <span class="field-error hidden" id="amount-error">Insira um valor maior que zero</span>
         </div>
         <div class="form-group hidden" id="benefit-type-group">
           <label>Tipo de Benefício</label>
@@ -1166,7 +1201,8 @@
         </div>
         <div class="form-group" id="desc-group">
           <label for="input-description">Descrição</label>
-          <input type="text" id="input-description" placeholder="Ex: Almoço no restaurante" required>
+          <input type="text" id="input-description" placeholder="Ex: Almoço no restaurante" required autocomplete="off">
+          <span class="field-error hidden" id="desc-error">Insira uma descrição</span>
         </div>
         <div class="form-group">
           <label for="input-notes">Anotação <span class="optional">(por que gastou isso?)</span></label>
@@ -1175,6 +1211,8 @@
         <div class="form-group">
           <label for="input-date">Data</label>
           <input type="date" id="input-date" required>
+          <span class="field-error hidden" id="date-error">Selecione uma data</span>
+          <span class="field-warn hidden" id="date-future-warn">⚠ Data no futuro — tem certeza?</span>
         </div>
         <div class="form-group">
           <div class="fixed-row">
@@ -1662,6 +1700,8 @@
 
   <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- App — load order matters (no bundler) -->
   <script src="js/config.js"></script>

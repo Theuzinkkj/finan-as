@@ -430,6 +430,145 @@
 
 .filter-count { margin-left: auto; font-size: .78rem; color: var(--text-3); }
 
+/* =============================================
+   BTN FILTROS TOGGLE
+   ============================================= */
+.btn-filters-toggle {
+  display:       flex;
+  align-items:   center;
+  gap:           6px;
+  background:    rgba(255,255,255,.05);
+  border:        1px solid rgba(255,255,255,.08);
+  border-radius: var(--r-sm);
+  color:         var(--text-2);
+  padding:       8px 12px;
+  font-family:   var(--font);
+  font-size:     .84rem;
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background .2s, border-color .2s, color .2s;
+}
+.btn-filters-toggle:hover,
+.btn-filters-toggle.open,
+.btn-filters-toggle.active {
+  background:   rgba(99,102,241,.1);
+  border-color: rgba(99,102,241,.45);
+  color:        var(--purple-l);
+}
+.fadv-badge {
+  background:    var(--purple);
+  color:         #fff;
+  font-size:     .65rem;
+  font-weight:   700;
+  border-radius: 99px;
+  padding:       1px 6px;
+  min-width:     18px;
+  text-align:    center;
+  line-height:   1.5;
+}
+
+/* =============================================
+   ADVANCED FILTERS PANEL
+   ============================================= */
+.filters-advanced {
+  background:    rgba(255,255,255,.03);
+  border:        1px solid var(--border);
+  border-radius: var(--r);
+  padding:       16px 18px 12px;
+  margin-bottom: 14px;
+  animation:     fadeUp .2s ease;
+}
+.fadv-row {
+  display:   flex;
+  gap:       20px 28px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.fadv-group {
+  display:        flex;
+  flex-direction: column;
+  gap:            7px;
+  min-width:      160px;
+}
+.fadv-cats-group { flex: 1; min-width: 200px; }
+.fadv-label {
+  font-size:      .72rem;
+  font-weight:    600;
+  color:          var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.fadv-range-wrap {
+  display:     flex;
+  align-items: center;
+  gap:         6px;
+}
+.fadv-sep { font-size: .78rem; color: var(--text-3); flex-shrink: 0; }
+.fadv-date-input,
+.fadv-amount-input {
+  background:    rgba(255,255,255,.05);
+  border:        1px solid var(--border);
+  border-radius: var(--r-sm);
+  color:         var(--text);
+  padding:       7px 10px;
+  font-family:   var(--font);
+  font-size:     .84rem;
+  outline:       none;
+  min-width:     0;
+  transition:    border-color .2s, box-shadow .2s;
+}
+.fadv-date-input   { width: 132px; }
+.fadv-amount-input { width: 106px; }
+.fadv-date-input:focus,
+.fadv-amount-input:focus { border-color: var(--purple); box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+
+.fadv-cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.fadv-cat-chip {
+  display:       flex;
+  align-items:   center;
+  gap:           5px;
+  background:    rgba(255,255,255,.05);
+  border:        1px solid var(--border);
+  border-radius: 99px;
+  padding:       5px 11px;
+  font-size:     .8rem;
+  color:         var(--text-2);
+  cursor:        pointer;
+  user-select:   none;
+  transition:    background .15s, border-color .15s, color .15s;
+}
+.fadv-cat-chip:hover   { background: rgba(255,255,255,.09); }
+.fadv-cat-chip.checked {
+  background:   rgba(99,102,241,.18);
+  border-color: rgba(99,102,241,.5);
+  color:        var(--purple-l);
+}
+.fadv-cat-chip input { display: none; }
+
+.fadv-footer { margin-top: 12px; display: flex; justify-content: flex-end; }
+.fadv-clear-btn {
+  background:    transparent;
+  border:        none;
+  color:         var(--text-3);
+  font-size:     .8rem;
+  cursor:        pointer;
+  padding:       4px 8px;
+  border-radius: var(--r-sm);
+  font-family:   var(--font);
+  transition:    color .15s, background .15s;
+}
+.fadv-clear-btn:hover { color: var(--text); background: rgba(255,255,255,.06); }
+
+[data-theme="light"] .btn-filters-toggle { background: rgba(0,0,0,.03); border-color: rgba(0,0,0,.1); color: #555; }
+[data-theme="light"] .btn-filters-toggle:hover,
+[data-theme="light"] .btn-filters-toggle.open,
+[data-theme="light"] .btn-filters-toggle.active { background: rgba(99,102,241,.08); border-color: rgba(99,102,241,.4); color: #4338ca; }
+[data-theme="light"] .filters-advanced { background: rgba(0,0,0,.02); border-color: rgba(0,0,0,.1); }
+[data-theme="light"] .fadv-date-input,
+[data-theme="light"] .fadv-amount-input { background: rgba(0,0,0,.03); border-color: rgba(0,0,0,.12); color: #292118; }
+[data-theme="light"] .fadv-cat-chip { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.1); color: #555; }
+[data-theme="light"] .fadv-cat-chip.checked { background: rgba(99,102,241,.13); border-color: rgba(99,102,241,.4); color: #4338ca; }
+
 .btn-add-inline {
   display:         flex;
   align-items:     center;

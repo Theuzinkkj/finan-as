@@ -917,21 +917,73 @@ function setCloudStatus(status, label) {
 // =============================================
 //  CLOUD SYNC
 // =============================================
-async function syncFromCloud() {
-  setCloudStatus('loading', 'Sincronizando...');
+
+// Meses já carregados na memória (evita refetch ao navegar para meses já vistos)
+const _cachedMonths = new Set();
+
+// Atualiza badge de itens pendentes no botão de sync
+async function _updatePendingBadge() {
+  const count = await PendingQueue.count().catch(() => 0);
+  const badge = document.getElementById('sync-pending-badge');
+  if (!badge) return;
+  badge.textContent = count > 0 ? count : '';
+  badge.classList.toggle('hidden', count === 0);
+  if (count > 0) setCloudStatus('pending', `${count} item${count > 1 ? 's' : ''} aguardando sync`);
+}
+
+// monthOnly = 'YYYY-MM': carrega apenas aquele mês e funde no array global.
+// Sem monthOnly: carrega últimos 13 meses (cobre gráficos históricos).
+async function syncFromCloud(monthOnly) {
+  setCloudStatus('loading', monthOnly ? `Carregando ${monthOnly}...` : 'Sincronizando...');
   try {
-    const remote    = await CloudDB.getAll();
-    const remoteIds = new Set(remote.map(t => t.id));
-    const local     = await DB.getAll();
-    for (const tx of remote)                                   await DB.put(tx);
-    for (const tx of local.filter(t => !remoteIds.has(t.id))) await DB.remove(tx.id);
-    transactions = remote;
+    let remote;
+
+    if (monthOnly) {
+      remote = await CloudDB.getAll({ month: monthOnly });
+      transactions = transactions.filter(t => !t.date.startsWith(monthOnly));
+      for (const tx of remote) {
+        await DB.put(tx);
+        transactions.push(tx);
+      }
+      _cachedMonths.add(monthOnly);
+    } else {
+      // Carrega últimos 13 meses para cobrir gráficos de evolução anual
+      const since = (() => {
+        const d = new Date(currentDate);
+        d.setMonth(d.getMonth() - 12);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+      })();
+      remote = await CloudDB.getAll({ since });
+
+      const remoteIds = new Set(remote.map(t => t.id));
+      const local     = await DB.getAll();
+
+      for (const tx of remote) await DB.put(tx);
+      // Remove do cache local apenas registros dentro do período que não estão no remoto
+      for (const tx of local.filter(t => t.date >= since && !remoteIds.has(t.id))) {
+        await DB.remove(tx.id);
+      }
+
+      transactions = remote;
+      _cachedMonths.clear();
+      remote.forEach(t => _cachedMonths.add(t.date.slice(0, 7)));
+    }
+
     renderAll();
-    setCloudStatus('connected', `${remote.length} transações sincronizadas`);
+    setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
+
+    // Tenta enviar itens que ficaram na fila offline
+    const pending = await PendingQueue.count().catch(() => 0);
+    if (pending > 0) {
+      const synced = await PendingQueue.flush().catch(() => 0);
+      if (synced > 0 && !monthOnly) await syncFromCloud();
+    }
+    await _updatePendingBadge();
   } catch (err) {
     console.warn('Cloud sync error:', err.message);
     setCloudStatus('error', 'Erro ao sincronizar: ' + err.message);
     toast('Erro ao sincronizar com a nuvem: ' + err.message, 'err');
+    await _updatePendingBadge();
   }
 }
 
@@ -1314,15 +1366,90 @@ let _txDayPage = 1;
 
 function resetTxPagination() { _txDayPage = 1; }
 
+function _updateAdvancedBadge(catCount, dateFrom, dateTo, amtMin, amtMax) {
+  let count = 0;
+  if (dateFrom || dateTo) count++;
+  if (amtMin !== null || amtMax !== null) count++;
+  count += catCount;
+  const badge = document.getElementById('fadv-badge');
+  const btn   = document.getElementById('btn-filters-toggle');
+  if (!badge) return;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.hidden = false;
+    btn?.classList.add('active');
+  } else {
+    badge.hidden = true;
+    btn?.classList.remove('active');
+  }
+}
+
+function buildAdvancedCategoryFilter() {
+  const container = document.getElementById('fadv-cats');
+  if (!container) return;
+  const checkedBefore = new Set(
+    Array.from(container.querySelectorAll('.fadv-cat-chip.checked')).map(c => c.dataset.cat)
+  );
+  container.innerHTML = '';
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
+    const chip = document.createElement('label');
+    chip.className = 'fadv-cat-chip' + (checkedBefore.has(key) ? ' checked' : '');
+    chip.dataset.cat = key;
+    chip.innerHTML = `<input type="checkbox" value="${key}"${checkedBefore.has(key) ? ' checked' : ''}><span>${cat.icon}</span><span>${cat.label}</span>`;
+    chip.addEventListener('click', e => {
+      e.preventDefault();
+      chip.classList.toggle('checked');
+      resetTxPagination();
+      renderAllTxs();
+    });
+    container.appendChild(chip);
+  });
+}
+
+function toggleAdvancedFilters() {
+  const panel = document.getElementById('filters-advanced');
+  const btn   = document.getElementById('btn-filters-toggle');
+  if (!panel) return;
+  panel.hidden = !panel.hidden;
+  btn?.classList.toggle('open', !panel.hidden);
+  if (!panel.hidden) buildAdvancedCategoryFilter();
+}
+
+function clearAdvancedFilters() {
+  ['filter-date-from', 'filter-date-to', 'filter-amount-min', 'filter-amount-max'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.querySelectorAll('#fadv-cats .fadv-cat-chip.checked').forEach(c => c.classList.remove('checked'));
+  resetTxPagination();
+  renderAllTxs();
+}
+
 function renderAllTxs() {
-  const catF   = document.getElementById('filter-category').value;
-  const typeF  = document.getElementById('filter-type').value;
-  const search = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
-  const list   = txOfMonth()
-    .filter(t => !catF   || t.category === catF)
+  const catF      = document.getElementById('filter-category').value;
+  const typeF     = document.getElementById('filter-type').value;
+  const search    = (document.getElementById('filter-search')?.value || '').trim().toLowerCase();
+  const dateFrom  = document.getElementById('filter-date-from')?.value || '';
+  const dateTo    = document.getElementById('filter-date-to')?.value   || '';
+  const amtMinRaw = document.getElementById('filter-amount-min')?.value;
+  const amtMaxRaw = document.getElementById('filter-amount-max')?.value;
+  const amountMin = amtMinRaw !== '' && amtMinRaw != null ? parseFloat(amtMinRaw) : null;
+  const amountMax = amtMaxRaw !== '' && amtMaxRaw != null ? parseFloat(amtMaxRaw) : null;
+  const checkedCats = Array.from(document.querySelectorAll('#fadv-cats .fadv-cat-chip.checked')).map(c => c.dataset.cat);
+
+  const baseList = (dateFrom || dateTo) ? [...transactions] : txOfMonth();
+
+  const list = baseList
+    .filter(t => !dateFrom || t.date >= dateFrom)
+    .filter(t => !dateTo   || t.date <= dateTo)
+    .filter(t => checkedCats.length > 0 ? checkedCats.includes(t.category) : (!catF || t.category === catF))
     .filter(t => !typeF  || t.type === typeF)
+    .filter(t => amountMin === null || t.amount >= amountMin)
+    .filter(t => amountMax === null || t.amount <= amountMax)
     .filter(t => !search || t.description.toLowerCase().includes(search) || (t.notes || '').toLowerCase().includes(search))
     .sort((a, b) => b.date.localeCompare(a.date));
+
+  _updateAdvancedBadge(checkedCats.length, dateFrom, dateTo, amountMin, amountMax);
 
   const countText = `${list.length} transaç${list.length === 1 ? 'ão' : 'ões'}`;
   const countEl = document.getElementById('filter-count');
@@ -1590,22 +1717,45 @@ async function handleFormSubmit(e) {
   const date   = document.getElementById('input-date').value;
 
   const hasInvoiceItems = selectedPayment === 'credito' && invoiceItems.length > 0;
-  if ((!amount || amount <= 0) && !hasInvoiceItems) return;
-  if (!hasInvoiceItems && !desc) return;
-  if (!date) return;
+
+  // ── Validação inline com mensagens de erro visíveis ──────────────────
+  let _hasError = false;
+  function _fieldErr(inputId, errId, condition) {
+    const inp = document.getElementById(inputId);
+    const err = document.getElementById(errId);
+    if (!inp || !err) return;
+    if (condition) {
+      err.classList.remove('hidden');
+      inp.classList.add('input-invalid');
+      _hasError = true;
+    } else {
+      err.classList.add('hidden');
+      inp.classList.remove('input-invalid');
+    }
+  }
+
+  _fieldErr('input-amount', 'amount-error',
+    !hasInvoiceItems && (!amount || amount <= 0 || !isFinite(amount)));
+  _fieldErr('input-description', 'desc-error',
+    !hasInvoiceItems && !desc);
+  _fieldErr('input-date', 'date-error',
+    !date);
 
   const catErr = document.getElementById('cat-error');
-  if ((selectedType === 'despesa' || selectedType === 'beneficio') && !selectedCat && !hasInvoiceItems) {
-    catErr.classList.remove('hidden'); return;
-  }
-  catErr.classList.add('hidden');
+  const needsCat = (selectedType === 'despesa' || selectedType === 'beneficio') && !selectedCat && !hasInvoiceItems;
+  catErr.classList.toggle('hidden', !needsCat);
+  if (needsCat) _hasError = true;
 
   const benefitTypeErr = document.getElementById('benefit-type-error');
-  if (selectedType === 'beneficio' && !selectedBenefitType) {
-    if (benefitTypeErr) benefitTypeErr.classList.remove('hidden');
+  const needsBt = selectedType === 'beneficio' && !selectedBenefitType;
+  benefitTypeErr?.classList.toggle('hidden', !needsBt);
+  if (needsBt) _hasError = true;
+
+  if (_hasError) {
+    const first = document.querySelector('#modal-transaction .input-invalid');
+    first?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     return;
   }
-  if (benefitTypeErr) benefitTypeErr.classList.add('hidden');
 
   if (hasInvoiceItems) {
     if (!selectedCat) selectedCat = 'compras';
@@ -1659,12 +1809,22 @@ async function handleFormSubmit(e) {
   try {
     await DB.put(tx);
     transactions.push(tx);
+    _cachedMonths.add(tx.date.slice(0, 7));
     renderAll();
-    toast('Transação adicionada!');
 
-    CloudDB.add(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    const result = await CloudDB.add(tx).catch(async err => {
+      if (!navigator.onLine) return { queued: true };
+      toast('Nuvem: ' + err.message, 'err');
+      return null;
+    });
+
+    if (result?.queued) {
+      toast('Salvo localmente — sincronizará quando voltar online.');
+      await _updatePendingBadge();
+    } else if (result !== null) {
+      toast('Transação adicionada!');
+      setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
+    }
   } catch (err) {
     toast('Erro ao salvar transação.', 'err');
   }
@@ -1695,21 +1855,40 @@ async function deleteTx(id) {
         transactions.push(tx);
         renderAll();
         toast('Exclusão desfeita.');
-        CloudDB.add(tx)
-          .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-          .catch(() => {});
+        const r = await CloudDB.add(tx).catch(() => null);
+        if (r) setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
+        await _updatePendingBadge();
       } catch {
         toast('Erro ao desfazer exclusão.', 'err');
       }
     });
-    CloudDB.remove(id)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+
+    const result = await CloudDB.remove(id).catch(async err => {
+      if (!navigator.onLine) return { queued: true };
+      toast('Nuvem: ' + err.message, 'err');
+      return null;
+    });
+
+    if (result?.queued) {
+      await _updatePendingBadge();
+    } else if (result !== null) {
+      setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
+    }
   } catch (err) {
     toast('Erro ao remover transação.', 'err');
     transactions.push(tx);
     renderAll();
   }
+}
+
+// Helper: executa CloudDB.update e trata queue offline / status
+async function _cloudUpdate(tx) {
+  const result = await CloudDB.update(tx).catch(err => {
+    toast('Nuvem: ' + err.message, 'err');
+    return null;
+  });
+  if (result?.queued) await _updatePendingBadge();
+  else if (result !== null) setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
 }
 
 // =============================================
@@ -1830,9 +2009,7 @@ async function saveRenameTx() {
     await DB.put(tx);
     renderAll();
     toast('Descrição atualizada.');
-    CloudDB.update(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }
 
@@ -1863,9 +2040,7 @@ async function saveEditAmount() {
     await DB.put(tx);
     renderAll();
     toast('Valor atualizado.');
-    CloudDB.update(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }
 
@@ -1939,9 +2114,7 @@ async function saveChangeCat() {
     await DB.put(tx);
     renderAll();
     toast('Categoria atualizada.');
-    CloudDB.update(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }
 
@@ -1957,9 +2130,7 @@ async function toggleFixedTx() {
     await DB.put(tx);
     renderAll();
     toast(tx.fixed ? '🔄 Transação marcada como fixa.' : 'Recorrência removida.');
-    CloudDB.update(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }
 
@@ -2005,9 +2176,7 @@ async function saveAddToFatura() {
     await DB.put(tx);
     renderAll();
     toast('Fatura atualizada!');
-    CloudDB.update(tx)
-      .then(() => setCloudStatus('connected', `${transactions.length} transações sincronizadas`))
-      .catch(err => toast('Nuvem: ' + err.message, 'err'));
+    _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar fatura.', 'err'); }
 }
 
@@ -2134,6 +2303,7 @@ function buildCategoryFilter() {
       `<option value="${key}">${cat.icon} ${cat.label}</option>`);
   });
   if (prev) sel.value = prev;
+  if (!document.getElementById('filters-advanced')?.hidden) buildAdvancedCategoryFilter();
 }
 
 function initCustomSelects() {
@@ -2303,6 +2473,8 @@ function goToTransactions(type, category) {
   const selCat  = document.getElementById('filter-category');
   if (selType) selType.value = type || '';
   if (selCat)  selCat.value  = category || '';
+  document.querySelectorAll('#fadv-cats .fadv-cat-chip.checked').forEach(c => c.classList.remove('checked'));
+  resetTxPagination();
   renderAllTxs();
 }
 
@@ -2644,21 +2816,26 @@ function bindEvents() {
     renderFaturaEditItems();
   });
 
-  // Navegação de mês
-  document.getElementById('prev-month').addEventListener('click', () => {
-    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  // Navegação de mês com lazy loading — busca o mês se ainda não está em cache
+  async function _navigateMonth(delta) {
+    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + delta, 1);
     selectedTxIds.clear();
     closeTxDetailPanel();
     resetTxPagination();
-    renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
-  });
-  document.getElementById('next-month').addEventListener('click', () => {
-    currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    selectedTxIds.clear();
-    closeTxDetailPanel();
-    resetTxPagination();
-    renderMonthLabel(); renderAll(); resetAIResult(); renderSelectionBar();
-  });
+    renderMonthLabel();
+    resetAIResult();
+    renderSelectionBar();
+
+    const monthKey = mkKey(currentDate);
+    if (!Demo.active && !_cachedMonths.has(monthKey)) {
+      await syncFromCloud(monthKey);
+    } else {
+      renderAll();
+    }
+  }
+
+  document.getElementById('prev-month').addEventListener('click', () => _navigateMonth(-1));
+  document.getElementById('next-month').addEventListener('click', () => _navigateMonth(+1));
 
   // Abas desktop / mobile
   document.getElementById('nav-tabs').addEventListener('click', e => {
@@ -2695,6 +2872,13 @@ function bindEvents() {
   document.getElementById('filter-category').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
   document.getElementById('filter-type').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
   document.getElementById('filter-search').addEventListener('input', () => { resetTxPagination(); renderAllTxs(); });
+
+  // Filtros avançados
+  document.getElementById('btn-filters-toggle').addEventListener('click', toggleAdvancedFilters);
+  document.getElementById('fadv-clear').addEventListener('click', clearAdvancedFilters);
+  ['filter-date-from', 'filter-date-to', 'filter-amount-min', 'filter-amount-max'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => { resetTxPagination(); renderAllTxs(); });
+  });
 
   // Abrir painel de perfil (desktop e avatares mobile)
   document.getElementById('btn-profile').addEventListener('click', openProfilePanel);
@@ -3201,6 +3385,23 @@ async function startApp() {
     await autoGenerateRecurring();
   });
 
+  // Reconexão: flush da fila offline e re-sync
+  window.addEventListener('online', async () => {
+    const count = await PendingQueue.count().catch(() => 0);
+    if (count > 0) {
+      toast(`Conexão restaurada — sincronizando ${count} item${count > 1 ? 's' : ''}...`);
+      const synced = await PendingQueue.flush().catch(() => 0);
+      if (synced > 0) await syncFromCloud();
+      else await _updatePendingBadge();
+    } else {
+      setCloudStatus('connected', 'Online');
+    }
+  });
+
+  window.addEventListener('offline', () => {
+    setCloudStatus('error', 'Sem conexão — mudanças salvas localmente');
+  });
+
   const dot = document.getElementById('db-status-dot-header');
   if (dot) {
     dot.style.cursor = 'pointer';
@@ -3208,6 +3409,9 @@ async function startApp() {
       if (!Demo.active) syncFromCloud();
     });
   }
+
+  // Badge inicial de pendentes (pode haver da sessão anterior)
+  _updatePendingBadge();
 }
 
 init();
