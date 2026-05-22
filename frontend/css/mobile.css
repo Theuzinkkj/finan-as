@@ -231,6 +231,16 @@
     border-top:    1px solid rgba(255,255,255,.08);
   }
   .mob-split-item { flex: 1; }
+  .mob-split-clickable {
+    cursor:        pointer;
+    border-radius: 8px;
+    padding:       4px 6px;
+    margin:        -4px -6px;
+    transition:    background .15s;
+  }
+  .mob-split-clickable:active {
+    background: rgba(255,255,255,.08);
+  }
   .mob-split-div  { width:1px; background:rgba(255,255,255,.08); flex-shrink:0; }
   .mob-split-label {
     font-size:     10px;
