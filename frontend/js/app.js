@@ -2976,6 +2976,8 @@ async function init() {
     await startApp();
   } catch (err) {
     console.error('[init] erro inesperado:', err);
+    // Sinaliza que /app falhou para que /login quebre o loop e force logout
+    sessionStorage.setItem('atlas_app_error', '1');
     window.location.href = '/login';
   }
 }
@@ -3004,6 +3006,7 @@ function exitDemoMode() {
 async function startApp() {
   if (appInitialized) return;
   appInitialized = true;
+  sessionStorage.removeItem('atlas_app_error');
   document.body.classList.add('tab-dashboard');
   document.body.dataset.tab = 'dashboard';
   renderMonthLabel();

@@ -66,16 +66,28 @@ const DB = {
 // =============================================
 const API = {
   async req(method, path, body) {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 20_000);
+
     const opts = {
       method,
       headers:     { 'Content-Type': 'application/json' },
-      credentials: 'include', // envia/recebe cookies httpOnly
+      credentials: 'include',
+      signal:      controller.signal,
     };
     if (body !== undefined) opts.body = JSON.stringify(body);
 
-    const res  = await fetch(path, opts);
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+    let res, text, data;
+    try {
+      res  = await fetch(path, opts);
+      text = await res.text();
+      data = text ? JSON.parse(text) : null;
+    } catch (err) {
+      clearTimeout(tid);
+      if (err.name === 'AbortError') throw new Error('Tempo limite excedido. Verifique sua conexão.');
+      throw err;
+    }
+    clearTimeout(tid);
 
     if (!res.ok) {
       const raw = (data && (data.error_description || data.message || data.error)) ||

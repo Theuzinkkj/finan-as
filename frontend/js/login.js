@@ -338,6 +338,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const loggedIn = await Auth.check();
   if (loggedIn) {
+    // Detecta loop de redirecionamento: se viemos do /app com falha, força logout
+    if (sessionStorage.getItem('atlas_app_error')) {
+      sessionStorage.removeItem('atlas_app_error');
+      await Auth.signOut().catch(() => {});
+      showAuthError('Sua sessão expirou ou houve um erro ao carregar o app. Faça login novamente.');
+      return;
+    }
     window.location.href = '/app';
     return;
   }
