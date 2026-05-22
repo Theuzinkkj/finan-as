@@ -436,9 +436,25 @@ app.get('/api/auth/callback', async (req, res) => {
 
 app.get('/api/transactions', requireAuth, async (req, res, next) => {
   try {
-    const url = `${SUPA_URL}/rest/v1/transactions`
-              + `?user_id=eq.${encodeURIComponent(req.userId)}`
-              + `&select=*&order=date.desc`;
+    let url = `${SUPA_URL}/rest/v1/transactions`
+            + `?user_id=eq.${encodeURIComponent(req.userId)}`
+            + `&select=*&order=date.desc`;
+
+    // ?month=YYYY-MM  →  filtra exatamente aquele mês
+    const { month, since } = req.query;
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const [y, m] = month.split('-').map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      url += `&date=gte.${month}-01&date=lte.${month}-${String(lastDay).padStart(2, '0')}`;
+    } else if (since && /^\d{4}-\d{2}-\d{2}$/.test(since)) {
+      // ?since=YYYY-MM-DD  →  carrega a partir daquela data
+      url += `&date=gte.${since}`;
+    }
+
+    // Paginação: ?limit=N&offset=N  (padrão 1000, máx 5000)
+    const limit  = Math.min(parseInt(req.query.limit)  || 1000, 5000);
+    const offset = Math.max(parseInt(req.query.offset) || 0,    0);
+    url += `&limit=${limit}&offset=${offset}`;
 
     const { ok, status, data } = await proxyFetch(url, { headers: supaHeaders(req.authToken) });
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });

@@ -6,8 +6,9 @@
 const DB = {
   _db: null,
   get DB_NAME() { return `atlasfinance_${Auth.userId || 'anon'}`; },
-  DB_VERSION: 1,
+  DB_VERSION: 2,
   STORE:      'transactions',
+  PENDING:    'pending_queue',
 
   open() {
     return new Promise((resolve, reject) => {
@@ -20,6 +21,10 @@ const DB = {
           store.createIndex('type',     'type',     { unique: false });
           store.createIndex('category', 'category', { unique: false });
         }
+        // v2: fila de operações pendentes (sync offline → cloud)
+        if (!db.objectStoreNames.contains(this.PENDING)) {
+          db.createObjectStore(this.PENDING, { keyPath: 'qid', autoIncrement: true });
+        }
       };
 
       req.onsuccess = ({ target: { result } }) => { this._db = result; resolve(); };
@@ -27,38 +32,17 @@ const DB = {
     });
   },
 
-  getAll() {
+  _op(store, mode, fn) {
     return new Promise((resolve, reject) => {
-      const req = this._db
-        .transaction(this.STORE, 'readonly')
-        .objectStore(this.STORE)
-        .getAll();
+      const req = fn(this._db.transaction(store, mode).objectStore(store));
       req.onsuccess = () => resolve(req.result);
       req.onerror   = ({ target: { error } }) => reject(error);
     });
   },
 
-  put(record) {
-    return new Promise((resolve, reject) => {
-      const req = this._db
-        .transaction(this.STORE, 'readwrite')
-        .objectStore(this.STORE)
-        .put(record);
-      req.onsuccess = () => resolve();
-      req.onerror   = ({ target: { error } }) => reject(error);
-    });
-  },
-
-  remove(id) {
-    return new Promise((resolve, reject) => {
-      const req = this._db
-        .transaction(this.STORE, 'readwrite')
-        .objectStore(this.STORE)
-        .delete(id);
-      req.onsuccess = () => resolve();
-      req.onerror   = ({ target: { error } }) => reject(error);
-    });
-  },
+  getAll()    { return this._op(this.STORE, 'readonly',  s => s.getAll()); },
+  put(record) { return this._op(this.STORE, 'readwrite', s => s.put(record)); },
+  remove(id)  { return this._op(this.STORE, 'readwrite', s => s.delete(id)); },
 
   purgeOld() {
     const cutoff = new Date();
@@ -82,6 +66,32 @@ const DB = {
       };
       req.onerror = ({ target: { error } }) => reject(error);
     });
+  },
+};
+
+// =============================================
+//  PENDING QUEUE — fila de sync offline
+// =============================================
+const PendingQueue = {
+  push(op)   { return DB._op(DB.PENDING, 'readwrite', s => s.add(op)); },
+  getAll()   { return DB._op(DB.PENDING, 'readonly',  s => s.getAll()); },
+  _del(qid)  { return DB._op(DB.PENDING, 'readwrite', s => s.delete(qid)); },
+  count()    { return DB._op(DB.PENDING, 'readonly',  s => s.count()); },
+
+  // Tenta enviar todos os pendentes. Para no primeiro erro (ainda offline).
+  async flush() {
+    const items = await this.getAll();
+    let synced = 0;
+    for (const item of items) {
+      try {
+        if      (item.type === 'add')    await CloudDB._addDirect(item.payload);
+        else if (item.type === 'remove') await CloudDB._removeDirect(item.payload);
+        else if (item.type === 'update') await CloudDB._updateDirect(item.payload);
+        await this._del(item.qid);
+        synced++;
+      } catch { break; }
+    }
+    return synced;
   },
 };
 
@@ -126,25 +136,64 @@ const API = {
 //  CLOUD TRANSACTIONS (via backend proxy)
 // =============================================
 const CloudDB = {
-  async getAll() {
-    const rows = await API.req('GET', '/api/transactions');
+  // Carrega com filtros opcionais: month=YYYY-MM, since=YYYY-MM-DD, limit, offset
+  async getAll({ month, since, limit = 1000, offset = 0 } = {}) {
+    let path = `/api/transactions?limit=${limit}&offset=${offset}`;
+    if (month) path += `&month=${encodeURIComponent(month)}`;
+    else if (since) path += `&since=${encodeURIComponent(since)}`;
+    const rows = await API.req('GET', path);
     return (Array.isArray(rows) ? rows : [])
       .map(r => ({ ...r, amount: parseFloat(r.amount) }));
   },
 
-  async add(tx) {
-    // user_id é injetado pelo backend a partir do JWT — não enviamos do cliente
-    const { user_id: _dropped, ...payload } = tx;
+  // Chamadas diretas ao servidor (usadas pelo PendingQueue.flush)
+  async _addDirect(tx) {
+    const { user_id: _d, ...payload } = tx;
     return API.req('POST', '/api/transactions', payload);
+  },
+  async _removeDirect(id) {
+    return API.req('DELETE', `/api/transactions/${id}`);
+  },
+  async _updateDirect(tx) {
+    const { id, user_id: _d, ...payload } = tx;
+    return API.req('PATCH', `/api/transactions/${id}`, payload);
+  },
+
+  // Métodos públicos: tentam cloud; se offline enfileiram para sync posterior
+  async add(tx) {
+    try {
+      return await this._addDirect(tx);
+    } catch (err) {
+      if (!navigator.onLine) {
+        await PendingQueue.push({ type: 'add', payload: tx });
+        return { queued: true };
+      }
+      throw err;
+    }
   },
 
   async remove(id) {
-    return API.req('DELETE', `/api/transactions/${id}`);
+    try {
+      return await this._removeDirect(id);
+    } catch (err) {
+      if (!navigator.onLine) {
+        await PendingQueue.push({ type: 'remove', payload: id });
+        return { queued: true };
+      }
+      throw err;
+    }
   },
 
   async update(tx) {
-    const { id, user_id: _dropped, ...payload } = tx;
-    return API.req('PATCH', `/api/transactions/${id}`, payload);
+    try {
+      return await this._updateDirect(tx);
+    } catch (err) {
+      if (!navigator.onLine) {
+        await PendingQueue.push({ type: 'update', payload: tx });
+        return { queued: true };
+      }
+      throw err;
+    }
   },
 };
 
@@ -154,17 +203,17 @@ const CloudDB = {
 // O JWT fica num cookie httpOnly: o JS nunca lê o token.
 // Apenas email/id de display são guardados (não são segredos).
 const Auth = {
-  get email()  { return localStorage.getItem('financeai_display_email') || ''; },
-  get userId() { return localStorage.getItem('financeai_display_uid')   || ''; },
+  get email()  { return Storage.get(Storage.AUTH_EMAIL, ''); },
+  get userId() { return Storage.get(Storage.AUTH_UID,   ''); },
 
   _saveDisplay(email, id) {
-    localStorage.setItem('financeai_display_email', email || '');
-    localStorage.setItem('financeai_display_uid',   id    || '');
+    Storage.set(Storage.AUTH_EMAIL, email || '');
+    Storage.set(Storage.AUTH_UID,   id    || '');
   },
 
   _clearDisplay() {
-    localStorage.removeItem('financeai_display_email');
-    localStorage.removeItem('financeai_display_uid');
+    Storage.remove(Storage.AUTH_EMAIL);
+    Storage.remove(Storage.AUTH_UID);
   },
 
   // Verifica sessão no backend — retorna true se autenticado.
@@ -215,11 +264,9 @@ const GroqAPI = {
 //  DEMO MODE
 // =============================================
 const Demo = {
-  KEY: 'financeai_demo',
-
-  get active() { return localStorage.getItem(this.KEY) === '1'; },
-  enter()      { localStorage.setItem(this.KEY, '1'); },
-  exit()       { localStorage.removeItem(this.KEY); },
+  get active() { return Storage.flag(Storage.DEMO); },
+  enter()      { Storage.setFlag(Storage.DEMO); },
+  exit()       { Storage.remove(Storage.DEMO); },
 
   _date(monthOffset, day) {
     const now   = new Date();

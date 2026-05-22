@@ -55,12 +55,12 @@ function releaseFocus(modalEl) {
 //  THEME
 // =============================================
 function initTheme() {
-  applyTheme(localStorage.getItem('financeai_theme') || 'dark');
+  applyTheme(Storage.get(Storage.THEME, 'dark'));
 }
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  localStorage.setItem('financeai_theme', theme);
+  Storage.set(Storage.THEME, theme);
   document.querySelectorAll('.theme-opt').forEach(b => {
     b.classList.toggle('active', b.id === `theme-btn-${theme}`);
   });
@@ -69,25 +69,23 @@ function applyTheme(theme) {
 // =============================================
 //  CUSTOM CATEGORIES
 // =============================================
-function _catsKey() { return `atlas_custom_cats_${Auth.userId || 'anon'}`; }
-
 function loadCustomCategories() {
-  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
+  const saved = Storage.getJSON(Storage.catsKey(), {});
   Object.assign(CATEGORIES, saved);
 }
 
 function saveCustomCategory(key, cat) {
   CATEGORIES[key] = cat;
-  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
+  const saved = Storage.getJSON(Storage.catsKey(), {});
   saved[key] = cat;
-  localStorage.setItem(_catsKey(), JSON.stringify(saved));
+  Storage.setJSON(Storage.catsKey(), saved);
 }
 
 function deleteCustomCategory(key) {
   delete CATEGORIES[key];
-  const saved = JSON.parse(localStorage.getItem(_catsKey()) || '{}');
+  const saved = Storage.getJSON(Storage.catsKey(), {});
   delete saved[key];
-  localStorage.setItem(_catsKey(), JSON.stringify(saved));
+  Storage.setJSON(Storage.catsKey(), saved);
 }
 
 // =============================================
@@ -99,15 +97,12 @@ function getBenefitSVG(key, size = 18) {
   return '';
 }
 
-function _benefitKey()     { return `atlas_benefits_${Auth.userId || 'anon'}`; }
-function _benefitOpenKey() { return `atlas_benefits_open_${Auth.userId || 'anon'}`; }
-
 function loadBenefitAllocations() {
-  benefitAllocations = JSON.parse(localStorage.getItem(_benefitKey()) || '{}');
+  benefitAllocations = Storage.getJSON(Storage.benefitKey(), {});
 }
 
 function initBenefitsToggle() {
-  const open = localStorage.getItem(_benefitOpenKey()) === 'true';
+  const open = Storage.get(Storage.benefitOpenKey()) === 'true';
   const body   = document.getElementById('benefits-body');
   const toggle = document.getElementById('btn-benefits-toggle');
   if (!body || !toggle) return;
@@ -121,7 +116,7 @@ function toggleBenefitsSection() {
   if (!body || !toggle) return;
   const isOpen = body.classList.toggle('open');
   toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  localStorage.setItem(_benefitOpenKey(), isOpen ? 'true' : 'false');
+  Storage.set(Storage.benefitOpenKey(), isOpen ? 'true' : 'false');
 }
 
 function saveBenefitsConfig() {
@@ -129,7 +124,7 @@ function saveBenefitsConfig() {
   const vt = parseFloat(document.getElementById('input-vt-amount').value) || 0;
   benefitAllocations.vr = vr;
   benefitAllocations.vt = vt;
-  localStorage.setItem(_benefitKey(), JSON.stringify(benefitAllocations));
+  Storage.setJSON(Storage.benefitKey(), benefitAllocations);
   closeModal('modal-benefits-config');
   renderBenefits(txOfMonth());
   toast('Benefícios configurados!');
@@ -138,15 +133,13 @@ function saveBenefitsConfig() {
 // =============================================
 //  BUDGETS
 // =============================================
-function _budgetOpenKey() { return `atlas_budget_open_${Auth.userId || 'anon'}`; }
-
 function loadBudgets() {
   // Source of truth is the server profile (synced to localStorage by syncProfileFromServer)
   budgets = loadProfile().budgets || {};
 }
 
 function initBudgetToggle() {
-  const open   = localStorage.getItem(_budgetOpenKey()) === 'true';
+  const open   = Storage.get(Storage.budgetOpenKey()) === 'true';
   const body   = document.getElementById('budget-body');
   const toggle = document.getElementById('btn-budget-toggle');
   if (!body || !toggle) return;
@@ -160,7 +153,7 @@ function toggleBudgetSection() {
   if (!body || !toggle) return;
   const isOpen = body.classList.toggle('open');
   toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  localStorage.setItem(_budgetOpenKey(), isOpen ? 'true' : 'false');
+  Storage.set(Storage.budgetOpenKey(), isOpen ? 'true' : 'false');
 }
 
 function openBudgetConfig() {
@@ -453,8 +446,8 @@ function renderBudgets(txs) {
 
   // Disparar alerta de email quando >= 80% (máximo 1x por categoria por mês)
   if (!Demo.active) {
-    const alertKey = `atlas_budget_alerted_${Auth.userId || 'anon'}`;
-    const alerted  = JSON.parse(localStorage.getItem(alertKey) || '{}');
+    const alertKey = Storage.budgetAlertKey();
+    const alerted  = Storage.getJSON(alertKey, {});
     const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     entries.forEach(([key, limit]) => {
       const spent = catTotals[key] || 0;
@@ -462,7 +455,7 @@ function renderBudgets(txs) {
       const k     = `${monthKey}_${key}`;
       if (pct >= 80 && !alerted[k]) {
         alerted[k] = true;
-        localStorage.setItem(alertKey, JSON.stringify(alerted));
+        Storage.setJSON(alertKey, alerted);
         const catLabel = CATEGORIES[key]?.label || key;
         API.post('/api/notify/budget-alert', {
           category: catLabel,
@@ -662,14 +655,12 @@ function completeOnboarding() {
 // =============================================
 //  PROFILE
 // =============================================
-function _profileKey() { return `atlas_profile_${Auth.userId || 'anon'}`; }
-
 function loadProfile() {
-  return JSON.parse(localStorage.getItem(_profileKey()) || '{}');
+  return Storage.getJSON(Storage.profileKey(), {});
 }
 
 function saveProfile(data) {
-  localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...data }));
+  Storage.setJSON(Storage.profileKey(), { ...loadProfile(), ...data });
   if (!Demo.active) {
     const { photo, ...serverData } = data;
     // Sincroniza URL da foto (curta) mas nunca base64 (enorme → quebra o JWT)
@@ -685,7 +676,7 @@ async function syncProfileFromServer() {
   try {
     const remote = await API.req('GET', '/api/profile');
     if (remote && typeof remote === 'object' && Object.keys(remote).length) {
-      localStorage.setItem(_profileKey(), JSON.stringify({ ...loadProfile(), ...remote }));
+      Storage.setJSON(Storage.profileKey(), { ...loadProfile(), ...remote });
     }
   } catch { /* offline ou sem sessão — mantém cache local */ }
 }
@@ -1596,7 +1587,7 @@ function editBenefit(key) {
 
 function removeBenefit(key) {
   benefitAllocations[key] = 0;
-  localStorage.setItem(_benefitKey(), JSON.stringify(benefitAllocations));
+  Storage.setJSON(Storage.benefitKey(), benefitAllocations);
   renderBenefits(txOfMonth());
   toast(`${BENEFIT_TYPES[key]?.label || 'Benefício'} removido`);
 }
@@ -2976,7 +2967,7 @@ function bindEvents() {
     reader.onload = async ev => {
       const base64 = ev.target.result;
       const localProfile = { ...loadProfile(), photo: base64 };
-      localStorage.setItem(_profileKey(), JSON.stringify(localProfile));
+      Storage.setJSON(Storage.profileKey(), localProfile);
       updateProfileUI();
 
       if (Demo.active) { toast('Foto atualizada!'); return; }

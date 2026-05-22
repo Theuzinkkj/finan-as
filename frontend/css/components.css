@@ -1228,6 +1228,37 @@
 
 .input-hint  { font-size: .73rem; color: var(--text-3); margin-top: 6px; line-height: 1.5; }
 .field-error { font-size: .74rem; color: var(--red); margin-top: 5px; display: block; }
+.field-warn  { font-size: .74rem; color: var(--yellow, #f59e0b); margin-top: 5px; display: block; }
+
+/* Estado de erro inline nos inputs */
+.input-invalid {
+  border-color: var(--red) !important;
+  box-shadow:   0 0 0 2px rgba(239,68,68,.18) !important;
+  animation:    shake .25s ease;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+/* Badge de itens pendentes no dot de sync */
+.sync-pending-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  min-width: 14px; height: 14px;
+  background: var(--red);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 14px;
+  text-align: center;
+  padding: 0 3px;
+  pointer-events: none;
+}
+/* Status: pending (itens em fila offline) */
+.db-dot.db-pending { background: var(--yellow, #f59e0b); }
 
 .category-grid {
   display:               grid;

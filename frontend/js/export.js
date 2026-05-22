@@ -45,81 +45,192 @@ function exportExcel() {
 
 function exportPDF() {
   if (!transactions.length) { toast('Nenhuma transação para exportar.', 'err'); return; }
+  if (!window.jspdf) { toast('Biblioteca PDF não carregada. Recarregue a página.', 'err'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
   const txs     = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
   const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
   const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
+  const M  = 15;   // margin
+  const PW = 210;  // page width mm
+  const CW = PW - M * 2; // content width
+  const PH = 297;
+  const BOTTOM = PH - 12;
+  let y = M;
+
+  // helpers
+  const newPageIfNeeded = (need) => {
+    if (y + need > BOTTOM) { doc.addPage(); y = M; }
+  };
+  const sectionHeader = (label) => {
+    newPageIfNeeded(12);
+    doc.setFillColor(30, 27, 75);
+    doc.rect(M, y, CW, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label, M + 3, y + 5);
+    y += 9;
+  };
+  const tableHeader = (cols) => {
+    doc.setFillColor(243, 244, 246);
+    doc.rect(M, y, CW, 6, 'F');
+    doc.setTextColor(100, 100, 120);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'bold');
+    cols.forEach(([text, x, align]) => doc.text(text, x, y + 4.5, { align: align || 'left' }));
+    y += 7;
+  };
+  const addChartImg = (id, x, imgY, w, h, label) => {
+    const canvas = document.getElementById(id);
+    if (!canvas || canvas.width === 0 || canvas.height === 0) return false;
+    doc.setTextColor(100, 100, 120);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text(label.toUpperCase(), x, imgY - 1);
+    try {
+      doc.addImage(canvas.toDataURL('image/png'), 'PNG', x, imgY + 1, w, h);
+    } catch (_) { return false; }
+    return true;
+  };
+
+  // ── HEADER ──────────────────────────────────────────────
+  doc.setFillColor(30, 27, 75);
+  doc.rect(0, 0, PW, 30, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Atlas Finance', M, 13);
+  doc.setFontSize(8.5);
+  doc.setFont('helvetica', 'normal');
+  doc.text('Extrato Financeiro', M, 20);
+  doc.setTextColor(180, 170, 220);
+  doc.setFontSize(7);
+  doc.text(`Gerado em ${fmtDate(todayLocal())}  ·  ${txs.length} transações`, M, 26);
+  y = 38;
+
+  // ── RESUMO ───────────────────────────────────────────────
+  const cardW = (CW - 8) / 3;
+  const cardDefs = [
+    { label: 'SALDO',    value: balance, bg: [243, 240, 255], border: [124, 58, 237], color: [124, 58, 237] },
+    { label: 'RECEITAS', value: income,  bg: [240, 253, 244], border: [16, 185, 129], color: [5, 150, 105]  },
+    { label: 'DESPESAS', value: expense, bg: [254, 242, 242], border: [239, 68, 68],  color: [220, 38, 38]  },
+  ];
+  cardDefs.forEach((card, i) => {
+    const cx = M + i * (cardW + 4);
+    doc.setFillColor(...card.bg);
+    doc.setDrawColor(...card.border);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(cx, y, cardW, 18, 2.5, 2.5, 'FD');
+    doc.setTextColor(130, 130, 150);
+    doc.setFontSize(6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.text(card.label, cx + 4, y + 6);
+    doc.setTextColor(...card.color);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(fmt(card.value), cx + 4, y + 14);
+  });
+  y += 24;
+
+  // ── GRÁFICOS ─────────────────────────────────────────────
+  // Linha 1: donut (esquerda) + evolução 6 meses (direita)
+  const donutW = 52, donutH = 52;
+  const evolW  = CW - donutW - 6, evolH = 52;
+  const chartY1 = y;
+  const hasDonut = addChartImg('donut-chart', M,              chartY1, donutW, donutH, 'Gastos por Categoria');
+  const hasEvol  = addChartImg('evol-chart',  M + donutW + 6, chartY1, evolW,  evolH,  'Evolução 6 Meses');
+  if (hasDonut || hasEvol) y = chartY1 + donutH + 10;
+
+  // Linha 2: top categorias (barra horizontal, largura total)
+  newPageIfNeeded(52);
+  const barH = 48;
+  const barY = y;
+  if (addChartImg('bar-chart', M, barY, CW, barH, 'Top Categorias')) y = barY + barH + 10;
+
+  // Linha 3: despesas diárias (largura total)
+  newPageIfNeeded(42);
+  const lineH = 38;
+  const lineY = y;
+  if (addChartImg('line-chart', M, lineY, CW, lineH, 'Despesas Diárias')) y = lineY + lineH + 10;
+
+  // ── TABELA DE CATEGORIAS ─────────────────────────────────
   const catTotals = {};
   txs.filter(t => t.type === 'despesa')
      .forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
+  const catEntries = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
 
-  const catRows = Object.entries(catTotals).sort((a, b) => b[1] - a[1])
-    .map(([k, v]) => `<tr>
-      <td>${CATEGORIES[k]?.icon || ''} ${CATEGORIES[k]?.label || 'Outros'}</td>
-      <td style="text-align:right;color:#dc2626;font-weight:600">${fmt(v)}</td>
-      <td style="text-align:right">${((v / expense) * 100).toFixed(1)}%</td>
-    </tr>`).join('');
+  if (catEntries.length && expense > 0) {
+    sectionHeader('GASTOS POR CATEGORIA');
+    tableHeader([
+      ['Categoria',  M + 3,        'left'],
+      ['Total',      M + CW - 35,  'left'],
+      ['%',          M + CW - 3,   'right'],
+    ]);
+    catEntries.forEach(([k, v], i) => {
+      newPageIfNeeded(8);
+      if (i % 2 === 0) { doc.setFillColor(249, 249, 251); doc.rect(M, y - 1, CW, 6.5, 'F'); }
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(30, 27, 75);
+      doc.text(CATEGORIES[k]?.label || 'Outros', M + 3, y + 4);
+      doc.setTextColor(220, 38, 38);
+      doc.text(fmt(v), M + CW - 35, y + 4);
+      doc.setTextColor(100, 100, 120);
+      doc.text(`${((v / expense) * 100).toFixed(1)}%`, M + CW - 3, y + 4, { align: 'right' });
+      y += 6.5;
+    });
+    y += 6;
+  }
 
-  const txRows = txs.map(t => {
+  // ── TABELA DE TRANSAÇÕES ─────────────────────────────────
+  sectionHeader('TRANSAÇÕES');
+  tableHeader([
+    ['Data',       M + 3,        'left'],
+    ['Tipo',       M + 24,       'left'],
+    ['Categoria',  M + 44,       'left'],
+    ['Descrição',  M + 82,       'left'],
+    ['Valor',      M + CW - 3,   'right'],
+  ]);
+
+  txs.forEach((t, i) => {
+    newPageIfNeeded(8);
     const isIncome = t.type === 'receita';
-    return `<tr>
-      <td>${fmtDate(t.date)}</td>
-      <td><span class="badge ${isIncome ? 'badge-income' : 'badge-expense'}">${isIncome ? 'Receita' : 'Despesa'}</span></td>
-      <td>${isIncome ? '—' : (CATEGORIES[t.category]?.label || 'Outros')}</td>
-      <td>${escHtml(t.description)}</td>
-      <td style="color:#888;font-size:.8em">${t.notes ? escHtml(t.notes) : '—'}</td>
-      <td style="text-align:right;font-weight:700;color:${isIncome ? '#059669' : '#dc2626'}">
-        ${isIncome ? '+' : '−'}${fmt(t.amount)}
-      </td>
-    </tr>`;
-  }).join('');
+    if (i % 2 === 0) { doc.setFillColor(249, 249, 251); doc.rect(M, y - 1, CW, 6.5, 'F'); }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.setTextColor(80, 80, 100);
+    doc.text(fmtDate(t.date), M + 3, y + 4);
+    doc.setTextColor(isIncome ? 5 : 185, isIncome ? 150 : 28, isIncome ? 105 : 28);
+    doc.text(isIncome ? 'Receita' : 'Despesa', M + 24, y + 4);
+    doc.setTextColor(80, 80, 100);
+    doc.text((isIncome ? '—' : (CATEGORIES[t.category]?.label || 'Outros')).substring(0, 20), M + 44, y + 4);
+    doc.setTextColor(30, 27, 75);
+    doc.text(t.description.substring(0, 38), M + 82, y + 4);
+    doc.setTextColor(isIncome ? 5 : 220, isIncome ? 150 : 38, isIncome ? 105 : 38);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${isIncome ? '+' : '−'}${fmt(t.amount)}`, M + CW - 3, y + 4, { align: 'right' });
+    y += 6.5;
+  });
 
-  const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
-<title>Atlas Finance — Extrato</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;color:#1e1b4b;padding:32px;font-size:13px}
-.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #1e1b4b}
-.logo{font-size:1.6rem;font-weight:800;color:#7c3aed}
-.meta{font-size:.8rem;color:#888;margin-top:6px}
-.summary{display:flex;gap:14px;margin-bottom:28px}
-.sum-card{flex:1;padding:14px 18px;border-radius:10px}
-.s-balance{background:#f3f0ff;border:1.5px solid #7c3aed}
-.s-income{background:#f0fdf4;border:1.5px solid #10b981}
-.s-expense{background:#fef2f2;border:1.5px solid #ef4444}
-.sum-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:4px}
-.sum-value{font-size:1.3rem;font-weight:800}
-.s-balance .sum-value{color:#7c3aed}.s-income .sum-value{color:#059669}.s-expense .sum-value{color:#dc2626}
-h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#888;margin:24px 0 10px}
-table{width:100%;border-collapse:collapse}
-th{background:#1e1b4b;color:#fff;padding:9px 12px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em}
-td{padding:8px 12px;border-bottom:1px solid #e5e7eb;vertical-align:top}
-tr:nth-child(even) td{background:#f9f9fb}
-.badge{padding:2px 8px;border-radius:100px;font-size:.72rem;font-weight:600}
-.badge-income{background:#dcfce7;color:#15803d}.badge-expense{background:#fee2e2;color:#b91c1c}
-.footer{margin-top:28px;font-size:.72rem;color:#bbb;text-align:center;border-top:1px solid #e5e7eb;padding-top:14px}
-@media print{body{padding:16px}.no-print{display:none}}
-</style></head><body>
-<div class="header">
-  <div><div class="logo"><svg viewBox="0 0 32 32" width="1em" height="1em" aria-hidden="true" style="vertical-align:middle;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="inv-g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5b4fc"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#3730a3"/></linearGradient></defs><path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#inv-g)"/></svg> Atlas Finance</div>
-  <div class="meta">Extrato · Gerado em ${fmtDate(todayLocal())} · ${txs.length} transações</div></div>
-  <button class="no-print" onclick="window.print()" style="padding:8px 18px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600">🖨 Imprimir / PDF</button>
-</div>
-<div class="summary">
-  <div class="sum-card s-balance"><div class="sum-label">Saldo</div><div class="sum-value">${fmt(balance)}</div></div>
-  <div class="sum-card s-income"><div class="sum-label">Receitas</div><div class="sum-value">${fmt(income)}</div></div>
-  <div class="sum-card s-expense"><div class="sum-label">Despesas</div><div class="sum-value">${fmt(expense)}</div></div>
-</div>
-${catRows ? `<h3>Gastos por Categoria</h3><table><thead><tr><th>Categoria</th><th style="text-align:right">Total</th><th style="text-align:right">%</th></tr></thead><tbody>${catRows}</tbody></table>` : ''}
-<h3>Todas as Transações</h3>
-<table><thead><tr><th>Data</th><th>Tipo</th><th>Categoria</th><th>Descrição</th><th>Anotação</th><th style="text-align:right">Valor</th></tr></thead>
-<tbody>${txRows}</tbody></table>
-<div class="footer">Atlas Finance · ${new Date().toLocaleString('pt-BR')}</div>
-</body></html>`;
+  // ── RODAPÉ EM TODAS AS PÁGINAS ───────────────────────────
+  const total = doc.getNumberOfPages();
+  for (let p = 1; p <= total; p++) {
+    doc.setPage(p);
+    doc.setDrawColor(220, 220, 230);
+    doc.setLineWidth(0.3);
+    doc.line(M, PH - 10, PW - M, PH - 10);
+    doc.setTextColor(180, 180, 190);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Atlas Finance · ${new Date().toLocaleString('pt-BR')}`, M, PH - 6);
+    doc.text(`Página ${p} de ${total}`, PW - M, PH - 6, { align: 'right' });
+  }
 
-  const win = window.open('', '_blank');
-  win.document.write(html);
-  win.document.close();
+  doc.save(`atlas-finance-extrato-${todayLocal()}.pdf`);
+  toast('PDF exportado com sucesso!');
 }
