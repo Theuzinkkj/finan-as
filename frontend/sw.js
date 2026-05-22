@@ -1,11 +1,12 @@
 'use strict';
 
-const CACHE_NAME = 'atlas-v2';
+const CACHE_NAME = 'atlas-v3';
 const OFFLINE_URL = '/app';
 
 // Arquivos essenciais para funcionar offline
 const PRECACHE = [
   '/app',
+  '/login',
   '/css/variables.css',
   '/css/layout.css',
   '/css/components.css',
@@ -13,8 +14,10 @@ const PRECACHE = [
   '/css/chat.css',
   '/css/investments.css',
   '/css/features.css',
+  '/js/storage.js',
   '/js/config.js',
   '/js/api.js',
+  '/js/login.js',
   '/js/app.js',
   '/js/ai.js',
   '/js/charts.js',
@@ -56,7 +59,23 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Estratégia stale-while-revalidate para assets estáticos
+  // JS: network-first para sempre servir a versão mais recente
+  if (url.pathname.startsWith('/js/')) {
+    event.respondWith(
+      fetch(request).then(response => {
+        if (response && response.status === 200) {
+          caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+        }
+        return response;
+      }).catch(async () => {
+        const cached = await caches.match(request);
+        return cached || new Response('Offline', { status: 503 });
+      })
+    );
+    return;
+  }
+
+  // Estratégia stale-while-revalidate para outros assets estáticos
   event.respondWith(
     caches.open(CACHE_NAME).then(async cache => {
       const cached = await cache.match(request);
