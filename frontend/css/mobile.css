@@ -104,6 +104,10 @@
 }
 .mob-fab-overlay.open { display: block; }
 
+/* Oculta elementos mobile-only em desktop */
+.mob-tx-overlay,
+.mob-tx-sheet { display: none; }
+
 /* =============================================
    MOBILE RESPONSIVE OVERRIDES  (≤ 900px)
    ============================================= */
@@ -466,6 +470,7 @@
   .mob-tx-overlay.open { display: block; }
 
   .mob-tx-sheet {
+    display:        block;
     position:       fixed;
     bottom:         -100%;
     left:           0; right: 0;
