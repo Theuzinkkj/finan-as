@@ -256,7 +256,7 @@
             </div>
             <div class="dash-ai-content" id="dash-ai-content">Analisando seus dados financeiros...</div>
           </div>
-          <div class="card dash-goal-card" id="dash-goal-card">
+          <div class="card dash-goal-card" id="dash-goal-card" onclick="openGoalModal()" style="cursor:pointer" title="Clique para editar a meta">
             <div class="dash-goal-header">
               <span class="dash-goal-label-text" id="dash-goal-label-text">META</span>
               <span class="dash-goal-pct" id="dash-goal-pct"></span>
@@ -1543,6 +1543,10 @@
       <div class="form-group">
         <label for="goal-date">Data alvo</label>
         <input type="date" id="goal-date">
+      </div>
+      <div class="form-group">
+        <label for="goal-saved">Valor já guardado (R$)</label>
+        <input type="number" id="goal-saved" step="100" min="0" placeholder="0">
       </div>
       <div class="form-actions">
         <button class="btn-danger btn-sm" id="btn-goal-clear" style="margin-right:auto;display:none">Remover</button>

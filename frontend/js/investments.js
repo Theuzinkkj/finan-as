@@ -151,7 +151,8 @@ function renderPortfolioGoal() {
   emptyEl?.classList.add('hidden');
 
   const { name, amount, date } = _portfolioGoal;
-  const total      = buys.reduce((s, e) => s + +e.amount, 0);
+  const portfolioTotal = buys.reduce((s, e) => s + +e.amount, 0);
+  const total = _portfolioGoal.savedAmount != null ? _portfolioGoal.savedAmount : portfolioTotal;
   const pct        = Math.min((total / amount) * 100, 100);
   const remaining  = Math.max(amount - total, 0);
   const fmt        = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -199,6 +200,7 @@ function openGoalModal() {
   document.getElementById('goal-name').value   = g?.name   || '';
   document.getElementById('goal-amount').value = g?.amount || '';
   document.getElementById('goal-date').value   = g?.date   || '';
+  document.getElementById('goal-saved').value  = g?.savedAmount != null ? g.savedAmount : '';
   const clearBtn = document.getElementById('btn-goal-clear');
   if (clearBtn) clearBtn.style.display = g ? '' : 'none';
   openModal('modal-goal');
@@ -206,13 +208,15 @@ function openGoalModal() {
 }
 
 function saveGoalModal() {
-  const name   = document.getElementById('goal-name').value.trim();
-  const amount = parseFloat(document.getElementById('goal-amount').value);
-  const date   = document.getElementById('goal-date').value;
+  const name        = document.getElementById('goal-name').value.trim();
+  const amount      = parseFloat(document.getElementById('goal-amount').value);
+  const date        = document.getElementById('goal-date').value;
+  const savedRaw    = document.getElementById('goal-saved').value;
+  const savedAmount = savedRaw !== '' ? parseFloat(savedRaw) : null;
   if (!name)               return toast?.('Preencha o nome da meta.', 'err');
   if (!amount || amount <= 0) return toast?.('Valor alvo inválido.', 'err');
   if (!date)               return toast?.('Selecione a data alvo.', 'err');
-  _portfolioGoal = { name, amount, date };
+  _portfolioGoal = { name, amount, date, ...(savedAmount !== null && { savedAmount }) };
   localStorage.setItem(_goalKey(), JSON.stringify(_portfolioGoal));
   closeModal('modal-goal');
   renderPortfolioGoal();
@@ -232,7 +236,8 @@ function clearGoalModal() {
 
 function getPortfolioGoalData() {
   const buys = _portfolio.filter(e => (e.transaction_type || 'compra') === 'compra');
-  const totalSaved = buys.reduce((s, e) => s + +e.amount, 0);
+  const portfolioTotal = buys.reduce((s, e) => s + +e.amount, 0);
+  const totalSaved = _portfolioGoal?.savedAmount != null ? _portfolioGoal.savedAmount : portfolioTotal;
   return { goal: _portfolioGoal, totalSaved };
 }
 
