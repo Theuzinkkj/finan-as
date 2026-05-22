@@ -66,16 +66,13 @@ function renderProjection() {
 // =============================================
 //  SCORE HISTORY
 // =============================================
-function _scoreHistoryKey() { return `atlas_score_history_${Auth.userId || 'anon'}`; }
-
 function saveScore(score, month) {
-  const key     = _scoreHistoryKey();
-  const history = JSON.parse(localStorage.getItem(key) || '{}');
+  const history = Storage.getJSON(Storage.scoreHistKey(), {});
   history[month] = score;
   // Keep last 12 months only
   const months  = Object.keys(history).sort();
   if (months.length > 12) months.slice(0, months.length - 12).forEach(m => delete history[m]);
-  localStorage.setItem(key, JSON.stringify(history));
+  Storage.setJSON(Storage.scoreHistKey(), history);
   renderScoreHistory();
 }
 
@@ -84,8 +81,7 @@ function renderScoreHistory() {
   const subtitle  = document.getElementById('score-history-subtitle');
   if (!container) return;
 
-  const key     = _scoreHistoryKey();
-  const history = JSON.parse(localStorage.getItem(key) || '{}');
+  const history = Storage.getJSON(Storage.scoreHistKey(), {});
   const entries = Object.entries(history).sort(([a], [b]) => a.localeCompare(b));
 
   if (entries.length < 2) {
@@ -138,15 +134,12 @@ const ACHIEVEMENTS_DEF = [
   { id: 'budget_set',    icon: '🎯', name: 'Meta de Gastos',        desc: 'Configurou uma meta de orçamento',   check: () => Object.keys(budgets || {}).length >= 1 },
   { id: 'invested',      icon: '📈', name: 'Investidor',            desc: 'Adicionou um ativo ao portfólio',    check: () => typeof portfolioEntries !== 'undefined' && portfolioEntries.length >= 1 },
   { id: 'save_20',       icon: '💰', name: 'Regra dos 20%',         desc: 'Poupou 20% ou mais da renda',        check: (txs) => { const i = txs.filter(t=>t.type==='receita').reduce((s,t)=>s+t.amount,0); const e = txs.filter(t=>t.type==='despesa').reduce((s,t)=>s+t.amount,0); return i > 0 && (i - e) / i >= 0.2; } },
-  { id: 'import_csv',    icon: '📂', name: 'Extrato Importado',     desc: 'Importou um extrato CSV',            check: () => !!localStorage.getItem('atlas_csv_imported') },
-  { id: 'score_good',    icon: '⭐', name: 'Score Bom',             desc: 'Atingiu score financeiro ≥ 70',      check: () => { const h = JSON.parse(localStorage.getItem(_scoreHistoryKey?.() || '') || '{}'); return Object.values(h).some(s => s >= 70); } },
+  { id: 'import_csv',    icon: '📂', name: 'Extrato Importado',     desc: 'Importou um extrato CSV',            check: () => Storage.flag(Storage.CSV_IMPORTED) },
+  { id: 'score_good',    icon: '⭐', name: 'Score Bom',             desc: 'Atingiu score financeiro ≥ 70',      check: () => { const h = Storage.getJSON(Storage.scoreHistKey(), {}); return Object.values(h).some(s => s >= 70); } },
 ];
 
-function _achievementsKey() { return `atlas_achievements_${Auth.userId || 'anon'}`; }
-
 function checkAchievements() {
-  const key       = _achievementsKey();
-  const unlocked  = new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  const unlocked  = new Set(Storage.getJSON(Storage.achievKey(), []));
   const prevCount = unlocked.size;
   const txs       = transactions || [];
 
@@ -161,14 +154,13 @@ function checkAchievements() {
   });
 
   if (unlocked.size !== prevCount) {
-    localStorage.setItem(key, JSON.stringify([...unlocked]));
+    Storage.setJSON(Storage.achievKey(), [...unlocked]);
     renderAchievements();
   }
 }
 
 function renderAchievements() {
-  const key      = _achievementsKey();
-  const unlocked = new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+  const unlocked = new Set(Storage.getJSON(Storage.achievKey(), []));
   const count    = unlocked.size;
 
   const badge = document.getElementById('achievements-profile-badge');
@@ -329,10 +321,8 @@ const TOUR_STEPS = [
 
 let _tourStep = 0;
 
-function _tourKey() { return `atlas_tour_done_${Auth.userId || 'anon'}`; }
-
 function startTour() {
-  if (localStorage.getItem(_tourKey())) return;
+  if (Storage.flag(Storage.tourKey())) return;
   _tourStep = 0;
   document.getElementById('tour-overlay')?.classList.remove('hidden');
   _renderTourStep();
@@ -401,7 +391,7 @@ function tourNext() {
 
 function endTour() {
   document.getElementById('tour-overlay')?.classList.add('hidden');
-  localStorage.setItem(_tourKey(), '1');
+  Storage.setFlag(Storage.tourKey());
 }
 
 function initTour() {
@@ -420,10 +410,10 @@ function initPWAInstall() {
     _deferredInstall = e;
 
     // Show banner after 30s or on second visit
-    const visits = +(localStorage.getItem('atlas_visits') || 0) + 1;
-    localStorage.setItem('atlas_visits', visits);
+    const visits = +(Storage.get(Storage.VISITS, '0')) + 1;
+    Storage.set(Storage.VISITS, visits);
 
-    if (visits >= 2 && !localStorage.getItem('atlas_pwa_dismissed')) {
+    if (visits >= 2 && !Storage.flag(Storage.PWA_DISMISSED)) {
       setTimeout(showInstallBanner, 3000);
     }
   });
@@ -448,14 +438,14 @@ async function installPWA() {
   const { outcome } = await _deferredInstall.userChoice;
   if (outcome === 'accepted') {
     document.getElementById('pwa-banner')?.remove();
-    localStorage.setItem('atlas_pwa_dismissed', '1');
+    Storage.setFlag(Storage.PWA_DISMISSED);
   }
   _deferredInstall = null;
 }
 
 function dismissInstall() {
   document.getElementById('pwa-banner')?.remove();
-  localStorage.setItem('atlas_pwa_dismissed', '1');
+  Storage.setFlag(Storage.PWA_DISMISSED);
 }
 
 // =============================================
@@ -476,7 +466,7 @@ if (typeof renderAIResult === 'function') {
     _origFn(a);
     const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
     const score    = Math.max(0, Math.min(100, a.score || 0));
-    const prevH    = JSON.parse(localStorage.getItem(_scoreHistoryKey()) || '{}');
+    const prevH    = Storage.getJSON(Storage.scoreHistKey(), {});
     const prevScore = prevH[monthKey];
 
     saveScore(score, monthKey);

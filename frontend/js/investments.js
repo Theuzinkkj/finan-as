@@ -8,8 +8,6 @@ let _portfolioGoal = null;
 let _pfFilter      = '';
 let _pfShowAll     = false;
 
-function _portfolioKey() { return 'atlas_pf_demo'; }
-function _goalKey()      { return 'atlas_goal_demo'; }
 
 const ASSET_OPTIONS_BY_TYPE = {
   'Ações': [
@@ -83,7 +81,7 @@ const TYPE_SHORT = {
 // ── CRUD ──────────────────────────────────────
 async function loadPortfolio() {
   if (typeof Demo !== 'undefined' && Demo.active) {
-    _portfolio = JSON.parse(localStorage.getItem(_portfolioKey()) || '[]');
+    _portfolio = Storage.getJSON(Storage.PF_DEMO, []);
     return;
   }
   try {
@@ -96,7 +94,7 @@ async function addPortfolioEntry(entry) {
   if (typeof Demo !== 'undefined' && Demo.active) {
     const saved = { ...entry, id: Date.now().toString(36) + Math.random().toString(36).slice(2), created_at: new Date().toISOString() };
     _portfolio.unshift(saved);
-    localStorage.setItem(_portfolioKey(), JSON.stringify(_portfolio));
+    Storage.setJSON(Storage.PF_DEMO, _portfolio);
     renderPortfolio();
     return;
   }
@@ -108,7 +106,7 @@ async function addPortfolioEntry(entry) {
 async function deletePortfolioEntry(id) {
   if (typeof Demo !== 'undefined' && Demo.active) {
     _portfolio = _portfolio.filter(e => e.id !== id);
-    localStorage.setItem(_portfolioKey(), JSON.stringify(_portfolio));
+    Storage.setJSON(Storage.PF_DEMO, _portfolio);
     renderPortfolio();
     return;
   }
@@ -122,7 +120,7 @@ async function updatePortfolioEntry(id, updates) {
     const idx = _portfolio.findIndex(e => e.id === id);
     if (idx < 0) throw new Error('Lançamento não encontrado.');
     _portfolio[idx] = { ..._portfolio[idx], ...updates };
-    localStorage.setItem(_portfolioKey(), JSON.stringify(_portfolio));
+    Storage.setJSON(Storage.PF_DEMO, _portfolio);
     renderPortfolio();
     return;
   }
@@ -134,7 +132,7 @@ async function updatePortfolioEntry(id, updates) {
 
 // ── Goal ──────────────────────────────────────
 function loadPortfolioGoal() {
-  _portfolioGoal = JSON.parse(localStorage.getItem(_goalKey()) || 'null');
+  _portfolioGoal = Storage.getJSON(Storage.GOAL_DEMO, null);
 }
 
 function renderPortfolioGoal() {
@@ -217,7 +215,7 @@ function saveGoalModal() {
   if (!amount || amount <= 0) return toast?.('Valor alvo inválido.', 'err');
   if (!date)               return toast?.('Selecione a data alvo.', 'err');
   _portfolioGoal = { name, amount, date, ...(savedAmount !== null && { savedAmount }) };
-  localStorage.setItem(_goalKey(), JSON.stringify(_portfolioGoal));
+  Storage.setJSON(Storage.GOAL_DEMO, _portfolioGoal);
   closeModal('modal-goal');
   renderPortfolioGoal();
   _renderDashGoalCard?.();
@@ -227,7 +225,7 @@ function saveGoalModal() {
 function clearGoalModal() {
   if (!confirm('Remover a meta financeira?')) return;
   _portfolioGoal = null;
-  localStorage.removeItem(_goalKey());
+  Storage.remove(Storage.GOAL_DEMO);
   closeModal('modal-goal');
   renderPortfolioGoal();
   _renderDashGoalCard?.();

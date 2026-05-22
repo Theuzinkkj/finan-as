@@ -331,7 +331,7 @@ function initMockupInteractivity() {
 
 // ─── Init ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
-  const theme = localStorage.getItem('financeai_theme') || 'dark';
+  const theme = Storage.get(Storage.THEME, 'dark');
   document.documentElement.dataset.theme = theme;
 
   initPasswordToggles();
