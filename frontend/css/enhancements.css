@@ -72,6 +72,15 @@
   font-size:       .85rem;
   color:           var(--text-2);
 }
+.csv-bank-detected {
+  background:    rgba(20,195,142,.12);
+  border:        1px solid rgba(20,195,142,.3);
+  border-radius: 8px;
+  padding:       7px 12px;
+  font-size:     .82rem;
+  color:         var(--green, #14c38e);
+  margin-bottom: 10px;
+}
 .csv-col-map {
   display:  flex;
   gap:      12px;

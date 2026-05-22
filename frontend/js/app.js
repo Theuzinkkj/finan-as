@@ -375,7 +375,7 @@ function bd_saveEditLimit() {
       renderBudgets(txOfMonth());
     } else {
       benefitAllocations[_bdCtx.key] = val;
-      localStorage.setItem(_benefitKey(), JSON.stringify(benefitAllocations));
+      Storage.setJSON(Storage.benefitKey(), benefitAllocations);
       renderBenefits(txOfMonth());
     }
     _bdPopulate(_bdCtx.type, _bdCtx.key);
@@ -791,7 +791,7 @@ async function deleteAccount() {
   try {
     await API.req('DELETE', '/api/auth/account');
     Auth._clearDisplay();
-    localStorage.clear();
+    Storage.clear();
     window.location.reload();
   } catch (err) {
     toast('Erro ao excluir conta: ' + err.message, 'err');
@@ -3125,6 +3125,29 @@ function bindEvents() {
     if (!preview) return;
     const val = parseFloat(e.target.value);
     preview.textContent = val > 0 ? fmt(val) : '';
+    if (val > 0) {
+      document.getElementById('amount-error')?.classList.add('hidden');
+      e.target.classList.remove('input-invalid');
+    }
+  });
+
+  // Limpa erro de descricao ao digitar
+  document.getElementById('input-description').addEventListener('input', e => {
+    if (e.target.value.trim()) {
+      document.getElementById('desc-error')?.classList.add('hidden');
+      e.target.classList.remove('input-invalid');
+    }
+  });
+
+  // Data: limpa erro e avisa sobre data futura
+  document.getElementById('input-date').addEventListener('change', e => {
+    const val = e.target.value;
+    if (val) {
+      document.getElementById('date-error')?.classList.add('hidden');
+      e.target.classList.remove('input-invalid');
+    }
+    const fw = document.getElementById('date-future-warn');
+    if (fw) fw.classList.toggle('hidden', !val || val <= todayLocal());
   });
 
   // Swipe para deletar no mobile
@@ -3352,10 +3375,10 @@ async function startApp() {
   try {
     await DB.open();
 
-    const legacy = JSON.parse(localStorage.getItem('financeai_txs') || '[]');
+    const legacy = Storage.getJSON(Storage.LEGACY_TXS, []);
     if (legacy.length) {
       for (const tx of legacy) await DB.put(tx);
-      localStorage.removeItem('financeai_txs');
+      Storage.remove(Storage.LEGACY_TXS);
       toast(`${legacy.length} transações migradas.`);
     }
 
@@ -3413,12 +3436,11 @@ init();
   const toggleBtn = document.getElementById('corner-widget-toggle');
   if (!widget || !toggleBtn) return;
 
-  const STORAGE_KEY = 'atlas_corner_widget_open';
-  const isOpen = localStorage.getItem(STORAGE_KEY) === 'true';
+  const isOpen = Storage.get(Storage.CORNER_WIDGET) === 'true';
   if (isOpen) widget.classList.add('open');
 
   toggleBtn.addEventListener('click', () => {
     const open = widget.classList.toggle('open');
-    localStorage.setItem(STORAGE_KEY, open);
+    Storage.set(Storage.CORNER_WIDGET, open);
   });
 })();

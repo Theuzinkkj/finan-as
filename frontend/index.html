@@ -993,11 +993,13 @@
           <input type="file" id="csv-file-input" accept=".csv,.txt" class="hidden">
         </div>
         <div id="csv-format-help" class="csv-format-help">
-          <strong>Formatos aceitos:</strong>
+          <strong>Formatos suportados automaticamente:</strong>
           <ul>
-            <li><code>Data;Descrição;Valor</code> — separado por ponto-e-vírgula (Nubank, Inter, Itaú)</li>
-            <li><code>Data,Descrição,Valor</code> — separado por vírgula (padrão internacional)</li>
+            <li>Nubank, Inter, Itaú, Bradesco, Banco do Brasil, C6, Santander, XP/BTG</li>
+            <li>Qualquer CSV com colunas de Data, Descrição e Valor</li>
+            <li>Encoding UTF-8 e ISO-8859-1 (latin-1) detectados automaticamente</li>
             <li>Valor positivo = receita &nbsp;|&nbsp; Valor negativo = despesa</li>
+            <li>Colunas separadas de Entrada e Saída também são suportadas</li>
           </ul>
         </div>
         <div id="csv-preview-area" class="hidden">
@@ -1005,6 +1007,7 @@
             <span id="csv-preview-count"></span>
             <button class="btn-link" id="csv-clear-btn">Limpar</button>
           </div>
+          <div id="csv-bank-detected" class="csv-bank-detected hidden"></div>
           <div class="csv-col-map" id="csv-col-map"></div>
           <div class="csv-preview-table-wrap">
             <table class="csv-preview-table" id="csv-preview-table">
