@@ -1,7 +1,8 @@
 FROM node:20-alpine
+WORKDIR /app/backend
+COPY backend/package*.json ./
+RUN npm ci --omit=dev
 WORKDIR /app
-COPY backend/package*.json ./backend/
-RUN cd backend && npm ci --omit=dev
 COPY . .
 EXPOSE 3001
 CMD ["node", "backend/server.js"]
