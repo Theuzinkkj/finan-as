@@ -144,7 +144,7 @@ function _bdPopulate(type, key) {
   const remaining = limit - spent;
   const warn      = !overBudget && pct >= 80;
 
-  document.getElementById('bd-icon').textContent      = icon;
+  document.getElementById('bd-icon').innerHTML         = icon;
   document.getElementById('bd-name').textContent      = name;
   document.getElementById('bd-spent').textContent     = fmt(spent);
   document.getElementById('bd-limit').textContent     = limitDisplay;
