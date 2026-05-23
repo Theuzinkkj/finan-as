@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 // =============================================
 //  STATE
@@ -35,7 +35,7 @@ function applyTheme(theme) {
 }
 
 // =============================================
-//  RECURRING â€” AUTO-GENERATION
+//  RECURRING — AUTO-GENERATION
 // =============================================
 async function autoGenerateRecurring() {
   if (Demo.active) return;
@@ -118,7 +118,7 @@ function buildCategoryGrid() {
   grid.addEventListener('click', e => {
     if (e.target.closest('#btn-add-cat')) {
       customCatSource = 'add';
-      document.getElementById('btn-cat-icon').textContent = 'ðŸ·ï¸';
+      document.getElementById('btn-cat-icon').textContent = '🏷ï¸';
       document.getElementById('btn-cat-icon').dataset.emoji = '';
       document.getElementById('input-cat-label').value = '';
       document.getElementById('cat-label-error').classList.add('hidden');
@@ -356,13 +356,13 @@ function updateNotesFieldForType(type) {
 }
 
 function bindEvents() {
-  // FAB â€” nova transaÃ§Ã£o (desktop floating dock)
+  // FAB — nova transaÃ§Ã£o (desktop floating dock)
   document.getElementById('btn-add').addEventListener('click', () => {
     resetTransactionModal();
     openModal('modal-transaction');
   });
 
-  // FAB mobile â€” menu expandÃ­vel
+  // FAB mobile — menu expandÃ­vel
   const mobFabBtn     = document.getElementById('mob-fab-btn');
   const mobFabMenu    = document.getElementById('mob-fab-menu');
   const mobFabOverlay = document.getElementById('mob-fab-overlay');
@@ -407,7 +407,7 @@ function bindEvents() {
   document.getElementById('mob-tx-close')?.addEventListener('click', closeMobTxSheet);
   document.getElementById('mob-tx-overlay')?.addEventListener('click', closeMobTxSheet);
 
-  // Mobile IA â€” botÃ£o analisar e perguntas comuns
+  // Mobile IA — botÃ£o analisar e perguntas comuns
   document.getElementById('mob-ia-analyze')?.addEventListener('click', () => {
     document.getElementById('btn-chat').click();
   });
@@ -456,7 +456,7 @@ function bindEvents() {
       document.getElementById('cat-label-error').classList.remove('hidden');
       return;
     }
-    const icon   = document.getElementById('btn-cat-icon').dataset.emoji || 'ðŸ·ï¸';
+    const icon   = document.getElementById('btn-cat-icon').dataset.emoji || '🏷ï¸';
     const colors = ['#f59e0b','#3b82f6','#8b5cf6','#10b981','#ec4899','#84cc16','#f97316','#6366f1','#94a3b8'];
     const color  = colors[Object.keys(CATEGORIES).length % colors.length];
     const key    = 'custom_' + Date.now();
@@ -480,9 +480,9 @@ function bindEvents() {
   // Emoji picker
   (function setupEmojiPicker() {
     const EMOJIS = [
-      'ðŸ·ï¸','ðŸ•','ðŸ”','ðŸ£','ðŸº','â˜•','ðŸ›’','ðŸš—','ðŸšŒ','âœˆï¸','ðŸ ','ðŸ¥','ðŸŽ“',
+      '🏷ï¸','ðŸ•','ðŸ”','ðŸ£','ðŸº','â˜•','ðŸ›’','ðŸš—','ðŸšŒ','âœˆï¸','ðŸ ','ðŸ¥','ðŸŽ“',
       'ðŸ“š','ðŸ’Š','ðŸ’¡','ðŸ”§','ðŸ’»','ðŸ“±','ðŸŽ®','ðŸŽµ','ðŸŽ¬','ðŸ‹ï¸','âš½','ðŸŠ','ðŸ¶',
-      'ðŸ±','ðŸŒ±','ðŸŒ','â™»ï¸','ðŸ’°','ðŸ’³','ðŸ’¸','ðŸ¦','ðŸŽ','ðŸŽ‰','â¤ï¸','ðŸ‘”','ðŸ‘—',
+      'ðŸ±','ðŸŒ±','ðŸŒ','â™»ï¸','💰','ðŸ’³','💸','ðŸ¦','ðŸŽ','ðŸŽ‰','â¤ï¸','ðŸ‘”','ðŸ‘—',
       'ðŸ’„','ðŸ§´','ðŸ›','ðŸ§¹','âš¡','ðŸ’§','ðŸ”‘','ðŸ“¦','ðŸš€','ðŸŒŸ','ðŸ””','ðŸ“…',
     ];
     const btn   = document.getElementById('btn-cat-icon');
@@ -649,7 +649,7 @@ function bindEvents() {
     renderInvoiceItems();
   });
 
-  // Modal editar fatura â€” adicionar item
+  // Modal editar fatura — adicionar item
   document.getElementById('btn-fatura-edit-add').addEventListener('click', () => {
     const descEl  = document.getElementById('fatura-edit-desc');
     const valueEl = document.getElementById('fatura-edit-value');
@@ -670,7 +670,7 @@ function bindEvents() {
     if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btn-fatura-edit-add').click(); }
   });
 
-  // Modal editar fatura â€” remover item (delegado)
+  // Modal editar fatura — remover item (delegado)
   document.getElementById('fatura-edit-list').addEventListener('click', e => {
     const btn = e.target.closest('.invoice-item-remove');
     if (!btn) return;
@@ -678,7 +678,7 @@ function bindEvents() {
     renderFaturaEditItems();
   });
 
-  // NavegaÃ§Ã£o de mÃªs com lazy loading â€” busca o mÃªs se ainda nÃ£o estÃ¡ em cache
+  // NavegaÃ§Ã£o de mÃªs com lazy loading — busca o mÃªs se ainda nÃ£o estÃ¡ em cache
   async function _navigateMonth(delta) {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + delta, 1);
     selectedTxIds.clear();
@@ -711,7 +711,7 @@ function bindEvents() {
 
   document.getElementById('view-all-btn').addEventListener('click', () => switchTab('transactions'));
 
-  // Goal modal â€” listeners aqui para funcionar mesmo antes de visitar a aba Investimentos
+  // Goal modal — listeners aqui para funcionar mesmo antes de visitar a aba Investimentos
   document.getElementById('btn-goal-cancel')?.addEventListener('click', () => closeModal('modal-goal'));
   document.getElementById('btn-goal-save')?.addEventListener('click', saveGoalModal);
   document.getElementById('btn-goal-clear')?.addEventListener('click', clearGoalModal);
@@ -730,7 +730,7 @@ function bindEvents() {
     });
   });
 
-  // Filtros â€” reseta paginaÃ§Ã£o ao filtrar
+  // Filtros — reseta paginaÃ§Ã£o ao filtrar
   const _debouncedFilter = debounce(() => { resetTxPagination(); renderAllTxs(); }, 300);
   document.getElementById('filter-category').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
   document.getElementById('filter-type').addEventListener('change', () => { resetTxPagination(); renderAllTxs(); });
@@ -906,18 +906,18 @@ function bindEvents() {
   // AnÃ¡lise IA
   document.getElementById('btn-analyze').addEventListener('click', runAI);
 
-  // Investimentos â€” atualizar taxas
+  // Investimentos — atualizar taxas
   document.getElementById('btn-rates-refresh')?.addEventListener('click', () => {
     _cachedRates = null;
     loadMarketRates();
   });
 
-  // Investimentos â€” atualizar mercado
+  // Investimentos — atualizar mercado
   document.getElementById('btn-market-refresh')?.addEventListener('click', () => {
     loadMarketData();
   });
 
-  // Investimentos â€” carteira
+  // Investimentos — carteira
   document.getElementById('btn-portfolio-add')?.addEventListener('click', () => openPortfolioModal());
   document.getElementById('btn-pf-close')?.addEventListener('click',  () => closePortfolioModal());
   document.getElementById('btn-pf-cancel')?.addEventListener('click', () => closePortfolioModal());
@@ -940,7 +940,7 @@ function bindEvents() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
   });
 
-  // Redimensionar â€” redesenhar grÃ¡ficos
+  // Redimensionar — redesenhar grÃ¡ficos
   window.addEventListener('resize', () => {
     const active = document.querySelector('.tab-content.active');
     if (!active) return;
@@ -949,7 +949,7 @@ function bindEvents() {
     if (active.id === 'tab-analysis')  { drawAnalysisChart(txs); drawAnnualChart(); _setupAnnualYearNav(); }
   });
 
-  // Escape â€” fecha modal, painel de perfil, chat ou menu de contexto (nessa ordem)
+  // Escape — fecha modal, painel de perfil, chat ou menu de contexto (nessa ordem)
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     const achievementsOverlay = document.getElementById('achievements-modal-overlay');
@@ -988,7 +988,7 @@ function bindEvents() {
     txItem.click();
   });
 
-  // Atalho N â€” nova transaÃ§Ã£o (apenas fora de inputs e modais)
+  // Atalho N — nova transaÃ§Ã£o (apenas fora de inputs e modais)
   document.addEventListener('keydown', e => {
     if (e.target.matches('input, textarea, select, [contenteditable]')) return;
     if (document.querySelector('.modal-overlay:not(.hidden)')) return;
@@ -1119,15 +1119,15 @@ async function shareMonthlyReport() {
   });
   const topCat = Object.entries(catTotals).sort((a, b) => b[1] - a[1])[0];
   const topCatLine = topCat
-    ? `\nðŸ· Maior gasto: ${CATEGORIES[topCat[0]]?.label || topCat[0]} (${fmt(topCat[1])})`
+    ? `\n🏷 Maior gasto: ${CATEGORIES[topCat[0]]?.label || topCat[0]} (${fmt(topCat[1])})`
     : '';
 
   const text = [
-    `ðŸ“Š Resumo financeiro â€” ${mes}`,
+    `📊 Resumo financeiro — ${mes}`,
     ``,
-    `ðŸ’° Receitas:  ${fmt(income)}`,
-    `ðŸ’¸ Despesas:  ${fmt(expense)}`,
-    `ðŸ“ˆ Saldo:     ${sign}${fmt(balance)}${topCatLine}`,
+    `💰 Receitas:  ${fmt(income)}`,
+    `💸 Despesas:  ${fmt(expense)}`,
+    `📈 Saldo:     ${sign}${fmt(balance)}${topCatLine}`,
     ``,
     `Gerado pelo Atlas Finance`,
   ].join('\n');
@@ -1285,7 +1285,7 @@ async function startApp() {
   window.addEventListener('online', async () => {
     const count = await PendingQueue.count().catch(() => 0);
     if (count > 0) {
-      toast(`ConexÃ£o restaurada â€” sincronizando ${count} item${count > 1 ? 's' : ''}...`);
+      toast(`ConexÃ£o restaurada — sincronizando ${count} item${count > 1 ? 's' : ''}...`);
       const synced = await PendingQueue.flush().catch(() => 0);
       if (synced > 0) await syncFromCloud();
       else await _updatePendingBadge();
@@ -1295,7 +1295,7 @@ async function startApp() {
   });
 
   window.addEventListener('offline', () => {
-    setCloudStatus('error', 'Sem conexÃ£o â€” mudanÃ§as salvas localmente');
+    setCloudStatus('error', 'Sem conexÃ£o — mudanÃ§as salvas localmente');
   });
 
   const dot = document.getElementById('db-status-dot-header');
