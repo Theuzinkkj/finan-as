@@ -634,6 +634,8 @@
 }
 .demo-banner-exit:hover { color: var(--text); }
 body.demo-mode { padding-top: 40px; }
+body.demo-mode .header      { top: 40px; }
+body.demo-mode .month-float { top: 100px; }
 
 /* ── LIGHT THEME ── */
 [data-theme="light"] #reset-password-screen { background: var(--bg); }
