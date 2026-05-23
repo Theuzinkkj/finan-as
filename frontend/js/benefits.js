@@ -16,7 +16,7 @@ function loadBenefitAllocations() {
 }
 
 function initBenefitsToggle() {
-  const open = Storage.get(Storage.benefitOpenKey()) === 'true';
+  const open = Storage.get(Storage.benefitOpenKey()) !== 'false';
   const body   = document.getElementById('benefits-body');
   const toggle = document.getElementById('btn-benefits-toggle');
   if (!body || !toggle) return;

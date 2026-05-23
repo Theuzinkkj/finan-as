@@ -12,7 +12,7 @@ function loadBudgets() {
 }
 
 function initBudgetToggle() {
-  const open   = Storage.get(Storage.budgetOpenKey()) === 'true';
+  const open   = Storage.get(Storage.budgetOpenKey()) !== 'false';
   const body   = document.getElementById('budget-body');
   const toggle = document.getElementById('btn-budget-toggle');
   if (!body || !toggle) return;

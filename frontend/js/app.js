@@ -1312,17 +1312,3 @@ async function startApp() {
 
 init();
 
-// Corner widget toggle
-(function () {
-  const widget  = document.getElementById('corner-widget');
-  const toggleBtn = document.getElementById('corner-widget-toggle');
-  if (!widget || !toggleBtn) return;
-
-  const isOpen = Storage.get(Storage.CORNER_WIDGET) === 'true';
-  if (isOpen) widget.classList.add('open');
-
-  toggleBtn.addEventListener('click', () => {
-    const open = widget.classList.toggle('open');
-    Storage.set(Storage.CORNER_WIDGET, open);
-  });
-})();

@@ -9,8 +9,7 @@ const Storage = {
   CSV_IMPORTED:  'atlas_csv_imported',
   PWA_DISMISSED: 'atlas_pwa_dismissed',
   VISITS:        'atlas_visits',
-  CORNER_WIDGET: 'atlas_corner_widget_open',
-  LEGACY_TXS:    'financeai_txs',
+LEGACY_TXS:    'financeai_txs',
   PF_DEMO:       'atlas_pf_demo',
   GOAL_DEMO:     'atlas_goal_demo',
 
