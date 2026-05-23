@@ -2,6 +2,147 @@
    ENHANCEMENTS — PWA, CSV, Tour, Badges, Confetti
    ============================================= */
 
+/* ─── Demo banner ────────────────────────────────────────────── */
+@keyframes demo-shimmer {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes demo-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(167,139,250,.7); }
+  60%       { box-shadow: 0 0 0 5px rgba(167,139,250,.0); }
+}
+
+#demo-banner {
+  position:        fixed;
+  top:             0;
+  left:            0;
+  right:           0;
+  z-index:         9999;
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         0 48px;
+  height:          46px;
+  background:      linear-gradient(270deg, #0e0720 0%, #1a0f38 35%, #0a1530 65%, #0e0720 100%);
+  background-size: 300% 300%;
+  animation:       demo-shimmer 12s ease infinite;
+  border-bottom:   1px solid rgba(124,92,255,.25);
+  box-shadow:      0 1px 0 rgba(167,139,250,.08), 0 4px 32px rgba(80,40,180,.2);
+  font-family:     'Inter', sans-serif;
+}
+#demo-banner.hidden { display: none !important; }
+
+.demo-banner-content {
+  display:     flex;
+  align-items: center;
+  gap:         12px;
+  white-space: nowrap;
+}
+
+.demo-badge {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            7px;
+  background:     rgba(124,92,255,.15);
+  border:         1px solid rgba(124,92,255,.4);
+  border-radius:  6px;
+  padding:        3px 10px 3px 8px;
+  font-size:      .6rem;
+  font-weight:    800;
+  letter-spacing: .16em;
+  color:          #b8a4f8;
+  flex-shrink:    0;
+  text-transform: uppercase;
+}
+.demo-badge-dot {
+  width:         7px;
+  height:        7px;
+  border-radius: 50%;
+  background:    #a78bfa;
+  flex-shrink:   0;
+  animation:     demo-dot-pulse 2s ease-out infinite;
+}
+
+.demo-banner-text {
+  font-size:   .84rem;
+  font-weight: 400;
+  color:       rgba(255,255,255,.5);
+  letter-spacing: .01em;
+}
+
+.demo-banner-sep {
+  width:         1px;
+  height:        14px;
+  background:    rgba(255,255,255,.12);
+  flex-shrink:   0;
+}
+
+.demo-banner-cta {
+  display:        inline-flex;
+  align-items:    center;
+  gap:            6px;
+  background:     none;
+  border:         none;
+  padding:        0;
+  font-family:    'Inter', sans-serif;
+  font-size:      .84rem;
+  font-weight:    600;
+  color:          #c4b5fd;
+  cursor:         pointer;
+  letter-spacing: .01em;
+  position:       relative;
+  transition:     color .2s;
+}
+.demo-banner-cta::after {
+  content:    '';
+  position:   absolute;
+  bottom:     -2px;
+  left:       0;
+  width:      0;
+  height:     1px;
+  background: linear-gradient(90deg, #a78bfa, #818cf8);
+  transition: width .3s ease;
+}
+.demo-banner-cta:hover             { color: #e9d5ff; }
+.demo-banner-cta:hover::after      { width: 100%; }
+.demo-banner-cta:hover .demo-cta-icon { transform: translateX(3px); }
+
+.demo-cta-icon {
+  flex-shrink: 0;
+  opacity:     .75;
+  transition:  transform .25s ease;
+}
+
+.demo-banner-exit {
+  position:        absolute;
+  right:           16px;
+  top:             50%;
+  transform:       translateY(-50%);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  width:           26px;
+  height:          26px;
+  background:      rgba(255,255,255,.04);
+  border:          1px solid rgba(255,255,255,.09);
+  border-radius:   50%;
+  color:           rgba(255,255,255,.3);
+  cursor:          pointer;
+  padding:         0;
+  transition:      background .2s, color .2s, border-color .2s, transform .2s;
+}
+.demo-banner-exit:hover {
+  background:   rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
+  color:        rgba(255,255,255,.8);
+  transform:    translateY(-50%) rotate(90deg);
+}
+
+body.demo-mode              { padding-top: 46px; }
+body.demo-mode .header      { top: 46px; }
+body.demo-mode .month-float { top: 106px; }
+
 /* ─── CSV Import Button ──────────────────────────────────────── */
 .btn-import-csv {
   display:       flex;
