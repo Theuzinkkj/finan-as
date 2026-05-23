@@ -138,12 +138,12 @@ function exportPDF() {
   y += 24;
 
   // ── GRÁFICOS ─────────────────────────────────────────────
-  // Linha 1: donut (esquerda) + evolução 6 meses (direita)
+  // Linha 1: donut (esquerda) + evolução financeira (direita)
   const donutW = 52, donutH = 52;
   const evolW  = CW - donutW - 6, evolH = 52;
   const chartY1 = y;
-  const hasDonut = addChartImg('donut-chart', M,              chartY1, donutW, donutH, 'Gastos por Categoria');
-  const hasEvol  = addChartImg('evol-chart',  M + donutW + 6, chartY1, evolW,  evolH,  'Evolução 6 Meses');
+  const hasDonut = addChartImg('donut-chart',  M,              chartY1, donutW, donutH, 'Gastos por Categoria');
+  const hasEvol  = addChartImg('line-chart',   M + donutW + 6, chartY1, evolW,  evolH,  'Evolução Financeira');
   if (hasDonut || hasEvol) y = chartY1 + donutH + 10;
 
   // Linha 2: top categorias (barra horizontal, largura total)
@@ -151,12 +151,6 @@ function exportPDF() {
   const barH = 48;
   const barY = y;
   if (addChartImg('bar-chart', M, barY, CW, barH, 'Top Categorias')) y = barY + barH + 10;
-
-  // Linha 3: despesas diárias (largura total)
-  newPageIfNeeded(42);
-  const lineH = 38;
-  const lineY = y;
-  if (addChartImg('line-chart', M, lineY, CW, lineH, 'Despesas Diárias')) y = lineY + lineH + 10;
 
   // ── TABELA DE CATEGORIAS ─────────────────────────────────
   const catTotals = {};

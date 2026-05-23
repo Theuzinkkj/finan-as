@@ -11,6 +11,7 @@ let selectedBenefitType = '';
 let selectedFixed      = false;
 let invoiceItems       = [];
 let transactions      = [];
+let _lineRange        = 30;
 let selectedTxIds     = new Set();
 let chatHistory       = [];
 let appInitialized    = false;
@@ -179,7 +180,7 @@ function buildCategoryFilter() {
   while (sel.options.length > 1) sel.remove(1);
   Object.entries(CATEGORIES).forEach(([key, cat]) => {
     sel.insertAdjacentHTML('beforeend',
-      `<option value="${key}">${cat.icon} ${cat.label}</option>`);
+      `<option value="${key}">${cat.label}</option>`);
   });
   if (prev) sel.value = prev;
   if (!document.getElementById('filters-advanced')?.hidden) buildAdvancedCategoryFilter();
@@ -322,7 +323,7 @@ function switchTab(tabName) {
     inlineChat.classList.add('hidden');
   }
   if (tabName === 'analysis')  setTimeout(() => { drawAnalysisChart(txOfMonth()); drawAnnualChart(); _setupAnnualYearNav(); autoRunAIOnce(); }, 40);
-  if (tabName === 'dashboard') setTimeout(() => { drawLine(txOfMonth()); drawDonut(txOfMonth()); }, 40);
+  if (tabName === 'dashboard') setTimeout(() => { drawLine(transactions, _lineRange); drawDonut(txOfMonth()); }, 40);
 }
 
 function goToTransactions(type, category) {
@@ -719,7 +720,7 @@ function bindEvents() {
   // BotÃ£o de configurar meta no card do dashboard
   document.getElementById('btn-budget-setup-dash')?.addEventListener('click', openGoalModal);
 
-  // BotÃµes de filtro de perÃ­odo no grÃ¡fico de evoluÃ§Ã£o (visual)
+  // Botões de filtro de período no gráfico de evolução
   document.querySelectorAll('.dash-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.dash-filter-btn').forEach(b => b.classList.remove('active'));
@@ -727,6 +728,8 @@ function bindEvents() {
       const labels = { '7': '7 dias', '30': '30 dias', '90': '90 dias', '365': 'Ano' };
       const periodEl = document.getElementById('dash-line-period');
       if (periodEl) periodEl.textContent = labels[btn.dataset.range] || '30 dias';
+      _lineRange = parseInt(btn.dataset.range, 10) || 30;
+      drawLine(transactions, _lineRange);
     });
   });
 
@@ -945,7 +948,7 @@ function bindEvents() {
     const active = document.querySelector('.tab-content.active');
     if (!active) return;
     const txs = txOfMonth();
-    if (active.id === 'tab-dashboard') { drawLine(txs); drawEvolutionChart(); }
+    if (active.id === 'tab-dashboard') { drawLine(transactions, _lineRange); }
     if (active.id === 'tab-analysis')  { drawAnalysisChart(txs); drawAnnualChart(); _setupAnnualYearNav(); }
   });
 

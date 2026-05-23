@@ -273,85 +273,6 @@ function drawDonut(txs) {
   };
 }
 
-// =============================================
-//  EVOLUTION CHART — últimos 6 meses
-// =============================================
-function drawEvolutionChart() {
-  const canvas = document.getElementById('evol-chart');
-  if (!canvas) return;
-
-  const W = canvas.parentElement.clientWidth || 500;
-  canvas.width  = W;
-  canvas.height = 140;
-  const H   = 140;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, W, H);
-
-  const MONTHS = 6;
-  const now    = new Date();
-  const labels = [];
-  const income = [];
-  const expense = [];
-
-  for (let i = MONTHS - 1; i >= 0; i--) {
-    const d   = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    labels.push(d.toLocaleString('pt-BR', { month: 'short' }));
-    const monthTxs = (typeof transactions !== 'undefined' ? transactions : [])
-      .filter(t => !t.fixed && t.date.startsWith(key));
-    income.push(monthTxs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0));
-    expense.push(monthTxs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0));
-  }
-
-  const maxVal = Math.max(...income, ...expense, 1);
-  const pL = 48, pR = 12, pT = 14, pB = 28;
-  const cW = W - pL - pR;
-  const cH = H - pT - pB;
-  const barW    = Math.max(8, (cW / MONTHS) * 0.32);
-  const groupW  = cW / MONTHS;
-  const gap     = barW * 0.3;
-
-  ctx.font      = '10px Inter, sans-serif';
-  ctx.fillStyle = chartFg(0.4);
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-
-  // Gridlines
-  for (let i = 0; i <= 3; i++) {
-    const y = pT + (cH / 3) * i;
-    ctx.strokeStyle = chartFg(0.07);
-    ctx.lineWidth   = 1;
-    ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke();
-    const v = maxVal * (1 - i / 3);
-    ctx.fillText(v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v.toFixed(0), pL - 4, y);
-  }
-
-  labels.forEach((lbl, i) => {
-    const cx     = pL + i * groupW + groupW / 2;
-    const incH   = (income[i]  / maxVal) * cH;
-    const expH   = (expense[i] / maxVal) * cH;
-    const incY   = pT + cH - incH;
-    const expY   = pT + cH - expH;
-    const r      = 3;
-
-    // Barra receita (verde)
-    ctx.fillStyle = '#34d399';
-    roundedRect(ctx, cx - barW - gap / 2, incY, barW, incH, r);
-    ctx.fill();
-
-    // Barra despesa (vermelho)
-    ctx.fillStyle = '#f87171';
-    roundedRect(ctx, cx + gap / 2, expY, barW, expH, r);
-    ctx.fill();
-
-    // Rótulo do mês
-    ctx.fillStyle = chartFg(0.5);
-    ctx.textAlign = 'center';
-    ctx.fillText(lbl, cx, H - pB + 14);
-    ctx.textAlign = 'right';
-  });
-}
-
 function roundedRect(ctx, x, y, w, h, r) {
   if (h < r) r = h;
   ctx.beginPath();
@@ -373,101 +294,67 @@ let _lineChartTooltip = null;
 let _lineHoveredIdx   = -1;
 let _lineBaseImage    = null;
 
-function getOrCreateLineTooltip() {
-  if (_lineChartTooltip) return _lineChartTooltip;
-  const el = document.createElement('div');
-  el.id = 'line-tooltip';
-  el.style.cssText = [
-    'position:fixed', 'z-index:9999',
-    'background:var(--bg-card)', 'border:1px solid var(--border-h)',
-    'border-radius:12px', 'padding:12px 14px',
-    'box-shadow:0 8px 32px rgba(0,0,0,.45)',
-    'min-width:200px', 'max-width:290px',
-    'pointer-events:none', 'display:none',
-    'backdrop-filter:blur(12px)',
-  ].join(';');
-  document.body.appendChild(el);
-  _lineChartTooltip = el;
-  return el;
-}
-
-function showLineTooltip(pt, rect) {
-  const el  = getOrCreateLineTooltip();
-  el.dataset.day = pt.day;
-
-  const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const rows = pt.txList.map(t => {
-    const cat = CATEGORIES[t.category] || CATEGORIES.outros;
-    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:12px;">
-      <span style="color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cat.icon} ${escHtml(t.description)}</span>
-      <span style="color:var(--red);font-weight:600;white-space:nowrap;flex-shrink:0">${fmtV(t.amount)}</span>
-    </div>`;
-  }).join('');
-
-  el.innerHTML = `
-    <div style="font-size:11px;color:var(--text-3);margin-bottom:7px;font-weight:500;letter-spacing:.03em">DIA ${pt.day}</div>
-    ${rows}
-    <div style="display:flex;justify-content:space-between;padding-top:7px;font-size:13px;font-weight:700;">
-      <span style="color:var(--text-2)">Total</span>
-      <span style="color:var(--red)">${fmtV(pt.v)}</span>
-    </div>`;
-
-  el.style.display = 'block';
-  const tooltipW = 290;
-  let x = rect.left + pt.x + 14;
-  let y = rect.top  + pt.y - 16;
-  if (x + tooltipW > window.innerWidth  - 8) x = rect.left + pt.x - tooltipW - 14;
-  if (x < 8) x = 8;
-  const tooltipH = el.offsetHeight;
-  if (y + tooltipH > window.innerHeight - 8) y = window.innerHeight - tooltipH - 8;
-  if (y < 8) y = 8;
-  el.style.left = x + 'px';
-  el.style.top  = y + 'px';
-}
-
-function hideLineTooltip() {
-  if (!_lineChartTooltip) return;
-  _lineChartTooltip.style.display = 'none';
-  delete _lineChartTooltip.dataset.day;
-}
-
-function drawLine(txs) {
+function drawLine(allTxs, range = 30) {
   const canvas = document.getElementById('line-chart');
   if (!canvas) return;
 
   const W = canvas.parentElement.clientWidth || 500;
   canvas.width  = W;
   canvas.height = 200;
-  const H   = 200;
+  const H = 200;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 
-  const year        = currentDate.getFullYear();
-  const month       = currentDate.getMonth();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const now         = new Date();
-  const maxDay      = (now.getMonth() === month && now.getFullYear() === year)
-                        ? now.getDate() : daysInMonth;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const todayStr = today.toISOString().slice(0, 10);
+  const groups = [];
 
-  const daily    = Array(daysInMonth + 1).fill(0);
-  const dailyTxs = Array.from({ length: daysInMonth + 1 }, () => []);
-  txs.filter(t => t.type === 'despesa').forEach(t => {
-    const d = parseInt(t.date.split('-')[2], 10);
-    daily[d] += t.amount;
-    dailyTxs[d].push(t);
+  if (range <= 30) {
+    for (let i = range - 1; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      groups.push({ key: d.toISOString().slice(0, 10), label: String(d.getDate()), income: 0, expense: 0 });
+    }
+  } else if (range === 90) {
+    for (let i = 12; i >= 0; i--) {
+      const wEnd   = new Date(today); wEnd.setDate(wEnd.getDate() - i * 7);
+      const wStart = new Date(wEnd);  wStart.setDate(wStart.getDate() - 6);
+      groups.push({
+        start:  wStart.toISOString().slice(0, 10),
+        end:    wEnd.toISOString().slice(0, 10),
+        label:  wStart.toLocaleString('pt-BR', { day: 'numeric', month: 'short' }),
+        income: 0, expense: 0,
+      });
+    }
+  } else {
+    for (let i = 11; i >= 0; i--) {
+      const d   = new Date(today.getFullYear(), today.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      groups.push({ key, label: d.toLocaleString('pt-BR', { month: 'short' }), income: 0, expense: 0 });
+    }
+  }
+
+  const startStr = range <= 30
+    ? new Date(today.getTime() - (range - 1) * 86400000).toISOString().slice(0, 10)
+    : range === 90
+    ? new Date(today.getTime() - 89 * 86400000).toISOString().slice(0, 10)
+    : new Date(today.getFullYear(), today.getMonth() - 11, 1).toISOString().slice(0, 10);
+
+  (allTxs || []).filter(t => !t.fixed && t.date >= startStr && t.date <= todayStr).forEach(t => {
+    let g;
+    if (range <= 30)      g = groups.find(g => g.key === t.date);
+    else if (range === 90) g = groups.find(g => t.date >= g.start && t.date <= g.end);
+    else                   g = groups.find(g => t.date.startsWith(g.key));
+    if (!g) return;
+    if (t.type === 'receita') g.income  += t.amount;
+    else                      g.expense += t.amount;
   });
 
-  const maxVal = Math.max(...daily, 1);
   const pL = 52, pR = 16, pT = 18, pB = 30;
   const cW = W - pL - pR, cH = H - pT - pB;
+  const maxVal = Math.max(...groups.flatMap(g => [g.income, g.expense]), 1);
 
-  ctx.strokeStyle  = chartFg(0.07);
-  ctx.lineWidth    = 1;
-  ctx.font         = '10px Inter';
-  ctx.fillStyle    = chartFg(0.45);
-  ctx.textAlign    = 'right';
-  ctx.textBaseline = 'middle';
-
+  ctx.font = '10px Inter'; ctx.strokeStyle = chartFg(0.07); ctx.lineWidth = 1;
+  ctx.fillStyle = chartFg(0.45); ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   for (let i = 0; i <= 4; i++) {
     const y = pT + (cH / 4) * i;
     ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(W - pR, y); ctx.stroke();
@@ -475,119 +362,89 @@ function drawLine(txs) {
     ctx.fillText(v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v.toFixed(0), pL - 5, y);
   }
 
-  const pts = [];
-  for (let d = 1; d <= maxDay; d++) {
-    pts.push({
-      x: pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * cW,
-      y: pT + cH - (daily[d] / maxVal) * cH,
-      v: daily[d],
-      day: d,
-      txList: dailyTxs[d],
-    });
-  }
-  _lineChartPts = pts;
-  if (pts.length < 2) return;
+  const pts = groups.map((g, i) => ({
+    x:       pL + (i / Math.max(groups.length - 1, 1)) * cW,
+    incY:    pT + cH - (g.income  / maxVal) * cH,
+    expY:    pT + cH - (g.expense / maxVal) * cH,
+    income:  g.income,
+    expense: g.expense,
+    label:   g.label,
+  }));
 
-  const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
-  grad.addColorStop(0, 'rgba(124,58,237,.28)');
-  grad.addColorStop(1, 'rgba(124,58,237,.01)');
+  function drawSmoothLine(yKey, color, rgbStr) {
+    if (pts.length < 2) return;
+    const grad = ctx.createLinearGradient(0, pT, 0, pT + cH);
+    grad.addColorStop(0, `rgba(${rgbStr},.16)`);
+    grad.addColorStop(1, `rgba(${rgbStr},.01)`);
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pT + cH);
+    pts.forEach(p => ctx.lineTo(p.x, p[yKey]));
+    ctx.lineTo(pts[pts.length - 1].x, pT + cH);
+    ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
 
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pT + cH);
-  pts.forEach(p => ctx.lineTo(p.x, p.y));
-  ctx.lineTo(pts[pts.length - 1].x, pT + cH);
-  ctx.closePath();
-  ctx.fillStyle = grad;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(pts[0].x, pts[0].y);
-  for (let i = 1; i < pts.length; i++) {
-    const prev = pts[i - 1], curr = pts[i];
-    const cpx  = (prev.x + curr.x) / 2;
-    ctx.bezierCurveTo(cpx, prev.y, cpx, curr.y, curr.x, curr.y);
-  }
-  ctx.strokeStyle = '#7c3aed';
-  ctx.lineWidth   = 2.5;
-  ctx.stroke();
-
-  ctx.fillStyle    = chartFg(0.4);
-  ctx.textAlign    = 'center';
-  ctx.textBaseline = 'alphabetic';
-  const step = Math.ceil(daysInMonth / 8);
-  for (let d = 1; d <= daysInMonth; d += step) {
-    const x = pL + ((d - 1) / Math.max(daysInMonth - 1, 1)) * cW;
-    ctx.fillText(d, x, H - pB + 18);
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0][yKey]);
+    for (let i = 1; i < pts.length; i++) {
+      const prev = pts[i - 1], curr = pts[i];
+      const cpx  = (prev.x + curr.x) / 2;
+      ctx.bezierCurveTo(cpx, prev[yKey], cpx, curr[yKey], curr.x, curr[yKey]);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.stroke();
   }
 
+  drawSmoothLine('expY', '#f87171', '248,113,113');
+  drawSmoothLine('incY', '#34d399', '52,211,153');
+
+  ctx.fillStyle = chartFg(0.4); ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+  const step = Math.ceil(groups.length / 8);
+  groups.forEach((g, i) => {
+    if (i % step !== 0 && i !== groups.length - 1) return;
+    ctx.fillText(g.label, pL + (i / Math.max(groups.length - 1, 1)) * cW, H - pB + 18);
+  });
+
+  _lineChartPts   = pts;
   _lineBaseImage  = ctx.getImageData(0, 0, W, H);
   _lineHoveredIdx = -1;
 
-  function redrawLineDots(hovIdx) {
+  function redrawHover(hovIdx) {
     ctx.putImageData(_lineBaseImage, 0, 0);
+    if (hovIdx < 0) return;
+    const hp = pts[hovIdx];
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(hp.x, pT); ctx.lineTo(hp.x, pT + cH);
+    ctx.strokeStyle = chartFg(0.2); ctx.lineWidth = 1;
+    ctx.stroke(); ctx.setLineDash([]); ctx.restore();
 
-    if (hovIdx >= 0) {
-      const hp = _lineChartPts[hovIdx];
-      ctx.save();
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      ctx.moveTo(hp.x, pT);
-      ctx.lineTo(hp.x, pT + cH);
-      ctx.strokeStyle = 'rgba(124,58,237,0.45)';
-      ctx.lineWidth   = 1;
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
-
-      ctx.save();
-      ctx.font         = 'bold 10px Inter';
-      ctx.textAlign    = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillStyle    = 'rgba(124,58,237,0.9)';
-      const labelX = Math.max(pL + 16, Math.min(W - pR - 16, hp.x));
-      ctx.fillText(`Dia ${hp.day}`, labelX, pT - 3);
-      ctx.restore();
-    }
-
-    _lineChartPts.forEach((p, i) => {
-      if (p.v === 0) return;
-      const hovered = i === hovIdx;
-      const r = hovered ? 7 : 4;
-      if (hovered) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(124,58,237,0.22)';
-        ctx.fill();
-      }
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-      ctx.fillStyle   = hovered ? '#7c3aed' : '#a78bfa';
-      ctx.fill();
-      ctx.strokeStyle = chartBg();
-      ctx.lineWidth   = hovered ? 2.5 : 2;
-      ctx.stroke();
+    [[hp.incY, '#34d399', '52,211,153'], [hp.expY, '#f87171', '248,113,113']].forEach(([y, color, rgb]) => {
+      ctx.beginPath(); ctx.arc(hp.x, y, 8, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${rgb},.18)`; ctx.fill();
+      ctx.beginPath(); ctx.arc(hp.x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.strokeStyle = chartBg(); ctx.lineWidth = 2; ctx.stroke();
     });
   }
 
-  redrawLineDots(-1);
-
   function showLinePanel(pt) {
     const panel = document.getElementById('line-click-info');
-    if (!panel || pt.txList.length === 0) { hideLinePanel(); return; }
-    const fmtV = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const rows = pt.txList.map((t, i) => {
-      const cat = CATEGORIES[t.category] || CATEGORIES.outros;
-      return `<div class="line-click-tx" style="animation-delay:${120 + i * 110}ms">
-        <span class="line-click-tx-desc">${cat.icon} <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(t.description)}</span></span>
-        <span class="line-click-tx-amount">${fmtV(t.amount)}</span>
-      </div>`;
-    }).join('');
+    if (!panel) return;
+    const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    const bal = pt.income - pt.expense;
+    const balColor = bal >= 0 ? '#34d399' : '#f87171';
     panel.innerHTML = `
-      <div class="line-click-day" style="animation-delay:60ms">Dia ${pt.day}</div>
-      ${rows}
-      <div class="line-click-total" style="animation-delay:${120 + pt.txList.length * 110}ms">
-        <span class="line-click-total-label">Total do dia</span>
-        <span class="line-click-total-value">${fmtV(pt.v)}</span>
+      <div class="line-click-day" style="animation-delay:60ms">${pt.label}</div>
+      <div class="line-click-tx" style="animation-delay:120ms">
+        <span class="line-click-tx-desc" style="color:#34d399">↑ Receitas</span>
+        <span class="line-click-tx-amount" style="color:#34d399">${fmt(pt.income)}</span>
+      </div>
+      <div class="line-click-tx" style="animation-delay:180ms">
+        <span class="line-click-tx-desc" style="color:#f87171">↓ Despesas</span>
+        <span class="line-click-tx-amount" style="color:#f87171">${fmt(pt.expense)}</span>
+      </div>
+      <div class="line-click-total" style="animation-delay:240ms">
+        <span class="line-click-total-label">Saldo</span>
+        <span class="line-click-total-value" style="color:${balColor}">${bal >= 0 ? '+' : ''}${fmt(bal)}</span>
       </div>`;
     panel.classList.remove('open');
     requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.add('open')));
@@ -600,21 +457,22 @@ function drawLine(txs) {
 
   canvas.onmousemove = e => {
     const r  = canvas.getBoundingClientRect();
-    const mx = (e.clientX - r.left) * (canvas.width  / r.width);
-    const my = (e.clientY - r.top)  * (canvas.height / r.height);
-    const idx = _lineChartPts.findIndex(p => p.v > 0 && Math.hypot(p.x - mx, p.y - my) < 16);
-    canvas.style.cursor = idx >= 0 ? 'pointer' : 'default';
+    const mx = (e.clientX - r.left) * (canvas.width / r.width);
+    let minDist = Infinity, idx = -1;
+    pts.forEach((p, i) => { const d = Math.abs(p.x - mx); if (d < minDist) { minDist = d; idx = i; } });
+    if (minDist > (cW / Math.max(groups.length, 1)) * 0.6) idx = -1;
+    canvas.style.cursor = idx >= 0 ? 'crosshair' : 'default';
     if (idx !== _lineHoveredIdx) {
       _lineHoveredIdx = idx;
-      redrawLineDots(idx);
-      if (idx >= 0) showLinePanel(_lineChartPts[idx]);
+      redrawHover(idx);
+      if (idx >= 0) showLinePanel(pts[idx]);
       else hideLinePanel();
     }
   };
 
   canvas.onmouseleave = () => {
     canvas.style.cursor = 'default';
-    if (_lineHoveredIdx !== -1) { _lineHoveredIdx = -1; redrawLineDots(-1); }
+    if (_lineHoveredIdx !== -1) { _lineHoveredIdx = -1; redrawHover(-1); }
     hideLinePanel();
   };
 }
@@ -662,7 +520,7 @@ function drawBars(txs) {
     ctx.font         = '12px Inter';
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${cat.icon} ${cat.label}`, pL - 9, y + barH / 2);
+    ctx.fillText(cat.label, pL - 9, y + barH / 2);
 
     ctx.fillStyle = chartFg(0.05);
     ctx.beginPath(); rrect(ctx, pL, y, trackW, barH, 5); ctx.fill();
@@ -739,7 +597,7 @@ function drawAnalysisBars(txs) {
       ctx.fillStyle = chartFg(hov ? 1 : 0.65);
       ctx.font = hov ? 'bold 12px Inter' : '12px Inter';
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-      ctx.fillText(`${cat.icon} ${cat.label}`, pL - 9, y + bh / 2);
+      ctx.fillText(cat.label, pL - 9, y + bh / 2);
 
       ctx.fillStyle = chartFg(hov ? 0.1 : 0.05);
       ctx.beginPath(); rrect(ctx, pL, y, trackW, bh, 5); ctx.fill();
@@ -1114,7 +972,7 @@ function drawAnalysisRadar(txs) {
     ctx.fillStyle    = chartFg(0.82); ctx.font = '11px Inter';
     ctx.textAlign    = Math.cos(a) > 0.15 ? 'left' : Math.cos(a) < -0.15 ? 'right' : 'center';
     ctx.textBaseline = Math.sin(a) > 0.15 ? 'top'  : Math.sin(a) < -0.15 ? 'bottom' : 'middle';
-    ctx.fillText(`${p.cat.icon} ${p.cat.label}`, lx, ly);
+    ctx.fillText(p.cat.label, lx, ly);
 
     const valLabelR = (p.val / maxVal) * maxR - 12;
     if (valLabelR > 8) {

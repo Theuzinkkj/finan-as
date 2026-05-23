@@ -39,6 +39,7 @@
   <link rel="stylesheet" href="css/enhancements.css">
   <link rel="stylesheet" href="css/mobile.css">
   <link rel="stylesheet" href="css/desktop.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
 <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
@@ -62,7 +63,7 @@
 
       <!-- Step 1: Name -->
       <div class="onboarding-step" id="ob-step-1">
-        <div class="ob-emoji">👋</div>
+        <div class="ob-emoji"><i class="bi bi-hand-wave"></i></div>
         <h2 class="ob-title">Bem-vindo ao Atlas!</h2>
         <p class="ob-sub">Vamos configurar tudo rapidinho para você começar com o pé direito.</p>
         <div class="form-group">
@@ -77,7 +78,7 @@
 
       <!-- Step 2: Monthly income -->
       <div class="onboarding-step hidden" id="ob-step-2">
-        <div class="ob-emoji">💰</div>
+        <div class="ob-emoji"><i class="bi bi-cash-stack"></i></div>
         <h2 class="ob-title">Qual a sua receita mensal?</h2>
         <p class="ob-sub">Vamos registrar seu salário ou renda principal como recorrente todo mês.</p>
         <div class="form-group">
@@ -96,14 +97,14 @@
 
       <!-- Step 3: Fixed expenses -->
       <div class="onboarding-step hidden" id="ob-step-3">
-        <div class="ob-emoji">🏠</div>
+        <div class="ob-emoji"><i class="bi bi-house-fill"></i></div>
         <h2 class="ob-title">Despesas fixas todo mês?</h2>
         <p class="ob-sub">Aluguel, internet, academia... serão adicionadas automaticamente todo mês.</p>
         <div id="ob-recurring-list"></div>
         <button type="button" class="btn-secondary ob-add-btn" onclick="obAddExpenseRow()">+ Adicionar despesa fixa</button>
         <div class="ob-actions">
           <button type="button" class="btn-secondary" onclick="obBack(2)">← Voltar</button>
-          <button type="button" class="btn-primary" id="ob-finish-btn" onclick="obFinish()">Começar! 🚀</button>
+          <button type="button" class="btn-primary" id="ob-finish-btn" onclick="obFinish()">Começar!</button>
         </div>
       </div>
     </div>
@@ -196,7 +197,7 @@
           <div class="mob-greeting-name" id="mob-greeting-name">—</div>
         </div>
         <div class="mob-greeting-actions">
-          <button class="mob-notif-btn" aria-label="Notificações">🔔</button>
+          <button class="mob-notif-btn" aria-label="Notificações"><i class="bi bi-bell-fill"></i></button>
           <button class="mob-avatar" id="mob-avatar" aria-label="Abrir perfil">?</button>
         </div>
       </div>
@@ -250,12 +251,12 @@
         <div class="card chart-card dash-line-card">
           <div class="dash-line-header">
             <div>
-              <div class="chart-title" style="margin-bottom:2px">Evolução de Gastos</div>
+              <div class="chart-title" style="margin-bottom:2px">Evolução Financeira</div>
               <div class="dash-line-period" id="dash-line-period">30 dias</div>
             </div>
             <div class="dash-line-legend">
-              <span class="dash-legend-dot" style="background:var(--purple-l,#a78bfa)"></span>Despesas
-              <span class="dash-legend-dot" style="background:var(--green);margin-left:10px"></span>Média
+              <span class="dash-legend-dot" style="background:#34d399"></span>Receitas
+              <span class="dash-legend-dot" style="background:#f87171;margin-left:10px"></span>Despesas
             </div>
             <div class="dash-line-filters">
               <button class="dash-filter-btn" data-range="7">7d</button>
@@ -288,18 +289,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Evolução 6 meses (full width) -->
-      <div class="card dash-evolution-card">
-        <div class="card-header">
-          <h3>Evolução — Últimos 6 Meses</h3>
-          <div class="dash-evol-legend">
-            <span class="dash-evol-dot" style="background:var(--green)"></span><span>Receitas</span>
-            <span class="dash-evol-dot" style="background:#f87171;margin-left:12px"></span><span>Despesas</span>
-          </div>
-        </div>
-        <canvas id="evol-chart" height="140"></canvas>
       </div>
 
       <!-- Linha inferior: categoria donut (esq) + transações recentes (dir) -->
@@ -628,13 +617,13 @@
         <div class="card analysis-ai-col">
           <div class="ai-col-header">
             <div class="ai-title-group">
-              <span class="ai-badge">✨ IA</span>
+              <span class="ai-badge"><i class="bi bi-stars"></i> IA</span>
               <h3>Análise Financeira</h3>
             </div>
           </div>
           <div id="ai-result">
             <div class="ai-placeholder">
-              <span class="ai-placeholder-icon">🤖</span>
+              <span class="ai-placeholder-icon"><i class="bi bi-robot"></i></span>
               <p>Clique em <strong>"Analisar com IA"</strong> para uma análise personalizada dos seus gastos deste mês.</p>
               <p class="ai-placeholder-sub">A IA identifica padrões, gastos desnecessários e onde você pode economizar.</p>
             </div>
@@ -816,7 +805,7 @@
           </div>
 
           <div class="inv-empty-state" id="inv-empty-state">
-            <span class="inv-empty-icon">📂</span>
+            <span class="inv-empty-icon"><i class="bi bi-folder2-open"></i></span>
             <p>Você ainda não registrou nenhum lançamento.<br>Clique em <strong>Adicionar Lançamento</strong> para começar.</p>
           </div>
 
@@ -864,7 +853,7 @@
       <!-- ═══ PROVENTOS ═══ -->
       <div class="inv-tab-pane" id="inv-tab-proventos">
         <div class="inv-coming-soon">
-          <span class="inv-coming-icon">💰</span>
+          <span class="inv-coming-icon"><i class="bi bi-cash-stack"></i></span>
           <h3>Proventos</h3>
           <p>Registre dividendos, JCP e rendimentos recebidos dos seus ativos.</p>
           <span class="inv-coming-badge">Em breve</span>
@@ -875,7 +864,7 @@
       <div class="inv-tab-pane" id="inv-tab-metas">
         <div id="portfolio-goal-section" style="display:none"></div>
         <div class="inv-empty-state" id="inv-metas-empty">
-          <span class="inv-empty-icon">🎯</span>
+          <span class="inv-empty-icon"><i class="bi bi-bullseye"></i></span>
           <p>Defina sua meta financeira e acompanhe o progresso da sua carteira.</p>
           <button class="btn-add-lancamento" id="btn-metas-goal-add" style="margin-top:8px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -914,17 +903,17 @@
   <div class="chat-panel hidden" id="chat-panel">
     <div class="chat-header">
       <div class="chat-title">
-        <span class="ai-badge">✨ IA</span>
+        <span class="ai-badge"><i class="bi bi-stars"></i> IA</span>
         <span>Assistente Financeiro</span>
       </div>
       <div class="chat-actions">
-        <button class="chat-action-btn" id="btn-chat-clear" title="Limpar conversa">🗑</button>
+        <button class="chat-action-btn" id="btn-chat-clear" title="Limpar conversa"><i class="bi bi-trash"></i></button>
         <button class="chat-action-btn" id="btn-chat-close" title="Fechar">✕</button>
       </div>
     </div>
     <div class="chat-messages" id="chat-messages" aria-live="polite" aria-label="Conversa com assistente financeiro">
       <div class="chat-welcome">
-        <div class="chat-welcome-icon">🤖</div>
+        <div class="chat-welcome-icon"><i class="bi bi-robot"></i></div>
         <p>Olá! Sou seu assistente financeiro pessoal. Tenho acesso aos seus dados do mês atual e posso responder dúvidas sobre seus gastos, dar dicas de economia ou ajudar com qualquer questão financeira.</p>
       </div>
     </div>
@@ -1241,10 +1230,10 @@
         <div class="form-group" id="payment-group">
           <label>Forma de Pagamento <span class="optional">(opcional)</span></label>
           <div class="payment-grid" id="payment-grid">
-            <button type="button" class="payment-btn" data-payment="dinheiro"><span class="payment-icon">💵</span><span>Dinheiro</span></button>
-            <button type="button" class="payment-btn" data-payment="pix"><span class="payment-icon">⚡</span><span>PIX</span></button>
-            <button type="button" class="payment-btn" data-payment="debito"><span class="payment-icon">💳</span><span>Débito</span></button>
-            <button type="button" class="payment-btn" data-payment="credito"><span class="payment-icon">💳</span><span>Crédito</span></button>
+            <button type="button" class="payment-btn" data-payment="dinheiro"><span class="payment-icon"><i class="bi bi-cash"></i></span><span>Dinheiro</span></button>
+            <button type="button" class="payment-btn" data-payment="pix"><span class="payment-icon"><i class="bi bi-lightning-fill"></i></span><span>PIX</span></button>
+            <button type="button" class="payment-btn" data-payment="debito"><span class="payment-icon"><i class="bi bi-credit-card-fill"></i></span><span>Débito</span></button>
+            <button type="button" class="payment-btn" data-payment="credito"><span class="payment-icon"><i class="bi bi-credit-card-2-front-fill"></i></span><span>Crédito</span></button>
           </div>
         </div>
         <div class="form-group hidden" id="invoice-group">
@@ -1549,11 +1538,11 @@
         <button class="modal-close" data-close="modal-benefits-config">✕</button>
       </div>
       <div class="form-group">
-        <label for="input-vr-amount">🍽️ Vale Refeição — valor mensal (R$)</label>
+        <label for="input-vr-amount"><i class="bi bi-cup-hot-fill"></i> Vale Refeição — valor mensal (R$)</label>
         <input type="number" id="input-vr-amount" step="0.01" min="0" placeholder="0,00">
       </div>
       <div class="form-group">
-        <label for="input-vt-amount">🚌 Vale Transporte — valor mensal (R$)</label>
+        <label for="input-vt-amount"><i class="bi bi-bus-front-fill"></i> Vale Transporte — valor mensal (R$)</label>
         <input type="number" id="input-vt-amount" step="0.01" min="0" placeholder="0,00">
       </div>
       <div class="form-actions">

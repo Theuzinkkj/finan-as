@@ -146,17 +146,17 @@ function _renderDashGoalCard() {
   contentEl.innerHTML = `
     <div class="dash-goal-amounts">${fmt(totalSaved)}<span class="dash-goal-limit"> / ${fmt(amount)}</span></div>
     <div class="dash-goal-track"><div class="dash-goal-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div></div>
-    <div class="dash-goal-footer">${pct >= 100 ? 'Meta atingida! 🎉' : `Faltam ${fmt(remaining)}`}<span class="dash-goal-date">Concluída em ~${dateLabel}</span></div>`;
+    <div class="dash-goal-footer">${pct >= 100 ? 'Meta atingida! <i class="bi bi-trophy-fill"></i>' : `Faltam ${fmt(remaining)}`}<span class="dash-goal-date">Concluída em ~${dateLabel}</span></div>`;
 }
 
 // =============================================
 //  RENDER — TRANSACTION ITEM
 // =============================================
 const PAYMENT_LABELS = {
-  dinheiro: '💵 Dinheiro',
-  pix:      '⚡ PIX',
-  debito:   '💳 Cartão de débito',
-  credito:  '💳 Cartão de crédito',
+  dinheiro: '<i class="bi bi-cash"></i> Dinheiro',
+  pix:      '<i class="bi bi-lightning-fill"></i> PIX',
+  debito:   '<i class="bi bi-credit-card-fill"></i> Cartão de débito',
+  credito:  '<i class="bi bi-credit-card-2-front-fill"></i> Cartão de crédito',
 };
 
 function txHTML(t) {
@@ -164,21 +164,21 @@ function txHTML(t) {
   const isBenefit   = t.type === 'beneficio';
   const cat         = CATEGORIES[t.category] || CATEGORIES.outros;
   const bt          = isBenefit && t.benefitType ? BENEFIT_TYPES[t.benefitType] : null;
-  const note        = t.notes ? `<div class="tx-note">📝 ${escHtml(t.notes)}</div>` : '';
-  const fixedBadge  = t.fixed ? '<span class="badge-fixed">🔄 Fixo</span>' : '';
+  const note        = t.notes ? `<div class="tx-note"><i class="bi bi-pencil-square"></i> ${escHtml(t.notes)}</div>` : '';
+  const fixedBadge  = t.fixed ? '<span class="badge-fixed"><i class="bi bi-arrow-repeat"></i> Fixo</span>' : '';
   const benefitBadge = bt ? `<span class="badge-benefit">${bt.label}</span>` : '';
   const isSel       = selectedTxIds.has(t.id);
   const hasFatura   = t.invoiceItems && t.invoiceItems.length > 0;
   const faturaBtn   = hasFatura
-    ? `<button class="tx-fatura-btn tx-fatura-inline" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
+    ? `<button class="tx-fatura-btn tx-fatura-inline" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura"><i class="bi bi-file-text"></i></button>`
     : '';
   const faturaMobBtn = hasFatura
-    ? `<button class="tx-fatura-btn tx-fatura-mob" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura">📄</button>`
+    ? `<button class="tx-fatura-btn tx-fatura-mob" onclick="openViewFaturaModal('${t.id}', event)" title="Ver fatura"><i class="bi bi-file-text"></i></button>`
     : '';
   const amtClass  = isIncome ? 'income' : isBenefit ? 'benefit' : 'expense';
   const amtPrefix = isIncome ? '+' : '−';
   const metaLabel = isIncome ? 'Receita' : cat.label;
-  const icon      = isIncome ? '💰' : cat.icon;
+  const icon      = isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon;
   return `
     <div class="tx-item${isSel ? ' tx-selected' : ''}" role="button" tabindex="0" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
       <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
@@ -218,13 +218,13 @@ function openTxDetailPanel(id) {
   const amtBg     = isIncome ? 'rgba(20,195,142,.12)' : isBenefit ? 'rgba(124,92,255,.12)' : 'rgba(255,90,106,.12)';
   const amtBorder = isIncome ? 'rgba(20,195,142,.25)' : isBenefit ? 'rgba(124,92,255,.25)' : 'rgba(255,90,106,.25)';
   const typeLabel = isIncome ? 'Receita' : isBenefit ? 'Benefício' : 'Despesa';
-  const icon      = isIncome ? '💰' : cat.icon;
+  const icon      = isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon;
   const payLabel  = PAYMENT_LABELS[tx.paymentMethod] || '—';
-  const recLabel  = tx.fixed ? '🔄 Fixo mensal' : 'Não recorrente';
+  const recLabel  = tx.fixed ? '<i class="bi bi-arrow-repeat"></i> Fixo mensal' : 'Não recorrente';
 
   const bt = isBenefit && tx.benefitType ? BENEFIT_TYPES[tx.benefitType] : null;
   const catLabel = isIncome ? 'Receita' : bt ? bt.label : cat.label;
-  const catIcon  = isIncome ? '💰' : bt ? bt.icon : cat.icon;
+  const catIcon  = isIncome ? '<i class="bi bi-cash-stack"></i>' : bt ? bt.icon : cat.icon;
 
   document.getElementById('tx-detail-content').innerHTML = `
     <div class="tx-detail-body">
@@ -232,7 +232,7 @@ function openTxDetailPanel(id) {
         <div class="tx-detail-icon" style="background:${cat.color}22;border:1px solid ${cat.color}44">${icon}</div>
         <div>
           <div class="tx-detail-name">${escHtml(tx.description)}</div>
-          <div class="tx-detail-date">${fmtDate(tx.date)}${tx.notes ? ' · 📝' : ''}</div>
+          <div class="tx-detail-date">${fmtDate(tx.date)}${tx.notes ? ' · <i class="bi bi-pencil-square"></i>' : ''}</div>
         </div>
       </div>
       <div class="tx-detail-value-box" style="background:${amtBg};border-color:${amtBorder}">
@@ -344,7 +344,7 @@ function renderSelectionBar() {
 
 function emptyHTML(msg = 'Nenhuma transação ainda.') {
   return `<div class="empty-state">
-    <span class="empty-icon">💸</span>
+    <span class="empty-icon"><i class="bi bi-cash-coin"></i></span>
     <p>${msg}</p>
     <p class="empty-sub">Clique em + para adicionar.</p>
   </div>`;
@@ -352,7 +352,7 @@ function emptyHTML(msg = 'Nenhuma transação ainda.') {
 
 function welcomeEmptyHTML() {
   return `<div class="empty-state empty-state-welcome">
-    <span class="empty-icon">👋</span>
+    <span class="empty-icon"><i class="bi bi-hand-wave"></i></span>
     <p><strong>Bem-vindo ao Atlas!</strong></p>
     <p class="empty-sub">Comece registrando sua primeira receita ou despesa.<br>Seus gráficos e resumos aparecerão aqui automaticamente.</p>
     <button class="btn-primary empty-state-cta" onclick="openModal('modal-add-tx')">+ Adicionar primeira transação</button>
@@ -554,8 +554,7 @@ function renderAll() {
   renderAllTxs();
   renderAnalysisStats(txs);
   drawDonut(txs);
-  drawLine(txs);
-  drawEvolutionChart();
+  drawLine(transactions, _lineRange);
   drawAnalysisChart(txs);
   if (typeof renderProjection === 'function')  renderProjection();
   if (typeof checkAchievements === 'function') checkAchievements();
