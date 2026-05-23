@@ -109,8 +109,8 @@ app.use((_req, res, next) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com",
-    "style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com",
-    "font-src 'self' blob: https://fonts.gstatic.com",
+    "style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com https://cdn.jsdelivr.net",
+    "font-src 'self' blob: https://fonts.gstatic.com https://cdn.jsdelivr.net",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' blob: https:",
     "worker-src 'self' blob:",
