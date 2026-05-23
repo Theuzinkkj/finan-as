@@ -339,9 +339,35 @@ function drawLine(allTxs, range = 30) {
     ? new Date(today.getTime() - 89 * 86400000).toISOString().slice(0, 10)
     : new Date(today.getFullYear(), today.getMonth() - 11, 1).toISOString().slice(0, 10);
 
-  (allTxs || []).filter(t => !t.fixed && t.date >= startStr && t.date <= todayStr).forEach(t => {
+  // Inclui transações recorrentes fixas geradas virtualmente para o período,
+  // replicando a lógica de txOfMonth para evitar que receitas/despesas fixas sumam do gráfico
+  const arr = allTxs || [];
+  const regular = arr.filter(t => !t.fixed && t.date >= startStr && t.date <= todayStr);
+  const generatedIds = new Set(regular.filter(t => t.recurringId).map(t => t.recurringId));
+
+  const monthsInRange = new Set();
+  const cursor = new Date(startStr + 'T12:00:00');
+  const endDate = new Date(todayStr + 'T12:00:00');
+  while (cursor <= endDate) {
+    monthsInRange.add(`${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  const virtual = [];
+  arr.filter(t => t.fixed && !generatedIds.has(t.id)).forEach(tpl => {
+    monthsInRange.forEach(mk => {
+      if (tpl.date.slice(0, 7) > mk) return;
+      const [ty, tm] = mk.split('-').map(Number);
+      const dim = new Date(ty, tm, 0).getDate();
+      const day = String(Math.min(parseInt(tpl.date.slice(8, 10), 10), dim)).padStart(2, '0');
+      const vDate = `${mk}-${day}`;
+      if (vDate >= startStr && vDate <= todayStr) virtual.push({ ...tpl, date: vDate, fixed: false });
+    });
+  });
+
+  [...regular, ...virtual].forEach(t => {
     let g;
-    if (range <= 30)      g = groups.find(g => g.key === t.date);
+    if (range <= 30)       g = groups.find(g => g.key === t.date);
     else if (range === 90) g = groups.find(g => t.date >= g.start && t.date <= g.end);
     else                   g = groups.find(g => t.date.startsWith(g.key));
     if (!g) return;
