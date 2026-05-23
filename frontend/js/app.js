@@ -783,9 +783,13 @@ function bindEvents() {
   // Logout do painel de perfil
   document.getElementById('btn-profile-logout').addEventListener('click', async () => {
     closeProfilePanel();
-    if (!Demo.active) await Auth.signOut();
-    else Demo.exit();
-    window.location.reload();
+    if (!Demo.active) {
+      await Auth.signOut();
+      window.location.reload();
+    } else {
+      Demo.exit();
+      window.location.href = window.location.pathname;
+    }
   });
 
   // Editar nome
@@ -877,9 +881,13 @@ function bindEvents() {
 
   // Logout (elemento oculto mantido por compatibilidade)
   document.getElementById('btn-logout').addEventListener('click', async () => {
-    if (!Demo.active) await Auth.signOut();
-    else Demo.exit();
-    window.location.reload();
+    if (!Demo.active) {
+      await Auth.signOut();
+      window.location.reload();
+    } else {
+      Demo.exit();
+      window.location.href = window.location.pathname;
+    }
   });
 
   // Tema
