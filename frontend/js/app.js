@@ -1168,6 +1168,7 @@ async function init() {
     initCSVImport();
 
     if (new URLSearchParams(window.location.search).get('demo') === '1') Demo.enter();
+    else Demo.exit(); // limpa flag demo stale caso o usuário tenha logado depois do demo
     if (Demo.active) {
       await startApp();
       const tabParam = new URLSearchParams(window.location.search).get('tab');
