@@ -592,9 +592,13 @@
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
-@keyframes demo-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: .6; }
+@keyframes demo-dot-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(.6); opacity: .5; }
+}
+@keyframes demo-cta-glow {
+  0%, 100% { text-shadow: 0 0 8px rgba(167,139,250,.0); }
+  50%       { text-shadow: 0 0 12px rgba(167,139,250,.6); }
 }
 
 #demo-banner {
@@ -606,102 +610,134 @@
   display:         flex;
   align-items:     center;
   justify-content: center;
-  gap:             12px;
-  padding:         0 48px;
+  padding:         0 44px;
   height:          44px;
-  background:      linear-gradient(270deg, #0f0a1e, #1a0f35, #0d1a3a, #0f0a1e);
-  background-size: 400% 400%;
-  animation:       demo-shimmer 8s ease infinite;
-  border-bottom:   1px solid rgba(124,92,255,.25);
-  box-shadow:      0 1px 20px rgba(124,92,255,.15);
-  font-size:       .82rem;
-  white-space:     nowrap;
+  background:      linear-gradient(270deg, #0c0818, #160d2e, #0b1528, #0c0818);
+  background-size: 300% 300%;
+  animation:       demo-shimmer 10s ease infinite;
+  border-bottom:   1px solid rgba(124,92,255,.2);
+  box-shadow:      0 2px 24px rgba(90,60,200,.18);
   overflow:        hidden;
+}
+/* linha de brilho sutil na borda inferior */
+#demo-banner::after {
+  content:    '';
+  position:   absolute;
+  bottom:     0;
+  left:       10%;
+  right:      10%;
+  height:     1px;
+  background: linear-gradient(90deg, transparent, rgba(167,139,250,.5), transparent);
 }
 #demo-banner.hidden { display: none !important; }
 
+.demo-banner-content {
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  white-space: nowrap;
+}
+
+/* Badge DEMO */
 .demo-badge {
   display:        flex;
   align-items:    center;
-  gap:            5px;
-  background:     linear-gradient(135deg, rgba(124,92,255,.35), rgba(79,209,197,.2));
-  color:          #c4b5fd;
-  border:         1px solid rgba(167,139,250,.4);
-  border-radius:  6px;
-  padding:        3px 9px;
-  font-size:      .65rem;
+  gap:            6px;
+  background:     rgba(124,92,255,.18);
+  color:          #b8a4f8;
+  border:         1px solid rgba(124,92,255,.35);
+  border-radius:  5px;
+  padding:        2px 8px;
+  font-size:      .62rem;
   font-weight:    800;
-  letter-spacing: .12em;
+  letter-spacing: .14em;
   flex-shrink:    0;
-  text-shadow:    0 0 8px rgba(167,139,250,.5);
 }
-.demo-badge::before {
-  content:       '';
-  width:         6px;
-  height:        6px;
+.demo-badge-dot {
+  width:         5px;
+  height:        5px;
   border-radius: 50%;
   background:    #a78bfa;
-  box-shadow:    0 0 6px #a78bfa;
-  animation:     demo-pulse 2s ease-in-out infinite;
+  box-shadow:    0 0 5px #a78bfa;
+  animation:     demo-dot-pulse 2.2s ease-in-out infinite;
+  flex-shrink:   0;
 }
 
-.demo-banner-text        { color: rgba(255,255,255,.6); font-size: .81rem; }
-.demo-banner-text strong { color: rgba(255,255,255,.92); font-weight: 600; }
+/* Texto principal */
+.demo-banner-text {
+  color:       rgba(255,255,255,.55);
+  font-size:   .82rem;
+  font-weight: 400;
+}
+.demo-banner-sep {
+  color:       rgba(255,255,255,.2);
+  font-size:   .82rem;
+  user-select: none;
+}
 
+/* CTA inline — parece link mas age como botão */
 .demo-banner-cta {
-  display:        flex;
+  display:        inline-flex;
   align-items:    center;
-  gap:            6px;
-  padding:        5px 16px;
-  border-radius:  20px;
-  border:         1px solid rgba(167,139,250,.5);
-  background:     linear-gradient(135deg, rgba(124,92,255,.8), rgba(99,102,241,.8));
-  color:          #fff;
+  gap:            5px;
+  background:     none;
+  border:         none;
+  padding:        0;
+  color:          #c4b5fd;
   font-family:    var(--font);
-  font-size:      .76rem;
+  font-size:      .82rem;
   font-weight:    600;
   cursor:         pointer;
-  flex-shrink:    0;
-  letter-spacing: .02em;
-  transition:     transform .15s, box-shadow .15s, background .15s;
-  box-shadow:     0 2px 12px rgba(124,92,255,.4);
+  letter-spacing: .01em;
+  position:       relative;
+  animation:      demo-cta-glow 3s ease-in-out infinite;
+  transition:     color .2s;
 }
-.demo-banner-cta::after {
-  content:   '→';
-  font-size: .8em;
-  transition: transform .15s;
+/* underline animado */
+.demo-banner-cta::before {
+  content:    '';
+  position:   absolute;
+  bottom:     -1px;
+  left:       0;
+  right:      100%;
+  height:     1px;
+  background: linear-gradient(90deg, #a78bfa, #818cf8);
+  transition: right .3s ease;
 }
-.demo-banner-cta:hover {
-  transform:  translateY(-1px);
-  box-shadow: 0 4px 20px rgba(124,92,255,.55);
-  background: linear-gradient(135deg, rgba(139,107,255,.9), rgba(99,102,241,.9));
-}
-.demo-banner-cta:hover::after { transform: translateX(2px); }
+.demo-banner-cta:hover { color: #e0d7ff; }
+.demo-banner-cta:hover::before { right: 0; }
 
+.demo-cta-icon {
+  transition:  transform .25s ease;
+  flex-shrink: 0;
+  opacity:     .8;
+}
+.demo-banner-cta:hover .demo-cta-icon { transform: translateX(3px); }
+
+/* Botão fechar */
 .demo-banner-exit {
-  position:    absolute;
-  right:       14px;
-  top:         50%;
-  transform:   translateY(-50%);
-  display:     flex;
-  align-items: center;
+  position:        absolute;
+  right:           14px;
+  top:             50%;
+  transform:       translateY(-50%);
+  display:         flex;
+  align-items:     center;
   justify-content: center;
-  width:       26px;
-  height:      26px;
-  background:  rgba(255,255,255,.05);
-  border:      1px solid rgba(255,255,255,.08);
-  border-radius: 50%;
-  color:       rgba(255,255,255,.35);
-  font-size:   .75rem;
-  cursor:      pointer;
-  padding:     0;
-  line-height: 1;
-  transition:  background .15s, color .15s, border-color .15s;
+  width:           24px;
+  height:          24px;
+  background:      transparent;
+  border:          1px solid rgba(255,255,255,.08);
+  border-radius:   50%;
+  color:           rgba(255,255,255,.28);
+  cursor:          pointer;
+  padding:         0;
+  transition:      background .2s, color .2s, border-color .2s, transform .2s;
 }
 .demo-banner-exit:hover {
-  background:    rgba(255,255,255,.12);
-  color:         rgba(255,255,255,.8);
-  border-color:  rgba(255,255,255,.2);
+  background:   rgba(255,255,255,.1);
+  color:        rgba(255,255,255,.75);
+  border-color: rgba(255,255,255,.18);
+  transform:    translateY(-50%) rotate(90deg);
 }
 
 body.demo-mode              { padding-top: 44px; }
