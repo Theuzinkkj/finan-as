@@ -128,14 +128,14 @@ function renderScoreHistory() {
 //  ACHIEVEMENTS / BADGES
 // =============================================
 const ACHIEVEMENTS_DEF = [
-  { id: 'first_tx',      icon: '📝', name: 'Primeira Transação',   desc: 'Registrou a primeira transação',     check: (txs) => txs.length >= 1 },
-  { id: 'ten_tx',        icon: '🗂️',  name: '10 Transações',        desc: 'Registrou 10 ou mais transações',    check: (txs) => txs.length >= 10 },
-  { id: 'month_green',   icon: '🟢', name: 'Mês no Verde',          desc: 'Fechou um mês com saldo positivo',   check: (txs) => { const i = txs.filter(t=>t.type==='receita').reduce((s,t)=>s+t.amount,0); const e = txs.filter(t=>t.type==='despesa').reduce((s,t)=>s+t.amount,0); return i > 0 && i > e; } },
-  { id: 'budget_set',    icon: '🎯', name: 'Meta de Gastos',        desc: 'Configurou uma meta de orçamento',   check: () => Object.keys(budgets || {}).length >= 1 },
-  { id: 'invested',      icon: '📈', name: 'Investidor',            desc: 'Adicionou um ativo ao portfólio',    check: () => typeof portfolioEntries !== 'undefined' && portfolioEntries.length >= 1 },
-  { id: 'save_20',       icon: '💰', name: 'Regra dos 20%',         desc: 'Poupou 20% ou mais da renda',        check: (txs) => { const i = txs.filter(t=>t.type==='receita').reduce((s,t)=>s+t.amount,0); const e = txs.filter(t=>t.type==='despesa').reduce((s,t)=>s+t.amount,0); return i > 0 && (i - e) / i >= 0.2; } },
-  { id: 'import_csv',    icon: '📂', name: 'Extrato Importado',     desc: 'Importou um extrato CSV',            check: () => Storage.flag(Storage.CSV_IMPORTED) },
-  { id: 'score_good',    icon: '⭐', name: 'Score Bom',             desc: 'Atingiu score financeiro ≥ 70',      check: () => { const h = Storage.getJSON(Storage.scoreHistKey(), {}); return Object.values(h).some(s => s >= 70); } },
+  { id: 'first_tx',      icon: '<i class="bi bi-pencil-square"></i>',                             name: 'Primeira Transação',   desc: 'Registrou a primeira transação',     check: (txs) => txs.length >= 1 },
+  { id: 'ten_tx',        icon: '<i class="bi bi-folder2-open"></i>',                              name: '10 Transações',        desc: 'Registrou 10 ou mais transações',    check: (txs) => txs.length >= 10 },
+  { id: 'month_green',   icon: '<i class="bi bi-circle-fill" style="color:#10b981"></i>',         name: 'Mês no Verde',          desc: 'Fechou um mês com saldo positivo',   check: (txs) => { const i = txs.filter(t=>t.type==='receita').reduce((s,t)=>s+t.amount,0); const e = txs.filter(t=>t.type==='despesa').reduce((s,t)=>s+t.amount,0); return i > 0 && i > e; } },
+  { id: 'budget_set',    icon: '<i class="bi bi-bullseye"></i>',                                  name: 'Meta de Gastos',        desc: 'Configurou uma meta de orçamento',   check: () => Object.keys(budgets || {}).length >= 1 },
+  { id: 'invested',      icon: '<i class="bi bi-graph-up-arrow"></i>',                            name: 'Investidor',            desc: 'Adicionou um ativo ao portfólio',    check: () => typeof portfolioEntries !== 'undefined' && portfolioEntries.length >= 1 },
+  { id: 'save_20',       icon: '<i class="bi bi-cash-stack"></i>',                                name: 'Regra dos 20%',         desc: 'Poupou 20% ou mais da renda',        check: (txs) => { const i = txs.filter(t=>t.type==='receita').reduce((s,t)=>s+t.amount,0); const e = txs.filter(t=>t.type==='despesa').reduce((s,t)=>s+t.amount,0); return i > 0 && (i - e) / i >= 0.2; } },
+  { id: 'import_csv',    icon: '<i class="bi bi-folder2-open"></i>',                              name: 'Extrato Importado',     desc: 'Importou um extrato CSV',            check: () => Storage.flag(Storage.CSV_IMPORTED) },
+  { id: 'score_good',    icon: '<i class="bi bi-star-fill"></i>',                                 name: 'Score Bom',             desc: 'Atingiu score financeiro ≥ 70',      check: () => { const h = Storage.getJSON(Storage.scoreHistKey(), {}); return Object.values(h).some(s => s >= 70); } },
 ];
 
 function checkAchievements() {

@@ -164,7 +164,7 @@ function renderPortfolioGoal() {
     <div class="portfolio-goal">
       <div class="portfolio-goal-top">
         <div class="portfolio-goal-left">
-          <span class="portfolio-goal-icon">🎯</span>
+          <span class="portfolio-goal-icon"><i class="bi bi-bullseye"></i></span>
           <div>
             <div class="portfolio-goal-name">${escHtml(name)}</div>
             <div class="portfolio-goal-sub">Meta: ${fmt(amount)} · ${dateLabel}</div>
@@ -1396,13 +1396,13 @@ function renderRateCards(rates) {
 
   const realYield  = rates.selic.value - rates.ipca.value;
   const realColor  = realYield >= 0 ? '#10b981' : '#ef4444';
-  const realIcon   = realYield >= 0 ? '📈' : '📉';
+  const realIcon   = realYield >= 0 ? '<i class="bi bi-graph-up-arrow"></i>' : '<i class="bi bi-graph-down-arrow"></i>';
   const realPrefix = realYield >= 0 ? '+' : '';
 
   const cards = [
-    { accent: '#6366f1', icon: '🏛️', label: 'SELIC Meta',  value: rates.selic.value, period: '% a.a.', note: 'Taxa básica definida pelo COPOM — piso de todos os juros da economia' },
-    { accent: '#10b981', icon: '💰', label: 'CDI',          value: rates.cdi.value,   period: '% a.a.', note: 'Referência para CDB, LCI, LCA e fundos DI — acompanha a SELIC' },
-    { accent: '#f59e0b', icon: '📊', label: 'IPCA 12m',     value: rates.ipca.value,  period: '% 12m',  note: 'Inflação oficial acumulada nos últimos 12 meses' },
+    { accent: '#6366f1', icon: '<i class="bi bi-bank"></i>',           label: 'SELIC Meta',  value: rates.selic.value, period: '% a.a.', note: 'Taxa básica definida pelo COPOM — piso de todos os juros da economia' },
+    { accent: '#10b981', icon: '<i class="bi bi-cash-stack"></i>',     label: 'CDI',          value: rates.cdi.value,   period: '% a.a.', note: 'Referência para CDB, LCI, LCA e fundos DI — acompanha a SELIC' },
+    { accent: '#f59e0b', icon: '<i class="bi bi-bar-chart-fill"></i>', label: 'IPCA 12m',     value: rates.ipca.value,  period: '% 12m',  note: 'Inflação oficial acumulada nos últimos 12 meses' },
     { accent: realColor, icon: realIcon, label: 'Juro Real', value: realYield, period: '% a.a.', prefix: realPrefix, valueColor: realColor, note: `SELIC − IPCA: seu dinheiro ${realYield >= 0 ? 'cresce acima' : 'perde para'} da inflação` },
   ];
 
@@ -1431,11 +1431,11 @@ function fmtRate(v) {
 // =============================================
 
 const TICKER_META = {
-  '^BVSP': { label: 'IBOVESPA', icon: '📈', color: '#6366f1', pts: true },
-  'USD':   { label: 'Dólar',    icon: '🇺🇸', color: '#10b981' },
-  'EUR':   { label: 'Euro',     icon: '🇪🇺', color: '#3b82f6' },
-  'BTC':   { label: 'Bitcoin',  icon: '₿',   color: '#f59e0b' },
-  'ETH':   { label: 'Ethereum', icon: 'Ξ',   color: '#8b5cf6' },
+  '^BVSP': { label: 'IBOVESPA', icon: '<i class="bi bi-graph-up-arrow"></i>',    color: '#6366f1', pts: true },
+  'USD':   { label: 'Dólar',    icon: '<i class="bi bi-currency-dollar"></i>',   color: '#10b981' },
+  'EUR':   { label: 'Euro',     icon: '<i class="bi bi-currency-euro"></i>',     color: '#3b82f6' },
+  'BTC':   { label: 'Bitcoin',  icon: '₿',                                       color: '#f59e0b' },
+  'ETH':   { label: 'Ethereum', icon: 'Ξ',                                       color: '#8b5cf6' },
 };
 
 async function loadMarketData() {
@@ -1499,7 +1499,7 @@ function renderMarketTicker(items) {
   if (!el) return;
 
   el.innerHTML = items.map(({ key, value, pct, change }) => {
-    const meta   = TICKER_META[key] || { label: key, icon: '📊', color: '#6366f1' };
+    const meta   = TICKER_META[key] || { label: key, icon: '<i class="bi bi-bar-chart-fill"></i>', color: '#6366f1' };
     const dir    = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
     const arrow  = pct > 0 ? '▲' : pct < 0 ? '▼' : '—';
     const pctFmt = pct != null ? `${pct > 0 ? '+' : ''}${pct.toFixed(2).replace('.', ',')}%` : '—';

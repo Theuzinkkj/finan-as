@@ -69,7 +69,7 @@ function setAuthMode(mode) {
   const line1 = document.getElementById('auth-welcome-line1');
   const line2 = document.getElementById('auth-welcome-line2');
   if (line1) line1.textContent = isSignup ? 'Crie sua conta' : 'Bem-vindo de volta';
-  if (line2) line2.textContent = isSignup ? '' : ' 👋';
+  if (line2) line2.innerHTML = isSignup ? '' : ' <i class="bi bi-hand-wave"></i>';
 
   document.getElementById('auth-hint-signin')?.classList.toggle('hidden', isSignup);
   document.getElementById('auth-hint-signup')?.classList.toggle('hidden', !isSignup);

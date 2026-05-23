@@ -65,10 +65,10 @@ function renderAIResult(a) {
         <p>${escHtml(a.summary || '')}</p>
       </div>
     </div>
-    ${a.waste?.length    ? `<div class="ai-section red">   <div class="ai-section-title">⚠️ Gastos Potencialmente Desnecessários</div>${ul(a.waste)}</div>`    : ''}
-    ${a.alerts?.length   ? `<div class="ai-section yellow"><div class="ai-section-title">🔔 Alertas</div>${ul(a.alerts)}</div>`   : ''}
-    ${a.tips?.length     ? `<div class="ai-section purple"><div class="ai-section-title">💡 Dicas Para Economizar</div>${ul(a.tips)}</div>`     : ''}
-    ${a.positive?.length ? `<div class="ai-section green"> <div class="ai-section-title">✅ Pontos Positivos</div>${ul(a.positive)}</div>` : ''}`;
+    ${a.waste?.length    ? `<div class="ai-section red">   <div class="ai-section-title"><i class="bi bi-exclamation-triangle-fill"></i> Gastos Potencialmente Desnecessários</div>${ul(a.waste)}</div>`    : ''}
+    ${a.alerts?.length   ? `<div class="ai-section yellow"><div class="ai-section-title"><i class="bi bi-bell-fill"></i> Alertas</div>${ul(a.alerts)}</div>`   : ''}
+    ${a.tips?.length     ? `<div class="ai-section purple"><div class="ai-section-title"><i class="bi bi-lightbulb-fill"></i> Dicas Para Economizar</div>${ul(a.tips)}</div>`     : ''}
+    ${a.positive?.length ? `<div class="ai-section green"> <div class="ai-section-title"><i class="bi bi-check-circle-fill"></i> Pontos Positivos</div>${ul(a.positive)}</div>` : ''}`;
 }
 
 function resetAIResult() {
@@ -77,7 +77,7 @@ function resetAIResult() {
   if (!el) return;
   el.innerHTML = `
     <div class="ai-placeholder">
-      <span class="ai-placeholder-icon">🤖</span>
+      <span class="ai-placeholder-icon"><i class="bi bi-robot"></i></span>
       <p>Os dados foram alterados. Clique em <strong>"Analisar com IA"</strong> para uma nova análise.</p>
     </div>`;
 }
@@ -207,7 +207,7 @@ Responda APENAS com JSON válido, sem markdown:
   } catch (err) {
     document.getElementById('ai-result').innerHTML = `
       <div class="ai-section red">
-        <div class="ai-section-title">❌ Erro</div>
+        <div class="ai-section-title"><i class="bi bi-x-circle-fill"></i> Erro</div>
         <p>${escHtml(err.message)}</p>
       </div>`;
     toast(err.message, 'err');
@@ -293,7 +293,7 @@ function demoChatReply(msg) {
     return `Suas receitas em ${monthLabel(currentDate)}: **${fmt(totI)}** em ${inc.length} entrada(s). ${inc.length > 1 ? 'Ter múltiplas fontes de renda é ótimo!' : 'Diversificar as fontes de renda pode aumentar sua segurança financeira.'}`;
 
   if (/oi|olá|ola|hey|tudo/.test(m))
-    return `Olá! 👋 Sou o assistente financeiro do Atlas. Você está no **modo demo** — posso responder perguntas sobre seus dados deste mês. Tente perguntar sobre saldo, categorias ou dicas de economia!`;
+    return `Olá! Sou o assistente financeiro do Atlas. Você está no **modo demo** — posso responder perguntas sobre seus dados deste mês. Tente perguntar sobre saldo, categorias ou dicas de economia!`;
 
   return `No modo demo respondo com base nos dados carregados. Tente perguntar: *"Qual meu saldo?"*, *"Onde mais gastei?"*, *"Como economizar?"* ou *"Maior gasto do mês"*.`;
 }
@@ -348,7 +348,7 @@ function appendChatMsg(role, content) {
     bubble.innerHTML = formatChatText(content);
   } else {
     bubble.className   = 'chat-bubble error-bubble';
-    bubble.textContent = '❌ ' + content;
+    bubble.textContent = 'Erro: ' + content;
   }
 
   wrapper.appendChild(bubble);
@@ -386,7 +386,7 @@ function clearChat() {
   chatHistory = [];
   document.getElementById('chat-messages').innerHTML = `
     <div class="chat-welcome">
-      <div class="chat-welcome-icon">🤖</div>
+      <div class="chat-welcome-icon"><i class="bi bi-robot"></i></div>
       <p>Conversa reiniciada. Como posso te ajudar?</p>
     </div>`;
 }

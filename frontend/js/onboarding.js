@@ -115,7 +115,7 @@ async function obFinish() {
   renderAll();
   if (created.length) {
     const n = created.length;
-    toast(`Perfeito! ${n} transaç${n === 1 ? 'ão adicionada' : 'ões adicionadas'}! 🎉`);
+    toast(`Perfeito! ${n} transaç${n === 1 ? 'ão adicionada' : 'ões adicionadas'}!`);
   }
 }
 

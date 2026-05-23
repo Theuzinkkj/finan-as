@@ -51,3 +51,4 @@ CREATE POLICY "users_update_own" ON transactions
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS fixed          BOOLEAN DEFAULT FALSE;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT;
 ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "invoiceItems"  JSONB;
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS "benefitType"   TEXT;

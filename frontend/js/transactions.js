@@ -241,7 +241,7 @@ function openTxMenu(id, event) {
 
   const tx = transactions.find(t => t.id === id);
   const fixedBtn = document.getElementById('btn-menu-fixed');
-  if (fixedBtn) fixedBtn.textContent = tx?.fixed ? '⏹️ Parar de repetir' : '🔄 Repetir todo mês';
+  if (fixedBtn) fixedBtn.innerHTML = tx?.fixed ? '<i class="bi bi-stop-fill"></i> Parar de repetir' : '<i class="bi bi-arrow-repeat"></i> Repetir todo mês';
   const btn  = event.currentTarget;
   const rect = btn.getBoundingClientRect();
   const mw   = 190;
@@ -279,7 +279,7 @@ function openMobTxSheet(id) {
 
   document.getElementById('mob-tx-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
-      <div style="width:52px;height:52px;border-radius:12px;background:${cat.color}22;border:1px solid ${cat.color}55;display:flex;align-items:center;justify-content:center;font-size:24px;">${isIncome ? '💰' : cat.icon}</div>
+      <div style="width:52px;height:52px;border-radius:12px;background:${cat.color}22;border:1px solid ${cat.color}55;display:flex;align-items:center;justify-content:center;font-size:24px;">${isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon}</div>
       <div style="flex:1">
         <div style="font-size:18px;font-weight:600;letter-spacing:-0.3px;">${escHtml(tx.description)}</div>
         <div style="font-size:12px;color:var(--text-dim);">${fmtDate(tx.date)}</div>
@@ -290,12 +290,12 @@ function openMobTxSheet(id) {
       <div style="font-size:32px;font-weight:700;color:${amtColor};letter-spacing:-1px;">${amtSign}${fmt(tx.amount)}</div>
     </div>
     <div class="mob-tx-field"><span>Tipo</span><span>${typeLabel}</span></div>
-    <div class="mob-tx-field"><span>Categoria</span><span>${isIncome ? '💰' : cat.icon} ${isIncome ? 'Receita' : cat.label}</span></div>
+    <div class="mob-tx-field"><span>Categoria</span><span>${isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon} ${isIncome ? 'Receita' : cat.label}</span></div>
     ${tx.notes ? `<div class="mob-tx-field"><span>Nota</span><span>${escHtml(tx.notes)}</span></div>` : ''}
-    ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span>🔄 Fixo mensal</span></div>` : ''}
+    ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span><i class="bi bi-arrow-repeat"></i> Fixo mensal</span></div>` : ''}
     <div style="display:flex;gap:8px;margin-top:18px;">
-      <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">✎ Editar</button>
-      <button onclick="closeMobTxSheet();deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">🗑 Excluir</button>
+      <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-pencil"></i> Editar</button>
+      <button onclick="closeMobTxSheet();deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-trash"></i> Excluir</button>
     </div>`;
 
   document.getElementById('mob-tx-overlay').classList.add('open');
@@ -461,7 +461,7 @@ async function toggleFixedTx() {
   try {
     await DB.put(tx);
     renderAll();
-    toast(tx.fixed ? '🔄 Transação marcada como fixa.' : 'Recorrência removida.');
+    toast(tx.fixed ? 'Transação marcada como fixa.' : 'Recorrência removida.');
     _cloudUpdate(tx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }

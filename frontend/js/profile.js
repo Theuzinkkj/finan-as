@@ -67,7 +67,7 @@ function updateProfileUI() {
   const mobGreetName = document.getElementById('mob-greeting-name');
   const mobGreetSub  = document.getElementById('mob-greeting-sub');
   const mobAvatar    = document.getElementById('mob-avatar');
-  if (mobGreetName) mobGreetName.textContent = name !== '—' ? name + ' 👋' : '👋';
+  if (mobGreetName) mobGreetName.innerHTML = name !== '—' ? escHtml(name) + ' <i class="bi bi-hand-wave"></i>' : '<i class="bi bi-hand-wave"></i>';
   if (mobAvatar)    mobAvatar.textContent    = initial;
   // Avatares extras (IA e Invest.)
   const mobIaAvatar  = document.getElementById('mob-ia-avatar');
