@@ -539,7 +539,7 @@ function renderAnalysisStats(txs) {
   document.getElementById('stat-count').textContent   = exp.length;
   document.getElementById('stat-max').textContent     = maxTx.amount ? fmt(maxTx.amount) : '—';
   document.getElementById('stat-avg').textContent     = total ? fmt(total / days) : '—';
-  document.getElementById('stat-top-cat').textContent = topCat ? `${topCat.icon} ${topCat.label}` : '—';
+  document.getElementById('stat-top-cat').innerHTML   = topCat ? `${topCat.icon} ${topCat.label}` : '—';
 }
 
 // =============================================
