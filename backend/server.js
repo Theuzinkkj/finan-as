@@ -9,6 +9,11 @@ const compression               = require('compression');
 const cron                      = require('node-cron');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); } catch { /* stripe não instalado */ }
+}
+
 const app          = express();
 const SUPA_URL     = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPA_ANON    = process.env.SUPABASE_KEY         || '';
@@ -59,7 +64,35 @@ if (MISSING.length) {
 // Compressão gzip/brotli em todas as respostas (reduz ~70% do payload)
 app.use(compression());
 
-app.use(express.json());
+// ── Stripe webhook (raw body obrigatório — antes do express.json) ─────────────
+app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(400).end();
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
+  } catch {
+    return res.status(400).end();
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    // Baixar plano para free quando assinatura for cancelada pelo Stripe
+    try {
+      await proxyFetch(
+        `${SUPA_URL}/rest/v1/profiles?stripe_customer_id=eq.${encodeURIComponent(sub.customer)}`,
+        {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}`, 'Prefer': 'return=minimal' },
+          body:    JSON.stringify({ plan: 'free' }),
+        }
+      );
+    } catch { /* non-fatal */ }
+  }
+
+  res.json({ received: true });
+});
+
+app.use(express.json({ limit: '7mb' }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 // Middleware próprio — o pacote cors não expõe req no callback de origin,
@@ -108,11 +141,12 @@ app.use((req, res, next) => {
 app.use((_req, res, next) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://js.stripe.com",
     "style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com https://cdn.jsdelivr.net",
     "font-src 'self' blob: https://fonts.gstatic.com https://cdn.jsdelivr.net",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' blob: https:",
+    "connect-src 'self' blob: https: https://viacep.com.br",
+    "frame-src https://js.stripe.com https://hooks.stripe.com",
     "worker-src 'self' blob:",
   ].join('; '));
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -126,10 +160,48 @@ app.use((_req, res, next) => {
 // ── Rotas de navegação ────────────────────────────────────────────────────────
 const fe = f => path.join(__dirname, '..', 'frontend', f);
 
-app.get('/',        (_req, res) => res.redirect('/landing'));
-app.get('/landing', (_req, res) => res.sendFile(fe('landing.html')));
-app.get('/login',   (_req, res) => res.sendFile(fe('login.html')));
-app.get('/app',     (_req, res) => res.sendFile(fe('index.html')));
+app.get('/',          (_req, res) => res.redirect('/landing'));
+app.get('/checkout',  (_req, res) => res.sendFile(fe('checkout.html')));
+app.get('/planos',    (_req, res) => res.sendFile(fe('planos.html')));
+app.get('/login',     (_req, res) => res.sendFile(fe('login.html')));
+app.get('/app',       (_req, res) => res.sendFile(fe('index.html')));
+
+// /landing com injeção de script para capturar botão "Assinar"
+app.get('/landing', async (_req, res) => {
+  const fs = require('fs');
+  try {
+    let html = await fs.promises.readFile(fe('landing.html'), 'utf8');
+    html = html.replace('</head>', `<script>
+      (function(){
+        function hookCtaButtons(){
+          document.querySelectorAll('a,button').forEach(function(el){
+            if(el._hooked) return;
+            var txt = el.textContent.trim().toLowerCase();
+            // Botões "Assinar / Começar" → /checkout
+            if(txt.includes('assinar')||txt.includes('assine')||txt.includes('começar')||txt.includes('comecar')||txt.includes('assine já')||txt.includes('assinar já')){
+              el._hooked = true;
+              el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();window.location.href='/checkout';},{capture:true});
+              if(el.tagName==='A') el.href='/checkout';
+            }
+            // Links "Ver planos / Preços" → /planos
+            if(txt.includes('ver planos')||txt.includes('preços')||txt.includes('planos')){
+              el._hooked = true;
+              el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();window.location.href='/planos';},{capture:true});
+              if(el.tagName==='A') el.href='/planos';
+            }
+          });
+        }
+        new MutationObserver(hookCtaButtons).observe(document.documentElement,{childList:true,subtree:true});
+        document.addEventListener('DOMContentLoaded',hookCtaButtons);
+        setTimeout(hookCtaButtons,600);
+        setTimeout(hookCtaButtons,1800);
+      })();
+    </script></head>`);
+    res.send(html);
+  } catch {
+    res.sendFile(fe('landing.html'));
+  }
+});
 
 // ── Arquivos estáticos ────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
@@ -195,6 +267,32 @@ const aiLimiter   = makeRateLimiter(60_000,       20, 'Muitas requisições. Ten
 const authLimiter = makeRateLimiter(15 * 60_000,  10, 'Muitas tentativas. Tente novamente em 15 minutos.');
 
 // ── Utilitários ───────────────────────────────────────────────────────────────
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']);
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024; // 5 MB
+
+function validateImageMagicBytes(buffer, mimeType) {
+  const type = mimeType.toLowerCase();
+  if (type === 'image/jpeg' || type === 'image/jpg') {
+    return buffer.length >= 3 &&
+      buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF;
+  }
+  if (type === 'image/png') {
+    return buffer.length >= 8 &&
+      buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47 &&
+      buffer[4] === 0x0D && buffer[5] === 0x0A && buffer[6] === 0x1A && buffer[7] === 0x0A;
+  }
+  if (type === 'image/gif') {
+    return buffer.length >= 4 &&
+      buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x38;
+  }
+  if (type === 'image/webp') {
+    return buffer.length >= 12 &&
+      buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46 &&
+      buffer[8] === 0x57 && buffer[9] === 0x45 && buffer[10] === 0x42 && buffer[11] === 0x50;
+  }
+  return false;
+}
 
 function decodeJwtPayload(token) {
   try {
@@ -531,8 +629,23 @@ app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
     if (!match) return res.status(400).json({ message: 'Formato de imagem inválido.' });
 
     const [, contentType, imageData] = match;
-    const ext     = contentType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
-    const buffer  = Buffer.from(imageData, 'base64');
+    const normalizedType = contentType.toLowerCase();
+
+    if (!ALLOWED_IMAGE_TYPES.has(normalizedType)) {
+      return res.status(400).json({ message: 'Formato não suportado. Tente uma foto em JPEG ou PNG.' });
+    }
+
+    const buffer = Buffer.from(imageData, 'base64');
+
+    if (buffer.length > MAX_PHOTO_BYTES) {
+      return res.status(400).json({ message: 'Arquivo muito pesado. Tente uma imagem menor que 5 MB.' });
+    }
+
+    if (!validateImageMagicBytes(buffer, normalizedType)) {
+      return res.status(400).json({ message: 'Arquivo não reconhecido. Tente uma foto diferente.' });
+    }
+
+    const ext      = normalizedType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
     const filePath = `${req.userId}.${ext}`;
 
     let uploadRes;
@@ -542,7 +655,7 @@ app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
       uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/avatars/${filePath}`, {
         method:  'POST',
         headers: {
-          'Content-Type':  contentType,
+          'Content-Type':  normalizedType,
           'apikey':        SUPA_SERVICE,
           'Authorization': `Bearer ${SUPA_SERVICE}`,
           'x-upsert':      'true',
@@ -683,24 +796,103 @@ app.post('/api/auth/update-password', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Exclui a conta do usuário autenticado (usa service key para admin)
+// Exclui a conta do usuário autenticado — LGPD: apaga todos os dados associados
 app.delete('/api/auth/account', requireAuth, async (req, res, next) => {
   try {
-    const { ok, status, data } = await proxyFetch(
-      `${SUPA_URL}/auth/v1/admin/users/${req.userId}`,
-      {
-        method:  'DELETE',
-        headers: {
-          'Content-Type':  'application/json',
-          'apikey':        SUPA_SERVICE,
-          'Authorization': `Bearer ${SUPA_SERVICE}`,
-        },
+    const userId = req.userId;
+    const svcHdr = {
+      'Content-Type':  'application/json',
+      'apikey':        SUPA_SERVICE,
+      'Authorization': `Bearer ${SUPA_SERVICE}`,
+    };
+
+    // 1. Busca metadados para obter URL da foto de perfil
+    const { ok: metaOk, data: metaData } = await proxyFetch(
+      `${SUPA_URL}/auth/v1/admin/users/${userId}`,
+      { headers: svcHdr }
+    );
+
+    // 2. Remove foto do storage (não-fatal)
+    if (metaOk && metaData?.user_metadata?.photo) {
+      const photoMatch = metaData.user_metadata.photo.match(/\/object\/public\/avatars\/(.+)$/);
+      if (photoMatch) {
+        await proxyFetch(`${SUPA_URL}/storage/v1/object/avatars/${photoMatch[1]}`, {
+          method: 'DELETE',
+          headers: { apikey: SUPA_SERVICE, Authorization: `Bearer ${SUPA_SERVICE}` },
+        }).catch(() => {});
       }
+    }
+
+    // 3. Remove todas as transações do usuário
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/transactions?user_id=eq.${encodeURIComponent(userId)}`,
+      { method: 'DELETE', headers: { ...svcHdr, Prefer: 'return=minimal' } }
+    );
+
+    // 4. Remove todos os lançamentos de portfólio
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/portfolio_entries?user_id=eq.${encodeURIComponent(userId)}`,
+      { method: 'DELETE', headers: { ...svcHdr, Prefer: 'return=minimal' } }
+    );
+
+    // 5. Remove a conta de autenticação (invalida sessões automaticamente)
+    const { ok, status, data } = await proxyFetch(
+      `${SUPA_URL}/auth/v1/admin/users/${userId}`,
+      { method: 'DELETE', headers: svcHdr }
     );
 
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
     clearSessionCookies(res);
     res.status(200).json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// ── Portabilidade de dados (LGPD art. 18) ────────────────────────────────────
+
+app.get('/api/user/export', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const svcHdr = {
+      'Content-Type':  'application/json',
+      'apikey':        SUPA_SERVICE,
+      'Authorization': `Bearer ${SUPA_SERVICE}`,
+    };
+
+    // Busca em paralelo: perfil, transações e portfólio
+    const [profileRes, txRes, pfRes] = await Promise.all([
+      proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${userId}`, { headers: svcHdr }),
+      proxyFetch(
+        `${SUPA_URL}/rest/v1/transactions?user_id=eq.${encodeURIComponent(userId)}&select=*&order=date.desc&limit=10000`,
+        { headers: { ...svcHdr, Accept: 'application/json' } }
+      ),
+      proxyFetch(
+        `${SUPA_URL}/rest/v1/portfolio_entries?user_id=eq.${encodeURIComponent(userId)}&select=*&order=date.desc&limit=10000`,
+        { headers: { ...svcHdr, Accept: 'application/json' } }
+      ),
+    ]);
+
+    const meta = profileRes.ok ? profileRes.data?.user_metadata || {} : {};
+
+    const payload = {
+      exportedAt:   new Date().toISOString(),
+      lgpd:         'Exportação de dados pessoais conforme LGPD art. 18 — direito à portabilidade.',
+      profile: {
+        id:        userId,
+        email:     profileRes.ok ? profileRes.data?.email : null,
+        name:      meta.name      || null,
+        phone:     meta.phone     || null,
+        cpf:       meta.cpf       || null,
+        address:   meta.address   || null,
+        plan:      meta.plan      || 'free',
+        createdAt: profileRes.ok ? profileRes.data?.created_at : null,
+      },
+      transactions:    txRes.ok  ? (txRes.data  || []) : [],
+      portfolioEntries: pfRes.ok ? (pfRes.data  || []) : [],
+    };
+
+    res.setHeader('Content-Disposition', 'attachment; filename="atlas-meus-dados.json"');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.status(200).json(payload);
   } catch (err) { next(err); }
 });
 
@@ -811,6 +1003,126 @@ app.delete('/api/portfolio/:id', requireAuth, async (req, res, next) => {
     });
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });
     res.status(200).end();
+  } catch (err) { next(err); }
+});
+
+// ── Billing (Stripe) ─────────────────────────────────────────────────────────
+
+const billingLimiter = makeRateLimiter(60_000, 5, 'Muitas tentativas. Tente novamente em 1 minuto.');
+
+// Retorna publishable key + info do plano para o frontend
+app.get('/api/billing/config', (_req, res) => {
+  res.json({
+    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    planName:       process.env.STRIPE_PLAN_NAME  || 'Atlas Pro',
+    planPrice:      process.env.STRIPE_PLAN_PRICE || 'R$ 29,90',
+  });
+});
+
+// Cria customer + subscription no Stripe → retorna clientSecret para confirmar pagamento
+app.post('/api/billing/prepare-checkout', billingLimiter, async (req, res, next) => {
+  try {
+    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados. Adicione STRIPE_SECRET_KEY no .env.' });
+    if (!process.env.STRIPE_PRICE_ID) return res.status(503).json({ message: 'Plano não configurado. Adicione STRIPE_PRICE_ID no .env.' });
+
+    const { name, email, cpf, phone } = req.body || {};
+    if (!name || !email) return res.status(400).json({ message: 'Nome e e-mail são obrigatórios.' });
+
+    const customer = await stripe.customers.create({
+      name,
+      email,
+      phone: phone || undefined,
+      metadata: { cpf: cpf || '', source: 'atlas-checkout' },
+    });
+
+    const subscription = await stripe.subscriptions.create({
+      customer:         customer.id,
+      items:            [{ price: process.env.STRIPE_PRICE_ID }],
+      payment_behavior: 'default_incomplete',
+      payment_settings: { save_default_payment_method: 'on_subscription' },
+      expand:           ['latest_invoice.payment_intent'],
+    });
+
+    const pi = subscription.latest_invoice?.payment_intent;
+    if (!pi?.client_secret) return res.status(502).json({ message: 'Erro ao criar assinatura no Stripe.' });
+
+    res.json({
+      clientSecret:   pi.client_secret,
+      customerId:     customer.id,
+      subscriptionId: subscription.id,
+      planPrice:      process.env.STRIPE_PLAN_PRICE || 'R$ 29,90',
+    });
+  } catch (err) { next(err); }
+});
+
+// Verifica pagamento + cria conta Supabase
+app.post('/api/billing/complete-registration', billingLimiter, async (req, res, next) => {
+  try {
+    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
+
+    const { email, password, name, cpf, phone, address, stripeCustomerId, paymentIntentId } = req.body || {};
+    if (!email || !password || !stripeCustomerId || !paymentIntentId) {
+      return res.status(400).json({ message: 'Dados incompletos.' });
+    }
+
+    // Verifica pagamento no Stripe
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (pi.status !== 'succeeded') {
+      return res.status(400).json({ message: 'Pagamento não confirmado. Tente novamente.' });
+    }
+
+    // Cria usuário no Supabase (admin, sem email de confirmação)
+    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users`, {
+      method:  'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'apikey':        SUPA_SERVICE,
+        'Authorization': `Bearer ${SUPA_SERVICE}`,
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { name, cpf, phone, address, stripe_customer_id: stripeCustomerId, plan: 'pro' },
+      }),
+    });
+
+    if (!ok) {
+      const msg = supaErrorMsg(data);
+      if (status === 422 || msg.toLowerCase().includes('already')) {
+        return res.status(409).json({ message: 'Este e-mail já está cadastrado. Faça login.' });
+      }
+      return res.status(status).json({ message: msg });
+    }
+
+    // Associa user_id ao customer do Stripe (não-fatal)
+    try { await stripe.customers.update(stripeCustomerId, { metadata: { supabase_user_id: data.id } }); } catch { /* ok */ }
+
+    res.json({ ok: true });
+  } catch (err) { next(err); }
+});
+
+// Cria sessão no Stripe Billing Portal para o usuário autenticado gerenciar a assinatura
+app.post('/api/billing/portal', requireAuth, async (req, res, next) => {
+  try {
+    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
+
+    const { ok, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: supaHeaders(req.authToken),
+    });
+
+    const customerId = data?.user_metadata?.stripe_customer_id;
+    if (!ok || !customerId) {
+      return res.status(400).json({ message: 'Nenhuma assinatura encontrada para esta conta.' });
+    }
+
+    const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/+$/, '');
+    const session = await stripe.billingPortal.sessions.create({
+      customer:   customerId,
+      return_url: `${appUrl}/app`,
+    });
+
+    res.json({ url: session.url });
   } catch (err) { next(err); }
 });
 
