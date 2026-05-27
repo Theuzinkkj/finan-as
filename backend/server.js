@@ -332,24 +332,33 @@ function parseCookies(req) {
 }
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
+// Usa Supabase como armazenamento compartilhado para funcionar com múltiplas
+// instâncias. Em caso de falha do banco, libera o request (fail open) para
+// não derrubar o site por causa do rate limiting.
 
 function makeRateLimiter(windowMs, max, message) {
-  const hits = new Map();
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of hits) {
-      if (now > entry.resetAt) hits.delete(key);
-    }
-  }, windowMs);
+  return async function rateLimiter(req, res, next) {
+    try {
+      const ip  = req.ip || req.connection?.remoteAddress || 'unknown';
+      const key = `${req.path}:${ip}`;
 
-  return function rateLimiter(req, res, next) {
-    const ip  = req.ip || req.connection?.remoteAddress || 'unknown';
-    const now = Date.now();
-    let entry = hits.get(ip);
-    if (!entry || now > entry.resetAt) entry = { count: 0, resetAt: now + windowMs };
-    entry.count++;
-    hits.set(ip, entry);
-    if (entry.count > max) return res.status(429).json({ message });
+      const { ok, data } = await proxyFetch(
+        `${SUPA_URL}/rest/v1/rpc/check_rate_limit`,
+        {
+          method:  'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'apikey':        SUPA_SERVICE,
+            'Authorization': `Bearer ${SUPA_SERVICE}`,
+          },
+          body: JSON.stringify({ p_key: key, p_window_ms: windowMs, p_max: max }),
+        }
+      );
+
+      if (ok && data === true) return res.status(429).json({ message });
+    } catch {
+      // Fail open: se o banco estiver fora, não bloqueia o usuário
+    }
     next();
   };
 }

@@ -3,22 +3,22 @@
 // =============================================
 //  STATE
 // =============================================
-let currentDate       = new Date();
-let selectedType       = 'despesa';
-let selectedCat        = '';
-let selectedPayment    = '';
-let selectedBenefitType = '';
-let selectedFixed      = false;
-let invoiceItems       = [];
-let transactions      = [];
-let _lineRange        = 30;
-let selectedTxIds     = new Set();
-let chatHistory       = [];
-let appInitialized    = false;
-let activeTxId        = null;
-let activeChangeCat   = null;
-let customCatSource   = 'add';
-let _refreshChangeCatGrid = null;
+var currentDate       = new Date();
+var selectedType       = 'despesa';
+var selectedCat        = '';
+var selectedPayment    = '';
+var selectedBenefitType = '';
+var selectedFixed      = false;
+var invoiceItems       = [];
+var transactions      = [];
+var _lineRange        = 30;
+var selectedTxIds     = new Set();
+var chatHistory       = [];
+var appInitialized    = false;
+var activeTxId        = null;
+var activeChangeCat   = null;
+var customCatSource   = 'add';
+var _refreshChangeCatGrid = null;
 
 // =============================================
 //  THEME
