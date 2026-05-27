@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Atlas — M1 Brand Pack</title>
+
+<!-- USE ESTES TAGS NO SEU SITE: -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #07070d; color: #ECEAF5; font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
+  .mono { font-family: "JetBrains Mono", monospace; }
+
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 56px 28px; }
+
+  h1 { font-size: 38px; letter-spacing: -1; font-weight: 700; margin: 0 0 8px; }
+  h1 .grad {
+    background: linear-gradient(135deg, #9B7DFF 0%, #7C5CFF 55%, #4FB6FF 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  h2 { font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; color: #6E6B85; font-weight: 600; margin: 48px 0 16px; }
+
+  .head { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+  .head .lead { font-size: 14px; color: #B5B2C8; line-height: 1.6; max-width: 640px; }
+
+  .grid { display: grid; gap: 14px; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+
+  .card {
+    background: #11111e; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 22px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; min-height: 180px; gap: 12px;
+    transition: border-color .15s;
+  }
+  .card:hover { border-color: rgba(124,92,255,0.30); }
+  .card .label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: #6E6B85; font-weight: 600; }
+  .card .name { font-size: 13px; font-weight: 600; color: #ECEAF5; }
+  .card .file { font-size: 11px; color: #6E6B85; font-family: "JetBrains Mono", monospace; }
+
+  .preview-bg-light { background: #F6F4EF; color: #1A1726; border-color: rgba(0,0,0,0.06); }
+  .preview-bg-light .name { color: #1A1726; }
+  .preview-bg-light .file { color: rgba(0,0,0,0.45); }
+
+  .stripe-card {
+    background: #fff; color: #0a2540; padding: 22px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.30); border-radius: 12px;
+    border: 1px solid #e3e3e5;
+  }
+  .stripe-card .head2 {
+    display: flex; align-items: center; gap: 12px;
+    padding-bottom: 18px; border-bottom: 1px solid #f0f0f2;
+  }
+  .stripe-card .icon-wrap {
+    width: 48px; height: 48px; border-radius: 10px;
+    background: #0B0B16;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stripe-card .brand-name { font-size: 15px; font-weight: 600; }
+  .stripe-card .brand-url { font-family: "JetBrains Mono", monospace; font-size: 11px; color: #697386; }
+  .stripe-card .amount-label { font-size: 12px; color: #697386; margin-top: 18px; }
+  .stripe-card .amount { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
+
+  code {
+    background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .code-block {
+    background: #0b0b15; border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px; padding: 18px;
+    font-family: "JetBrains Mono", monospace; font-size: 12px;
+    line-height: 1.6; color: #B5B2C8;
+    overflow-x: auto; white-space: pre;
+  }
+  .code-block .tag { color: #5BC0FF; }
+  .code-block .attr { color: #E27ABA; }
+  .code-block .val { color: #F2B544; }
+
+  .note {
+    padding: 16px 18px; border-radius: 10px;
+    background: linear-gradient(120deg, rgba(124,92,255,0.12), transparent);
+    border: 1px solid rgba(124,92,255,0.25);
+    font-size: 13px; color: #B5B2C8; line-height: 1.6;
+  }
+  .note strong { color: #ECEAF5; }
+
+  .favicon-tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: #3d3641; border-radius: 8px 8px 0 0; color: #fff;
+    font-size: 13px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <img src="logo-full-white-2x.png" alt="Atlas" style="height: 36px;">
+  </div>
+
+  <h1>M1 · <span class="grad">Diamante</span></h1>
+  <p class="lead" style="color: #B5B2C8; margin: 8px 0 24px; max-width: 640px;">
+    Brand pack completo. Vetor (SVG) e raster (PNG) em múltiplas resoluções. Use os snippets abaixo para instalar no seu site.
+  </p>
+
+  <h2>1 · Logo principal</h2>
+  <div class="grid grid-2">
+    <div class="card" style="min-height: 140px;">
+      <span class="label">Sobre fundo escuro · texto branco</span>
+      <img src="logo-full-white-2x.png" alt="Atlas" style="height: 56px; image-rendering: -webkit-optimize-contrast;">
+      <span class="file">logo-full-white-{1x,2x,3x}.png · logo-full.svg</span>
+    </div>
+    <div class="card preview-bg-light" style="min-height: 140px;">
+      <span class="label" style="color: rgba(0,0,0,0.45);">Sobre fundo claro · texto escuro</span>
+      <img src="logo-full-dark-2x.png" alt="Atlas" style="height: 56px;">
+      <span class="file">logo-full-dark-{1x,2x,3x}.png · logo-full-dark-text.svg</span>
+    </div>
+  </div>
+
+  <h2>2 · Símbolo (logomark)</h2>
+  <div class="grid grid-4">
+    <div class="card">
+      <span class="label">Color · SVG</span>
+      <img src="logo-mark.svg" alt="" style="width: 80px; height: 80px;">
+      <span class="file">logo-mark.svg</span>
+    </div>
+    <div class="card">
+      <span class="label">PNG 512</span>
+      <img src="logo-mark-512.png" alt="" style="width: 80px; height: 80px;">
+      <span class="file">logo-mark-512.png</span>
+    </div>
+    <div class="card" style="background: #000;">
+      <span class="label">Mono branco</span>
+      <img src="logo-mark-white.svg" alt="" style="width: 80px; height: 80px;">
+      <span class="file">logo-mark-white.svg</span>
+    </div>
+    <div class="card preview-bg-light">
+      <span class="label" style="color: rgba(0,0,0,0.45);">Mono preto</span>
+      <img src="logo-mark-black.svg" alt="" style="width: 80px; height: 80px;">
+      <span class="file">logo-mark-black.svg</span>
+    </div>
+  </div>
+
+  <h2>3 · Favicon (aba do navegador)</h2>
+  <div class="favicon-tab">
+    <img src="favicon-16.png" alt="" style="width: 14px; height: 14px;">
+    Atlas · Dashboard
+  </div>
+  <div class="grid grid-4" style="margin-top: 16px;">
+    <div class="card">
+      <span class="label">16 × 16</span>
+      <img src="favicon-16.png" alt="" style="width: 16px; height: 16px; image-rendering: pixelated;">
+      <span class="file">favicon-16.png</span>
+    </div>
+    <div class="card">
+      <span class="label">32 × 32</span>
+      <img src="favicon-32.png" alt="" style="width: 32px; height: 32px;">
+      <span class="file">favicon-32.png</span>
+    </div>
+    <div class="card">
+      <span class="label">48 × 48</span>
+      <img src="favicon-48.png" alt="" style="width: 48px; height: 48px;">
+      <span class="file">favicon-48.png</span>
+    </div>
+    <div class="card">
+      <span class="label">SVG (escalável)</span>
+      <img src="favicon.svg" alt="" style="width: 48px; height: 48px;">
+      <span class="file">favicon.svg</span>
+    </div>
+  </div>
+
+  <h2>4 · Ícone para fatura Stripe</h2>
+  <div class="grid grid-2" style="align-items: flex-start;">
+    <div class="card">
+      <span class="label">256 × 256 · upload no Stripe</span>
+      <img src="stripe-icon-256.png" alt="" style="width: 128px; height: 128px; border-radius: 12px;">
+      <span class="file">stripe-icon-256.png</span>
+      <p style="font-size: 11px; color: #6E6B85; max-width: 220px; margin: 6px 0 0; line-height: 1.5;">
+        Fundo escuro sólido. Vai dentro de container do Stripe, sem padding extra.
+      </p>
+    </div>
+
+    <!-- Mockup recibo Stripe -->
+    <div class="stripe-card">
+      <div class="head2">
+        <div class="icon-wrap">
+          <img src="logo-mark.svg" alt="" style="width: 30px; height: 30px;">
+        </div>
+        <div>
+          <div class="brand-name">Atlas</div>
+          <div class="brand-url">atlas.io</div>
+        </div>
+        <div style="margin-left: auto; text-align: right;">
+          <div class="brand-url" style="font-size: 10px; letter-spacing: 0.5px;">RECIBO</div>
+          <div class="brand-url" style="font-size: 11px; color: #0a2540; margin-top: 2px;">#1A2B-3F4D</div>
+        </div>
+      </div>
+      <div class="amount-label">Valor pago</div>
+      <div class="amount">R$ 19,90</div>
+      <div class="brand-url" style="margin-top: 4px;">21 mai 2026 · 14:32</div>
+      <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f2; font-size: 12px;">
+        <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+          <span style="color: #697386;">Descrição</span>
+          <span style="font-weight: 500;">Atlas Pro · Mensal</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 5px 0;">
+          <span style="color: #697386;">Cartão</span>
+          <span style="font-weight: 500;">•••• 4242</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>5 · Cole no seu &lt;head&gt;</h2>
+  <div class="code-block"><span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/svg+xml"</span> <span class="attr">href</span>=<span class="val">"/favicon.svg"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/png"</span> <span class="attr">sizes</span>=<span class="val">"32x32"</span> <span class="attr">href</span>=<span class="val">"/favicon-32.png"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/png"</span> <span class="attr">sizes</span>=<span class="val">"16x16"</span> <span class="attr">href</span>=<span class="val">"/favicon-16.png"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"apple-touch-icon"</span> <span class="attr">sizes</span>=<span class="val">"180x180"</span> <span class="attr">href</span>=<span class="val">"/apple-touch-icon.png"</span><span class="tag">&gt;</span>
+<span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"manifest"</span> <span class="attr">href</span>=<span class="val">"/manifest.json"</span><span class="tag">&gt;</span></div>
+
+  <h2>6 · manifest.json (PWA)</h2>
+  <div class="code-block">{
+  <span class="attr">"name"</span>: <span class="val">"Atlas"</span>,
+  <span class="attr">"short_name"</span>: <span class="val">"Atlas"</span>,
+  <span class="attr">"icons"</span>: [
+    { <span class="attr">"src"</span>: <span class="val">"/icon-192.png"</span>, <span class="attr">"sizes"</span>: <span class="val">"192x192"</span>, <span class="attr">"type"</span>: <span class="val">"image/png"</span> },
+    { <span class="attr">"src"</span>: <span class="val">"/icon-512.png"</span>, <span class="attr">"sizes"</span>: <span class="val">"512x512"</span>, <span class="attr">"type"</span>: <span class="val">"image/png"</span> }
+  ],
+  <span class="attr">"theme_color"</span>: <span class="val">"#7C5CFF"</span>,
+  <span class="attr">"background_color"</span>: <span class="val">"#0B0B16"</span>
+}</div>
+
+  <h2>7 · Stripe Dashboard</h2>
+  <div class="note">
+    <strong>Onde colocar o ícone na Stripe:</strong><br>
+    Dashboard → Settings → Branding → <em>Icon</em> (logo da empresa nas faturas/recibos).
+    Use <code>stripe-icon-256.png</code> ou <code>stripe-icon-512.png</code> (Stripe redimensiona automaticamente).<br><br>
+    <strong>Cores de marca pra Stripe:</strong> Primary <code>#7C5CFF</code> · Secondary <code>#0B0B16</code>.
+  </div>
+
+  <h2>Arquivos no pack</h2>
+  <ul style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #B5B2C8; line-height: 1.8; list-style: none; padding: 0;">
+    <li>📐 <strong style="color: #ECEAF5;">favicon.svg</strong> — vetor, recomendado (suporta retina ilimitado)</li>
+    <li>🖼 favicon-{16,32,48,64}.png — fallback PNG</li>
+    <li>🍎 apple-touch-icon.png — 180×180 com fundo escuro</li>
+    <li>📱 icon-{192,512}.png — PWA / Android</li>
+    <li>💳 <strong style="color: #ECEAF5;">stripe-icon-{256,512}.png</strong> — pra upload no Stripe Dashboard</li>
+    <li>🎨 logo-mark.svg, logo-mark-white.svg, logo-mark-black.svg — símbolo só</li>
+    <li>🎨 logo-mark-{128,256,512}.png — símbolo em raster</li>
+    <li>🏷 <strong style="color: #ECEAF5;">logo-full.svg</strong>, logo-full-dark-text.svg — logo + texto</li>
+    <li>🏷 logo-full-white-{1x,2x,3x}.png, logo-full-dark-{1x,2x,3x}.png</li>
+  </ul>
+
+</div>
+</body>
+</html>

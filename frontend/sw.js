@@ -58,10 +58,20 @@ self.addEventListener('fetch', event => {
   // Não cacheia requisições de API — sempre vai ao servidor
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() => new Response(JSON.stringify({ message: 'Sem conexão. Verifique sua internet.' }), {
-        status: 503,
-        headers: { 'Content-Type': 'application/json' },
-      }))
+      fetch(request).catch(err => {
+        let message;
+        if (err.name === 'AbortError') {
+          message = 'Tempo limite excedido. Verifique sua conexão.';
+        } else if (self.navigator?.onLine === false) {
+          message = 'Sem conexão. Verifique sua internet.';
+        } else {
+          message = 'Servidor indisponível. Tente novamente em instantes.';
+        }
+        return new Response(JSON.stringify({ message }), {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      })
     );
     return;
   }

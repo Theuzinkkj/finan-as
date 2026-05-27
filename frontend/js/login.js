@@ -96,6 +96,8 @@ function authErrorMsg(raw) {
     return 'Cadastro desabilitado. Entre em contato com o suporte.';
   if (m.includes('network') || m.includes('fetch') || m.includes('load failed') || m.includes('failed to load'))
     return 'Erro de conexão. Verifique sua internet.';
+  if (m.includes('servidor indisponível') || m.includes('serviço') || m.includes('serviço externo'))
+    return 'Servidor temporariamente indisponível. Aguarde alguns instantes e tente novamente.';
   if (m.includes('too many requests') || m.includes('429'))
     return 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.';
   if (m.includes('email_exists') || m.includes('email already'))
