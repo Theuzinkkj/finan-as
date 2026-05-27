@@ -4,8 +4,8 @@
   "description": "Organize seus gastos, visualize para onde vai seu dinheiro e comece a economizar.",
   "start_url": "/app",
   "display": "standalone",
-  "background_color": "#0f0e17",
-  "theme_color": "#7c3aed",
+  "background_color": "#0B0B16",
+  "theme_color": "#7C5CFF",
   "orientation": "portrait-primary",
   "lang": "pt-BR",
   "icons": [
@@ -22,9 +22,9 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
       "purpose": "any"
     }
   ],
