@@ -25,6 +25,7 @@ async function syncProfileFromServer() {
     const remote = await API.req('GET', '/api/profile');
     if (remote && typeof remote === 'object' && Object.keys(remote).length) {
       Storage.setJSON(Storage.profileKey(), { ...loadProfile(), ...remote });
+      window.dispatchEvent(new Event('atlas:profile-synced'));
     }
   } catch { /* offline ou sem sessão — mantém cache local */ }
 }

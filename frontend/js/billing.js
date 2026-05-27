@@ -317,13 +317,7 @@
 
   // ── Init ─────────────────────────────────────────────────────────────────────
 
-  function applyBillingUI(retries) {
-    // Aguarda syncProfileFromServer popular o localStorage antes de checar o plano
-    const plan = (typeof loadProfile === 'function') ? loadProfile().plan : null;
-    if (!plan && retries > 0) {
-      setTimeout(() => applyBillingUI(retries - 1), 600);
-      return;
-    }
+  function applyBillingUI() {
     addProChips();
     addProBadge();
     handleCheckoutReturn();
@@ -335,8 +329,11 @@
     hookButtons();
     hookKeyboard();
 
-    // Aguarda app.js terminar de montar o DOM e sincronizar o perfil
-    setTimeout(() => applyBillingUI(8), 400);
+    // Aguarda syncProfileFromServer disparar o evento com o plano carregado do servidor
+    window.addEventListener('atlas:profile-synced', applyBillingUI, { once: true });
+
+    // Fallback: se o evento não vier em 5s (offline/cache), aplica com o que tiver
+    setTimeout(() => applyBillingUI(), 5000);
   }
 
   if (document.readyState === 'loading') {
