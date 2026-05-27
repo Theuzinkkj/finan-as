@@ -6,6 +6,7 @@ const nodemailer                = require('nodemailer');
 const { randomBytes, createHash } = require('crypto');
 const Sentry                    = require('@sentry/node');
 const compression               = require('compression');
+const helmet                    = require('helmet');
 const cron                      = require('node-cron');
 const { z }                     = require('zod');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
@@ -164,6 +165,11 @@ if (MISSING.length) {
 }
 
 // ── Middleware global ─────────────────────────────────────────────────────────
+
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP gerenciado pelo frontend (PWA tem service worker)
+  crossOriginEmbedderPolicy: false, // evita quebrar recursos de terceiros (fontes, ícones)
+}));
 
 // Compressão gzip/brotli em todas as respostas (reduz ~70% do payload)
 app.use(compression());
