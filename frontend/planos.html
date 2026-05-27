@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas — Planos e Preços</title>
+  <meta name="description" content="Escolha o plano ideal para controlar suas finanças com inteligência artificial.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --card:     rgba(255,255,255,0.04);
+      --card-pro: rgba(99,102,241,0.06);
+      --card-pre: rgba(245,158,11,0.06);
+      --border:   rgba(255,255,255,0.08);
+      --border-h: rgba(255,255,255,0.14);
+      --purple:   #6366f1;
+      --purple-l: #818cf8;
+      --purple-d: #4338ca;
+      --amber:    #f59e0b;
+      --amber-l:  #fbbf24;
+      --amber-d:  #d97706;
+      --green:    #10b981;
+      --red:      #ef4444;
+      --text:     #f1f5f9;
+      --text-2:   #94a3b8;
+      --text-3:   #64748b;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 12% 18%, rgba(99,102,241,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 50% at 88% 80%, rgba(245,158,11,.12) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(13,17,23,.80); backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-size: 1.15rem; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-logo svg { width: 30px; height: 30px; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-link { color: var(--text-2); text-decoration: none; font-size: .85rem; font-weight: 500; padding: 7px 14px; border-radius: 8px; transition: color .2s, background .2s; }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,.06); }
+    .nav-cta { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff !important; font-weight: 700 !important; border-radius: 10px; padding: 8px 18px !important; }
+    .nav-cta:hover { opacity: .9; background: linear-gradient(135deg, var(--purple), #7c3aed) !important; }
+
+    /* ── HERO ── */
+    .hero { position: relative; z-index: 1; text-align: center; padding: 80px 24px 60px; max-width: 700px; margin: 0 auto; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.28); border-radius: 20px; padding: 5px 14px; font-size: .74rem; font-weight: 700; color: var(--purple-l); letter-spacing: .07em; text-transform: uppercase; margin-bottom: 20px; }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.15; letter-spacing: -.02em; margin-bottom: 16px; }
+    .hero h1 span { color: var(--purple-l); }
+    .hero p { font-size: 1.05rem; color: var(--text-2); line-height: 1.6; }
+
+    /* ── PRICING GRID ── */
+    .pricing-section { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 24px 80px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start; }
+
+    /* ── CARD SHARED ── */
+    .plan-card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 32px 28px 28px; position: relative; transition: transform .25s, box-shadow .25s; }
+    .plan-card:hover { transform: translateY(-4px); box-shadow: 0 24px 60px rgba(0,0,0,.35); }
+
+    /* ── PRO CARD ── */
+    .plan-card.pro { background: var(--card-pro); border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 1px rgba(99,102,241,.20), 0 16px 48px rgba(99,102,241,.10); }
+    .plan-card.pro::before { content: ''; position: absolute; inset: -1px; border-radius: 25px; background: linear-gradient(135deg, rgba(99,102,241,.30), rgba(124,58,237,.20), transparent 60%); z-index: -1; pointer-events: none; }
+    .plan-card.pro .plan-price { color: var(--purple-l); }
+
+    /* ── PREMIUM CARD ── */
+    .plan-card.premium { background: var(--card-pre); border-color: rgba(245,158,11,.35); box-shadow: 0 0 0 1px rgba(245,158,11,.20), 0 16px 48px rgba(245,158,11,.10); }
+    .plan-card.premium::before { content: ''; position: absolute; inset: -1px; border-radius: 25px; background: linear-gradient(135deg, rgba(245,158,11,.28), rgba(217,119,6,.18), transparent 60%); z-index: -1; pointer-events: none; }
+    .plan-card.premium .plan-price { color: var(--amber-l); }
+
+    /* ── BADGES ── */
+    .popular-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; font-size: .70rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; border-radius: 20px; padding: 4px 12px; margin-bottom: 20px; }
+    .best-value-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, var(--amber-d), #92400e); color: #fff; font-size: .70rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; border-radius: 20px; padding: 4px 12px; margin-bottom: 20px; }
+
+    .plan-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+    .plan-price { font-size: 2.4rem; font-weight: 800; line-height: 1; margin-bottom: 4px; letter-spacing: -.03em; }
+    .plan-price sub { font-size: .95rem; font-weight: 500; color: var(--text-2); vertical-align: baseline; letter-spacing: 0; }
+    .plan-period { font-size: .82rem; color: var(--text-3); margin-bottom: 28px; }
+    .plan-savings { display: inline-flex; align-items: center; gap: 5px; background: rgba(16,185,129,.10); border: 1px solid rgba(16,185,129,.22); border-radius: 20px; padding: 3px 10px; font-size: .72rem; font-weight: 700; color: #34d399; margin-bottom: 20px; }
+
+    .plan-cta { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 13px; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: .92rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: opacity .2s, transform .15s; margin-bottom: 28px; }
+    .plan-cta:hover { opacity: .88; transform: translateY(-1px); }
+    .plan-cta.free { background: rgba(255,255,255,.07); border: 1px solid var(--border-h); color: var(--text); }
+    .plan-cta.monthly { background: linear-gradient(135deg, var(--purple), #7c3aed); border: none; color: #fff; box-shadow: 0 4px 20px rgba(99,102,241,.35); }
+    .plan-cta.annual { background: linear-gradient(135deg, var(--amber-d), #92400e); border: none; color: #fff; box-shadow: 0 4px 20px rgba(245,158,11,.30); }
+
+    .plan-divider { border: none; border-top: 1px solid var(--border); margin-bottom: 20px; }
+    .plan-features { display: flex; flex-direction: column; gap: 11px; }
+    .feature-row { display: flex; align-items: flex-start; gap: 10px; font-size: .84rem; color: var(--text-2); line-height: 1.4; }
+    .feature-row .ico { width: 18px; flex-shrink: 0; margin-top: 1px; font-size: .8rem; }
+    .ico.yes { color: var(--green); }
+    .ico.no  { color: var(--text-3); }
+    .ico.gold { color: var(--amber-l); }
+    .feature-row.dim { color: var(--text-3); }
+
+    /* ── COMPARISON TABLE ── */
+    .compare-section { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 24px 80px; }
+    .section-title { font-size: 1.6rem; font-weight: 800; text-align: center; margin-bottom: 8px; }
+    .section-sub { text-align: center; color: var(--text-2); font-size: .9rem; margin-bottom: 40px; }
+    .compare-table { width: 100%; border-collapse: collapse; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .compare-table th, .compare-table td { padding: 13px 16px; font-size: .84rem; text-align: center; border-bottom: 1px solid var(--border); }
+    .compare-table th { background: rgba(255,255,255,.04); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); }
+    .compare-table th:first-child, .compare-table td:first-child { text-align: left; color: var(--text); font-weight: 500; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:hover td { background: rgba(255,255,255,.025); }
+    .col-pro { color: var(--purple-l); font-weight: 700; }
+    .col-pre { color: var(--amber-l); font-weight: 700; }
+    .col-header-pro { color: var(--purple-l) !important; }
+    .col-header-pre { color: var(--amber-l) !important; }
+    .ico-yes { color: var(--green); font-size: .95rem; }
+    .ico-no  { color: var(--text-3); font-size: .85rem; }
+
+    /* ── FAQ ── */
+    .faq-section { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; padding: 0 24px 80px; }
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .faq-q { width: 100%; padding: 18px 20px; background: none; border: none; color: var(--text); font-family: 'Inter', sans-serif; font-size: .9rem; font-weight: 600; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .faq-q i { color: var(--text-3); transition: transform .25s; flex-shrink: 0; }
+    .faq-item.open .faq-q i { transform: rotate(180deg); color: var(--purple-l); }
+    .faq-a { display: none; padding: 0 20px 18px; font-size: .84rem; color: var(--text-2); line-height: 1.65; }
+    .faq-item.open .faq-a { display: block; }
+
+    /* ── CTA BOTTOM ── */
+    .cta-bottom { position: relative; z-index: 1; text-align: center; padding: 0 24px 100px; }
+    .cta-bottom h2 { font-size: 1.8rem; font-weight: 800; margin-bottom: 12px; }
+    .cta-bottom p  { color: var(--text-2); margin-bottom: 32px; font-size: .95rem; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-big { display: inline-flex; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1rem; padding: 14px 28px; border-radius: 14px; text-decoration: none; transition: opacity .2s, transform .15s; }
+    .btn-big:hover { opacity: .9; transform: translateY(-2px); }
+    .btn-big.purple { background: linear-gradient(135deg, var(--purple), #7c3aed); color: #fff; box-shadow: 0 8px 28px rgba(99,102,241,.35); }
+    .btn-big.amber  { background: linear-gradient(135deg, var(--amber-d), #92400e); color: #fff; box-shadow: 0 8px 28px rgba(245,158,11,.28); }
+
+    /* ── FOOTER ── */
+    footer { position: relative; z-index: 1; text-align: center; padding: 24px; border-top: 1px solid var(--border); font-size: .78rem; color: var(--text-3); display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    footer a { color: var(--text-3); text-decoration: none; }
+    footer a:hover { color: var(--text-2); }
+
+    /* ── MOBILE ── */
+    @media (max-width: 860px) {
+      .pricing-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
+    }
+    @media (max-width: 680px) {
+      nav { padding: 14px 20px; }
+      .nav-links .nav-link:not(.nav-cta) { display: none; }
+      .hero { padding: 60px 20px 40px; }
+      .pricing-section, .compare-section, .faq-section { padding-inline: 16px; }
+      .compare-table { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/landing" class="nav-logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="ng" x1="0" y1="0" x2="200" y2="200">
+          <stop offset="0" stop-color="#9B7DFF"/>
+          <stop offset=".55" stop-color="#7C5CFF"/>
+          <stop offset="1" stop-color="#4FB6FF"/>
+        </linearGradient>
+      </defs>
+      <path d="M100 30 L165 80 L100 170 L35 80 Z" fill="url(#ng)"/>
+      <path d="M100 30 L165 80 L35 80 Z" fill="rgba(255,255,255,0.18)"/>
+    </svg>
+    Atlas
+  </a>
+  <div class="nav-links">
+    <a href="/landing" class="nav-link">Início</a>
+    <a href="/login" class="nav-link">Entrar</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><i class="bi bi-gem"></i> Planos &amp; Preços</div>
+  <h1>Escolha o plano<br><span>certo para você</span></h1>
+  <p>Comece grátis e faça upgrade quando precisar de mais poder.<br>Sem surpresas, sem contrato de fidelidade.</p>
+</section>
+
+<!-- PRICING CARDS -->
+<section class="pricing-section">
+  <div class="pricing-grid">
+
+    <!-- FREE -->
+    <div class="plan-card">
+      <div class="plan-name">Gratuito</div>
+      <div class="plan-price">R$ 0 <sub>/ mês</sub></div>
+      <div class="plan-period">Para sempre gratuito — sem cartão</div>
+      <a href="/login?signup=1" class="plan-cta free">
+        <i class="bi bi-box-arrow-in-right"></i> Começar grátis
+      </a>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Lançamento de transações</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Dashboard do mês atual</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Categorias básicas</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Gráficos de despesas</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>IA assistente financeira</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>Carteira de investimentos</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>Alertas de orçamento</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>Exportação CSV / PDF</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>Resumo mensal por email</div>
+        <div class="feature-row dim"><i class="bi bi-lock-fill ico no"></i>Suporte prioritário</div>
+      </div>
+    </div>
+
+    <!-- PRO MENSAL -->
+    <div class="plan-card pro">
+      <div class="popular-badge"><i class="bi bi-lightning-charge-fill"></i> Mais popular</div>
+      <div class="plan-name">Atlas Pro</div>
+      <div class="plan-price" id="card-pro-price">R$ 19,90 <sub>/ mês</sub></div>
+      <div class="plan-period">Cobrado mensalmente · Cancele quando quiser</div>
+      <a href="/checkout?plan=monthly" class="plan-cta monthly">
+        <i class="bi bi-gem"></i> Assinar Pro
+      </a>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Tudo do plano Gratuito</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i><strong style="color:var(--text)">IA assistente ilimitada</strong></div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Carteira de investimentos</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Alertas de orçamento</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Exportação CSV + PDF</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Resumo mensal automático</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico yes"></i>Suporte prioritário</div>
+        <div class="feature-row"><i class="bi bi-shield-check ico yes"></i>7 dias de garantia</div>
+      </div>
+    </div>
+
+    <!-- PREMIUM ANUAL -->
+    <div class="plan-card premium">
+      <div class="best-value-badge"><i class="bi bi-patch-check-fill"></i> Melhor valor · &minus;15%</div>
+      <div class="plan-name">Atlas Premium</div>
+      <div class="plan-price" id="card-premium-price">R$ 202,80 <sub>/ ano</sub></div>
+      <div class="plan-period" id="card-premium-period">Equivale a R$ 16,90/mês · cobrado de uma vez</div>
+      <div class="plan-savings"><i class="bi bi-piggy-bank-fill"></i> R$ 3/mês a menos que o mensal</div>
+      <a href="/checkout?plan=annual" class="plan-cta annual">
+        <i class="bi bi-gem"></i> Assinar Premium
+      </a>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Tudo do plano Pro</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i><strong style="color:var(--text)">IA assistente ilimitada</strong></div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Carteira de investimentos</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Alertas de orçamento</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Exportação CSV + PDF</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Resumo mensal automático</div>
+        <div class="feature-row"><i class="bi bi-check-lg ico gold"></i>Suporte prioritário</div>
+        <div class="feature-row"><i class="bi bi-shield-check ico gold"></i>7 dias de garantia</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section class="compare-section">
+  <div class="section-title">Comparativo completo</div>
+  <div class="section-sub">Veja em detalhes o que está incluído em cada plano</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Funcionalidade</th>
+        <th>Gratuito</th>
+        <th class="col-header-pro">Pro · Mensal</th>
+        <th class="col-header-pre">Premium · Anual</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Lançamento de transações</td><td><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Dashboard do mês atual</td><td><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Categorias básicas</td><td><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Gráficos de despesas</td><td><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>IA assistente financeira</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Carteira de investimentos</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Alertas de orçamento</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Exportação CSV</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Relatórios PDF</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Resumo mensal automático</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Suporte prioritário</td><td><i class="bi bi-lock-fill ico-no"></i></td><td class="col-pro"><i class="bi bi-check-circle-fill ico-yes"></i></td><td class="col-pre"><i class="bi bi-check-circle-fill ico-yes"></i></td></tr>
+      <tr><td>Garantia de reembolso</td><td>—</td><td class="col-pro">7 dias</td><td class="col-pre">7 dias</td></tr>
+      <tr><td>Preço</td><td>Grátis</td><td class="col-pro">R$ 19,90/mês</td><td class="col-pre">R$ 16,90/mês</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="section-title">Perguntas frequentes</div>
+  <div class="section-sub">Tudo que você precisa saber antes de assinar</div>
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Qual a diferença entre Pro e Premium?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">Os recursos são idênticos — a diferença é apenas a forma de cobrança. O Pro é mensal (R$ 19,90/mês) e o Premium é anual (R$ 202,80/ano = R$ 16,90/mês), com desconto de 15% para quem prefere pagar uma vez por ano.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Posso cancelar quando quiser?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">Sim, sem fidelidade. Cancele a qualquer momento pelo portal do cliente dentro do próprio Atlas ou diretamente pelo Stripe. Você continua com acesso até o final do período já pago.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Existe período de teste?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">A cobrança é feita no momento da assinatura, mas oferecemos <strong>7 dias de garantia</strong>. Se não ficar satisfeito por qualquer motivo, devolvemos 100% do valor pago.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Quais formas de pagamento são aceitas?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">Cartão de crédito e débito das bandeiras Visa, Mastercard, Amex e Elo. O processamento é feito pelo Stripe, uma das plataformas de pagamento mais seguras do mundo.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        Posso usar o plano Gratuito para sempre?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">Sim! O plano Gratuito não tem limite de tempo. Ele inclui o essencial para controlar suas finanças. Faça upgrade quando quiser desbloquear a IA e recursos avançados.</div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFAQ(this)">
+        O que acontece com meus dados se eu cancelar?
+        <i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="faq-a">Seus dados ficam disponíveis no plano Gratuito. Você continua acessando todas as suas transações e histórico, mas perde acesso às funcionalidades pagas (IA, exportação avançada, etc.).</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="cta-bottom">
+  <h2>Pronto para começar?</h2>
+  <p>Junte-se a milhares de usuários que já controlam suas finanças com o Atlas.</p>
+  <div class="cta-btns">
+    <a href="/checkout?plan=monthly" class="btn-big purple">
+      <i class="bi bi-gem"></i> Atlas Pro · R$ 19,90/mês
+    </a>
+    <a href="/checkout?plan=annual" class="btn-big amber">
+      <i class="bi bi-patch-check-fill"></i> Atlas Premium · R$ 202,80/ano
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span>© 2025 Atlas Finance</span>
+  <a href="/termos">Termos de uso</a>
+  <a href="/privacidade">Privacidade</a>
+  <a href="/login">Entrar</a>
+</footer>
+
+<script>
+  function toggleFAQ(btn) {
+    btn.closest('.faq-item').classList.toggle('open');
+  }
+
+  fetch('/api/billing/config').then(r => r.json()).then(d => {
+    if (d.plans?.monthly?.price) {
+      const el = document.getElementById('card-pro-price');
+      if (el) el.innerHTML = d.plans.monthly.price + ' <sub>/ mês</sub>';
+    }
+    if (d.plans?.annual?.price) {
+      const el = document.getElementById('card-premium-price');
+      if (el) el.innerHTML = d.plans.annual.price + ' <sub>/ ano</sub>';
+    }
+    if (d.plans?.annual?.monthlyPrice) {
+      const el = document.getElementById('card-premium-period');
+      if (el) el.textContent = 'Equivale a ' + d.plans.annual.monthlyPrice + '/mês · cobrado de uma vez';
+    }
+  }).catch(() => {});
+</script>
+</body>
+</html>

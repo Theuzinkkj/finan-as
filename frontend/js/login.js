@@ -73,6 +73,7 @@ function setAuthMode(mode) {
 
   document.getElementById('auth-hint-signin')?.classList.toggle('hidden', isSignup);
   document.getElementById('auth-hint-signup')?.classList.toggle('hidden', !isSignup);
+  document.getElementById('auth-hint-pro')?.classList.toggle('hidden', !isSignup);
 
   clearAuthFeedback();
 }

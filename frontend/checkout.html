@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas Pro — Assinar</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://js.stripe.com/v3/"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d1117;
+      --card:     rgba(255,255,255,0.04);
+      --border:   rgba(255,255,255,0.08);
+      --border-h: rgba(255,255,255,0.16);
+      --purple:   #6366f1;
+      --purple-l: #818cf8;
+      --green:    #10b981;
+      --red:      #ef4444;
+      --text:     #f1f5f9;
+      --text-2:   #94a3b8;
+      --text-3:   #64748b;
+      --r:        14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 65% 55% at 10% 15%, rgba(99,102,241,.28) 0%, transparent 65%),
+        radial-gradient(ellipse 60% 50% at 88% 82%, rgba(99,102,241,.20) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+      animation: orb-a 14s ease-in-out infinite alternate, orb-b 18s ease-in-out infinite alternate-reverse;
+    }
+
+    @property --px { syntax: '<percentage>'; inherits: false; initial-value: 10%; }
+    @property --py { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
+    @keyframes orb-a { to { --px: 72%; --py: 68%; } }
+    @keyframes orb-b { to { --vx: 18%; --vy: 12%; } }
+
+    /* ── Layout ── */
+    .page-wrap {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .co-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(13,17,23,.70);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .co-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 800;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .co-logo svg { width: 32px; height: 32px; }
+    .co-secure {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      color: var(--text-2);
+    }
+    .co-secure i { color: var(--green); font-size: .9rem; }
+
+    /* ── Main content ── */
+    .co-main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 40px;
+      padding: 40px 24px 60px;
+      max-width: 980px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── Benefits sidebar ── */
+    .co-sidebar {
+      flex: 0 0 300px;
+      position: sticky;
+      top: 100px;
+    }
+    .co-plan-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 24px;
+    }
+    .co-plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.30);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--purple-l);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .co-plan-name {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .co-plan-price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--purple-l);
+      margin-bottom: 4px;
+    }
+    .co-plan-price span {
+      font-size: .9rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+    .co-plan-desc {
+      font-size: .82rem;
+      color: var(--text-2);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+    .co-features {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .co-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .84rem;
+      color: var(--text-2);
+    }
+    .co-feature i {
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(16,185,129,.15);
+      border-radius: 50%;
+      font-size: .75rem;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+    .co-divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .co-guarantee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .78rem;
+      color: var(--text-3);
+    }
+    .co-guarantee i { color: var(--purple-l); font-size: 1rem; }
+
+    /* ── Form panel ── */
+    .co-form-panel {
+      flex: 1;
+      min-width: 0;
+      max-width: 500px;
+    }
+
+    /* ── Stepper ── */
+    .co-stepper {
+      display: flex;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 0;
+    }
+    .co-step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+    }
+    .co-step-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid var(--border-h);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .85rem;
+      color: var(--text-3);
+      background: var(--bg);
+      transition: all .3s;
+      position: relative;
+      z-index: 1;
+    }
+    .co-step-item.active .co-step-circle {
+      border-color: var(--purple);
+      background: rgba(99,102,241,.15);
+      color: var(--purple-l);
+    }
+    .co-step-item.done .co-step-circle {
+      border-color: var(--green);
+      background: rgba(16,185,129,.15);
+      color: var(--green);
+    }
+    .co-step-label {
+      font-size: .70rem;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      transition: color .3s;
+    }
+    .co-step-item.active .co-step-label { color: var(--purple-l); }
+    .co-step-item.done  .co-step-label { color: var(--green); }
+    .co-step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border-h);
+      margin-bottom: 22px;
+      transition: background .3s;
+    }
+    .co-step-line.done { background: var(--green); }
+
+    /* ── Step cards ── */
+    .co-step {
+      display: none;
+      animation: fadeUp .3s ease;
+    }
+    .co-step.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .co-card {
+      background: rgba(13,17,23,.80);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 24px 64px rgba(0,0,0,.45);
+    }
+
+    .co-step-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .co-step-sub {
+      font-size: .83rem;
+      color: var(--text-2);
+      margin-bottom: 24px;
+    }
+
+    /* ── Form fields ── */
+    .form-row { display: grid; gap: 14px; margin-bottom: 14px; }
+    .form-row.col-2 { grid-template-columns: 1fr 1fr; }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label {
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: .03em;
+    }
+    .field label .req { color: var(--purple-l); margin-left: 2px; }
+    .field input,
+    .field select {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border-h);
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: .9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+    }
+    .field input.error { border-color: var(--red); }
+    .field input::placeholder { color: var(--text-3); }
+    .field select { cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+    .field select option { background: #1a1f2e; color: var(--text); }
+
+    .field-error {
+      font-size: .72rem;
+      color: var(--red);
+      min-height: 16px;
+    }
+
+    .field-hint {
+      font-size: .72rem;
+      color: var(--text-3);
+    }
+
+    /* password wrapper */
+    .pwd-wrap { position: relative; }
+    .pwd-wrap input { padding-right: 42px; }
+    .pwd-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-2);
+      cursor: pointer;
+      padding: 4px;
+      font-size: .95rem;
+      line-height: 1;
+    }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #6366f1, #7c3aed);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: .94rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity .2s, transform .1s;
+      margin-top: 8px;
+    }
+    .btn-primary:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+
+    .btn-back {
+      background: none;
+      border: 1px solid var(--border-h);
+      border-radius: 10px;
+      color: var(--text-2);
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      cursor: pointer;
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color .2s, color .2s;
+      margin-bottom: 16px;
+    }
+    .btn-back:hover { border-color: var(--border-h); color: var(--text); }
+
+    /* ── Stripe card element ── */
+    .stripe-wrap {
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--border-h);
+      border-radius: 10px;
+      padding: 13px 14px;
+      transition: border-color .2s, box-shadow .2s;
+      margin-bottom: 6px;
+    }
+    .stripe-wrap.focused {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(99,102,241,.18);
+    }
+    #card-errors {
+      font-size: .75rem;
+      color: var(--red);
+      min-height: 18px;
+      margin-bottom: 4px;
+    }
+    #payment-error {
+      font-size: .80rem;
+      color: var(--red);
+      text-align: center;
+      min-height: 20px;
+      margin-top: 8px;
+    }
+
+    .payment-summary {
+      background: rgba(99,102,241,.08);
+      border: 1px solid rgba(99,102,241,.20);
+      border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .payment-summary-name { font-size: .88rem; font-weight: 600; }
+    .payment-summary-price { font-size: 1.1rem; font-weight: 800; color: var(--purple-l); }
+
+    .stripe-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: .70rem;
+      color: var(--text-3);
+      margin-top: 12px;
+    }
+    .stripe-badge i { font-size: .8rem; color: var(--green); }
+
+    /* ── Step 3 loading ── */
+    .payment-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 32px 0;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border-h);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Step 4 — Confirmação ── */
+    .success-wrap {
+      text-align: center;
+      padding: 16px 0 8px;
+    }
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(16,185,129,.15);
+      border: 2px solid rgba(16,185,129,.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+    }
+    .success-icon i { font-size: 2.2rem; color: var(--green); }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.4); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .success-title {
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .success-msg {
+      font-size: .88rem;
+      color: var(--text-2);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+    .success-msg strong { color: var(--text); }
+    .here-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 32px;
+      background: linear-gradient(135deg, #6366f1, #7c3aed);
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: .94rem;
+      text-decoration: none;
+      transition: opacity .2s, transform .1s;
+    }
+    .here-link:hover { opacity: .9; transform: translateY(-1px); }
+
+    /* ── Inline spinner inside button ── */
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── CEP loading ── */
+    .cep-loading { display: none; font-size: .72rem; color: var(--text-3); }
+    .cep-loading.active { display: block; }
+
+    /* ── Mobile ── */
+    @media (max-width: 720px) {
+      .co-sidebar { display: none; }
+      .co-main { padding: 24px 16px 48px; }
+      .co-card { padding: 24px 18px; }
+      .form-row.col-2 { grid-template-columns: 1fr; }
+      .co-stepper { gap: 0; }
+      .co-step-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <header class="co-header">
+    <a href="/landing" class="co-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="200" y2="200">
+            <stop offset="0" stop-color="#9B7DFF"/>
+            <stop offset=".55" stop-color="#7C5CFF"/>
+            <stop offset="1" stop-color="#4FB6FF"/>
+          </linearGradient>
+        </defs>
+        <path d="M100 30 L165 80 L100 170 L35 80 Z" fill="url(#g1)"/>
+        <path d="M100 30 L165 80 L35 80 Z" fill="rgba(255,255,255,0.18)"/>
+      </svg>
+      Atlas
+    </a>
+    <div class="co-secure">
+      <i class="bi bi-shield-lock-fill"></i>
+      Pagamento 100% seguro via Stripe
+    </div>
+  </header>
+
+  <!-- Main -->
+  <div class="co-main">
+
+    <!-- Sidebar de benefícios -->
+    <aside class="co-sidebar">
+      <div class="co-plan-card">
+        <div class="co-plan-badge"><i class="bi bi-gem"></i> Pro</div>
+        <div class="co-plan-name">Atlas Pro</div>
+        <div class="co-plan-price" id="sidebar-price">R$ 29,90 <span>/ mês</span></div>
+        <p class="co-plan-desc">Controle total das suas finanças com inteligência artificial.</p>
+        <div class="co-features">
+          <div class="co-feature"><i class="bi bi-check-lg"></i>IA assistente ilimitada</div>
+          <div class="co-feature"><i class="bi bi-check-lg"></i>Sync em todos dispositivos</div>
+          <div class="co-feature"><i class="bi bi-check-lg"></i>Análise de investimentos</div>
+          <div class="co-feature"><i class="bi bi-check-lg"></i>Alertas de orçamento</div>
+          <div class="co-feature"><i class="bi bi-check-lg"></i>Exportação CSV e relatórios</div>
+          <div class="co-feature"><i class="bi bi-check-lg"></i>Suporte prioritário</div>
+        </div>
+        <hr class="co-divider">
+        <div class="co-guarantee">
+          <i class="bi bi-patch-check-fill"></i>
+          7 dias de garantia. Cancele quando quiser.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Formulário multi-etapas -->
+    <div class="co-form-panel">
+
+      <!-- Stepper -->
+      <div class="co-stepper">
+        <div class="co-step-item active" id="step-indicator-1">
+          <div class="co-step-circle"><i class="bi bi-person-fill"></i></div>
+          <div class="co-step-label">Dados</div>
+        </div>
+        <div class="co-step-line" id="line-1-2"></div>
+        <div class="co-step-item" id="step-indicator-2">
+          <div class="co-step-circle"><i class="bi bi-geo-alt-fill"></i></div>
+          <div class="co-step-label">Endereço</div>
+        </div>
+        <div class="co-step-line" id="line-2-3"></div>
+        <div class="co-step-item" id="step-indicator-3">
+          <div class="co-step-circle"><i class="bi bi-credit-card-fill"></i></div>
+          <div class="co-step-label">Pagamento</div>
+        </div>
+        <div class="co-step-line" id="line-3-4"></div>
+        <div class="co-step-item" id="step-indicator-4">
+          <div class="co-step-circle"><i class="bi bi-check-lg"></i></div>
+          <div class="co-step-label">Pronto</div>
+        </div>
+      </div>
+
+      <!-- STEP 1 — Dados pessoais -->
+      <div class="co-step active co-card" id="step-1">
+        <div class="co-step-title">Seus dados</div>
+        <div class="co-step-sub">Crie sua conta Atlas Pro</div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Nome completo <span class="req">*</span></label>
+            <input type="text" id="f-nome" placeholder="João Silva" autocomplete="name">
+            <span class="field-error" id="e-nome"></span>
+          </div>
+        </div>
+
+        <div class="form-row col-2">
+          <div class="field">
+            <label>CPF <span class="req">*</span></label>
+            <input type="text" id="f-cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric">
+            <span class="field-error" id="e-cpf"></span>
+          </div>
+          <div class="field">
+            <label>Telefone <span class="req">*</span></label>
+            <input type="text" id="f-tel" placeholder="(11) 99999-0000" maxlength="15" inputmode="numeric">
+            <span class="field-error" id="e-tel"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>E-mail <span class="req">*</span></label>
+            <input type="email" id="f-email" placeholder="joao@email.com" autocomplete="email">
+            <span class="field-error" id="e-email"></span>
+          </div>
+        </div>
+
+        <div class="form-row col-2">
+          <div class="field">
+            <label>Senha <span class="req">*</span></label>
+            <div class="pwd-wrap">
+              <input type="password" id="f-senha" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+              <button type="button" class="pwd-toggle" onclick="togglePwd('f-senha', this)"><i class="bi bi-eye"></i></button>
+            </div>
+            <span class="field-error" id="e-senha"></span>
+          </div>
+          <div class="field">
+            <label>Confirmar senha <span class="req">*</span></label>
+            <div class="pwd-wrap">
+              <input type="password" id="f-senha2" placeholder="Repita a senha" autocomplete="new-password">
+              <button type="button" class="pwd-toggle" onclick="togglePwd('f-senha2', this)"><i class="bi bi-eye"></i></button>
+            </div>
+            <span class="field-error" id="e-senha2"></span>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="submitStep1()">
+          Continuar <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- STEP 2 — Endereço -->
+      <div class="co-step co-card" id="step-2">
+        <button class="btn-back" onclick="goToStep(1)"><i class="bi bi-arrow-left"></i> Voltar</button>
+        <div class="co-step-title">Seu endereço</div>
+        <div class="co-step-sub">Para emissão de nota fiscal</div>
+
+        <div class="form-row col-2">
+          <div class="field">
+            <label>CEP <span class="req">*</span></label>
+            <input type="text" id="f-cep" placeholder="00000-000" maxlength="9" inputmode="numeric" oninput="handleCEP(this)">
+            <span class="cep-loading" id="cep-loading">Buscando endereço...</span>
+            <span class="field-error" id="e-cep"></span>
+          </div>
+          <div class="field">
+            <label>Número <span class="req">*</span></label>
+            <input type="text" id="f-numero" placeholder="123" inputmode="numeric">
+            <span class="field-error" id="e-numero"></span>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label>Logradouro <span class="req">*</span></label>
+            <input type="text" id="f-rua" placeholder="Rua / Avenida" autocomplete="street-address">
+            <span class="field-error" id="e-rua"></span>
+          </div>
+        </div>
+
+        <div class="form-row col-2">
+          <div class="field">
+            <label>Complemento</label>
+            <input type="text" id="f-comp" placeholder="Apto, Bloco…">
+          </div>
+          <div class="field">
+            <label>Bairro <span class="req">*</span></label>
+            <input type="text" id="f-bairro" placeholder="Bairro">
+            <span class="field-error" id="e-bairro"></span>
+          </div>
+        </div>
+
+        <div class="form-row col-2">
+          <div class="field">
+            <label>Cidade <span class="req">*</span></label>
+            <input type="text" id="f-cidade" placeholder="Cidade">
+            <span class="field-error" id="e-cidade"></span>
+          </div>
+          <div class="field">
+            <label>Estado <span class="req">*</span></label>
+            <select id="f-estado">
+              <option value="">— Estado —</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+              <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+              <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+              <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+              <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+              <option>SP</option><option>SE</option><option>TO</option>
+            </select>
+            <span class="field-error" id="e-estado"></span>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="submitStep2()">
+          Continuar <i class="bi bi-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- STEP 3 — Pagamento -->
+      <div class="co-step co-card" id="step-3">
+        <button class="btn-back" onclick="goToStep(2)"><i class="bi bi-arrow-left"></i> Voltar</button>
+        <div class="co-step-title">Pagamento</div>
+        <div class="co-step-sub">Cobrança mensal recorrente</div>
+
+        <!-- Loading enquanto prepara checkout -->
+        <div class="payment-loading" id="payment-loading">
+          <div class="spinner"></div>
+          <span style="font-size:.82rem;color:var(--text-2)">Preparando pagamento seguro…</span>
+        </div>
+
+        <!-- Conteúdo do pagamento (hidden até carregar) -->
+        <div id="payment-content" style="display:none">
+          <div class="payment-summary">
+            <div class="payment-summary-name" id="payment-plan-label">
+              <i class="bi bi-gem" style="color:var(--purple-l);margin-right:6px"></i>
+              Atlas Pro · mensal
+            </div>
+            <div class="payment-summary-price" id="payment-price-label">R$ 19,90</div>
+          </div>
+
+          <div class="field" style="margin-bottom:16px">
+            <label>Dados do cartão <span class="req">*</span></label>
+            <div class="stripe-wrap" id="stripe-wrap">
+              <div id="card-element"></div>
+            </div>
+            <div id="card-errors"></div>
+          </div>
+
+          <div id="payment-error"></div>
+
+          <button class="btn-primary" id="btn-pay" onclick="submitPayment()">
+            <i class="bi bi-lock-fill"></i>
+            <span id="btn-pay-label">Pagar com segurança</span>
+          </button>
+
+          <div class="stripe-badge">
+            <i class="bi bi-shield-check"></i>
+            Seus dados são criptografados pelo Stripe
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 — Confirmação -->
+      <div class="co-step co-card" id="step-4">
+        <div class="success-wrap">
+          <div class="success-icon"><i class="bi bi-check-lg"></i></div>
+          <div class="success-title">Assinatura ativada!</div>
+          <p class="success-msg">
+            Tudo certo, seu plano <strong id="success-plan-name">Atlas Pro</strong> está ativo.<br>
+            Sua conta foi criada com o e-mail <strong id="success-email">—</strong>.<br><br>
+            Agora é só fazer login para começar a usar.
+          </p>
+          <a href="/login" class="here-link">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Fazer login — HERE
+          </a>
+        </div>
+      </div>
+
+    </div><!-- /.co-form-panel -->
+  </div><!-- /.co-main -->
+</div><!-- /.page-wrap -->
+
+<script>
+'use strict';
+
+/* ── Estado global ── */
+let currentStep = 1;
+const fd = {}; // form data acumulado entre steps
+let stripe = null, cardElement = null, clientSecret = null, customerId = null;
+let planPrice = 'R$ 19,90';
+
+const planType = new URLSearchParams(window.location.search).get('plan') === 'annual' ? 'annual' : 'monthly';
+
+/* ── Init ── */
+(async () => {
+  try {
+    const res  = await fetch('/api/billing/config');
+    const data = await res.json();
+    if (data.publishableKey) stripe = Stripe(data.publishableKey);
+
+    const plan = planType === 'annual' ? data.plans?.annual : data.plans?.monthly;
+    if (plan) {
+      planPrice = plan.price;
+      if (planType === 'annual') {
+        const annualPrice   = plan.price        || 'R$ 202,80';
+        const monthlyEquiv  = plan.monthlyPrice  || 'R$ 16,90';
+        document.getElementById('sidebar-price').innerHTML = annualPrice + ' <span>/ ano</span>';
+        document.getElementById('sidebar-price').insertAdjacentHTML('afterend',
+          `<div style="font-size:.78rem;color:#94a3b8;margin-bottom:16px">Equivale a ${monthlyEquiv}/mês · cobrado de uma vez</div>`);
+        document.querySelector('.co-plan-badge').innerHTML = '<i class="bi bi-gem"></i> Premium · Anual';
+        document.querySelector('.co-plan-name').textContent = 'Atlas Premium';
+        document.querySelector('.co-plan-desc').textContent = 'Todos os recursos Pro com 15% de desconto, cobrado em uma parcela anual.';
+        const step1Sub = document.querySelector('#step-1 .co-step-sub');
+        if (step1Sub) step1Sub.textContent = 'Crie sua conta Atlas Premium';
+        const step3Sub = document.querySelector('#step-3 .co-step-sub');
+        if (step3Sub) step3Sub.textContent = 'Cobrança anual · valor único de ' + annualPrice;
+      } else {
+        document.getElementById('sidebar-price').innerHTML = (plan.price || 'R$ 19,90') + ' <span>/ mês</span>';
+      }
+    } else if (data.planPrice) {
+      planPrice = data.planPrice;
+      document.getElementById('sidebar-price').innerHTML = data.planPrice + ' <span>/ mês</span>';
+    }
+  } catch { /* Stripe indisponível */ }
+})();
+
+/* ── Navegar entre steps ── */
+function goToStep(n) {
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  document.getElementById(`step-${n}`).classList.add('active');
+  updateStepper(n);
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  if (n === 3) preparePaymentStep();
+}
+
+function updateStepper(active) {
+  for (let i = 1; i <= 4; i++) {
+    const ind  = document.getElementById(`step-indicator-${i}`);
+    ind.classList.remove('active', 'done');
+    if (i < active)      ind.classList.add('done');
+    else if (i === active) ind.classList.add('active');
+  }
+  for (let i = 1; i <= 3; i++) {
+    const line = document.getElementById(`line-${i}-${i+1}`);
+    if (line) line.classList.toggle('done', i < active);
+  }
+}
+
+/* ── Utilidades de validação ── */
+function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function setErr(id, msg) {
+  const el = document.getElementById(`e-${id}`);
+  if (el) el.textContent = msg;
+  const inp = document.getElementById(`f-${id}`);
+  if (inp) inp.classList.toggle('error', !!msg);
+}
+function clearErrors(...ids) { ids.forEach(id => setErr(id, '')); }
+
+function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s); }
+
+function validateCPF(raw) {
+  const cpf = raw.replace(/\D/g, '');
+  if (cpf.length !== 11 || /^(.)\1+$/.test(cpf)) return false;
+  let s = 0;
+  for (let i = 0; i < 9; i++) s += +cpf[i] * (10 - i);
+  let r = (s * 10) % 11;
+  if (r === 10 || r === 11) r = 0;
+  if (r !== +cpf[9]) return false;
+  s = 0;
+  for (let i = 0; i < 10; i++) s += +cpf[i] * (11 - i);
+  r = (s * 10) % 11;
+  if (r === 10 || r === 11) r = 0;
+  return r === +cpf[10];
+}
+
+/* ── Masks ── */
+function maskCPF(v) {
+  v = v.replace(/\D/g,'').slice(0,11);
+  if (v.length > 9) v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{0,2})/,'$1.$2.$3-$4');
+  else if (v.length > 6) v = v.replace(/^(\d{3})(\d{3})(\d{0,3})/,'$1.$2.$3');
+  else if (v.length > 3) v = v.replace(/^(\d{3})(\d{0,3})/,'$1.$2');
+  return v;
+}
+
+function maskTel(v) {
+  v = v.replace(/\D/g,'').slice(0,11);
+  if (v.length === 11) v = v.replace(/^(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else if (v.length > 6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/,'($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/,'($1) $2');
+  else if (v.length > 0) v = v.replace(/^(\d{0,2})/,'($1');
+  return v;
+}
+
+function maskCEP(v) {
+  v = v.replace(/\D/g,'').slice(0,8);
+  if (v.length > 5) v = v.replace(/^(\d{5})(\d{0,3})/,'$1-$2');
+  return v;
+}
+
+document.getElementById('f-cpf').addEventListener('input', e => { e.target.value = maskCPF(e.target.value); });
+document.getElementById('f-tel').addEventListener('input', e => { e.target.value = maskTel(e.target.value); });
+document.getElementById('f-cep').addEventListener('input', e => { e.target.value = maskCEP(e.target.value); });
+
+/* ── CEP autocomplete ── */
+let cepTimer = null;
+function handleCEP(input) {
+  clearTimeout(cepTimer);
+  const clean = input.value.replace(/\D/g,'');
+  if (clean.length < 8) return;
+  cepTimer = setTimeout(() => fetchCEP(clean), 400);
+}
+
+async function fetchCEP(cep) {
+  const loading = document.getElementById('cep-loading');
+  loading.classList.add('active');
+  try {
+    const res  = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+    const data = await res.json();
+    if (data.erro) { setErr('cep','CEP não encontrado'); return; }
+    setErr('cep','');
+    document.getElementById('f-rua').value    = data.logradouro || '';
+    document.getElementById('f-bairro').value = data.bairro     || '';
+    document.getElementById('f-cidade').value = data.localidade || '';
+    document.getElementById('f-estado').value = data.uf         || '';
+    document.getElementById('f-numero').focus();
+  } catch { setErr('cep','Erro ao buscar CEP'); }
+  finally { loading.classList.remove('active'); }
+}
+
+/* ── Password toggle ── */
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+}
+
+/* ── Step 1 ── */
+function submitStep1() {
+  const nome   = val('nome');
+  const cpf    = val('cpf');
+  const tel    = val('tel');
+  const email  = val('email');
+  const senha  = val('senha');
+  const senha2 = val('senha2');
+
+  clearErrors('nome','cpf','tel','email','senha','senha2');
+  let ok = true;
+
+  if (!nome)              { setErr('nome', 'Nome obrigatório');           ok = false; }
+  if (!validateCPF(cpf))  { setErr('cpf', 'CPF inválido');                ok = false; }
+  if (tel.replace(/\D/g,'').length < 10) { setErr('tel','Telefone inválido'); ok = false; }
+  if (!isEmail(email))    { setErr('email', 'E-mail inválido');           ok = false; }
+  if (senha.length < 8)   { setErr('senha', 'Mínimo 8 caracteres');       ok = false; }
+  if (senha !== senha2)   { setErr('senha2', 'As senhas não coincidem');   ok = false; }
+
+  if (!ok) return;
+
+  fd.nome   = nome;
+  fd.cpf    = cpf;
+  fd.tel    = tel;
+  fd.email  = email;
+  fd.senha  = senha;
+  goToStep(2);
+}
+
+/* ── Step 2 ── */
+function submitStep2() {
+  const cep    = val('cep');
+  const rua    = val('rua');
+  const numero = val('numero');
+  const bairro = val('bairro');
+  const cidade = val('cidade');
+  const estado = val('estado');
+
+  clearErrors('cep','rua','numero','bairro','cidade','estado');
+  let ok = true;
+
+  if (cep.replace(/\D/g,'').length !== 8) { setErr('cep','CEP inválido');        ok = false; }
+  if (!rua)    { setErr('rua','Logradouro obrigatório');  ok = false; }
+  if (!numero) { setErr('numero','Número obrigatório');   ok = false; }
+  if (!bairro) { setErr('bairro','Bairro obrigatório');   ok = false; }
+  if (!cidade) { setErr('cidade','Cidade obrigatória');   ok = false; }
+  if (!estado) { setErr('estado','Estado obrigatório');   ok = false; }
+
+  if (!ok) return;
+
+  fd.endereco = {
+    cep:         cep,
+    logradouro:  rua,
+    numero:      numero,
+    complemento: val('comp'),
+    bairro:      bairro,
+    cidade:      cidade,
+    estado:      estado,
+  };
+  goToStep(3);
+}
+
+/* ── Step 3 — Preparar pagamento ── */
+let paymentReady = false;
+
+async function preparePaymentStep() {
+  if (paymentReady) return; // já preparado
+
+  const loadEl   = document.getElementById('payment-loading');
+  const contentEl= document.getElementById('payment-content');
+  loadEl.style.display    = 'flex';
+  contentEl.style.display = 'none';
+
+  if (!stripe) {
+    loadEl.style.display = 'none';
+    contentEl.style.display = 'block';
+    document.getElementById('payment-error').textContent =
+      'Pagamentos não disponíveis. Entre em contato com o suporte.';
+    document.getElementById('btn-pay').disabled = true;
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/billing/prepare-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: fd.nome, email: fd.email, cpf: fd.cpf, phone: fd.tel, planType }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao preparar pagamento');
+
+    clientSecret = data.clientSecret;
+    customerId   = data.customerId;
+
+    // Montar Stripe CardElement
+    const elements = stripe.elements();
+    cardElement = elements.create('card', {
+      style: {
+        base: {
+          color: '#f1f5f9',
+          fontFamily: 'Inter, sans-serif',
+          fontSize:   '15px',
+          '::placeholder': { color: '#64748b' },
+          iconColor: '#818cf8',
+        },
+        invalid: { color: '#ef4444' },
+      },
+      hidePostalCode: true,
+    });
+    cardElement.mount('#card-element');
+    cardElement.on('ready', () => {});
+    cardElement.on('focus', () => document.getElementById('stripe-wrap').classList.add('focused'));
+    cardElement.on('blur',  () => document.getElementById('stripe-wrap').classList.remove('focused'));
+    cardElement.on('change', e => {
+      document.getElementById('card-errors').textContent = e.error?.message || '';
+    });
+
+    // Atualizar sumário de pagamento
+    const resolvedPrice = data.planPrice || planPrice;
+    const resolvedName  = data.planName  || (planType === 'annual' ? 'Atlas Premium' : 'Atlas Pro');
+    planPrice = resolvedPrice;
+    document.getElementById('payment-price-label').textContent = resolvedPrice;
+    document.getElementById('payment-plan-label').innerHTML =
+      `<i class="bi bi-gem" style="color:var(--purple-l);margin-right:6px"></i>${resolvedName} · ${planType === 'annual' ? 'anual' : 'mensal'}`;
+
+    paymentReady = true;
+  } catch (err) {
+    document.getElementById('payment-error').textContent = err.message;
+  } finally {
+    loadEl.style.display    = 'none';
+    contentEl.style.display = 'block';
+  }
+}
+
+/* ── Step 3 — Confirmar pagamento ── */
+async function submitPayment() {
+  if (!stripe || !cardElement || !clientSecret) return;
+
+  const btn   = document.getElementById('btn-pay');
+  const label = document.getElementById('btn-pay-label');
+  const errEl = document.getElementById('payment-error');
+
+  btn.disabled = true;
+  label.innerHTML = '<span class="btn-spinner"></span> Processando…';
+  errEl.textContent = '';
+
+  try {
+    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: { name: fd.nome, email: fd.email },
+      },
+    });
+
+    if (error) {
+      errEl.textContent = error.message;
+      return;
+    }
+
+    if (paymentIntent.status === 'succeeded') {
+      // Criar conta no backend
+      const res = await fetch('/api/billing/complete-registration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email:            fd.email,
+          password:         fd.senha,
+          name:             fd.nome,
+          cpf:              fd.cpf,
+          phone:            fd.tel,
+          address:          fd.endereco,
+          stripeCustomerId: customerId,
+          paymentIntentId:  paymentIntent.id,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Email já cadastrado
+        if (res.status === 409) {
+          errEl.textContent = data.message + ' Redirecionando para login…';
+          setTimeout(() => window.location.href = '/login', 2500);
+          return;
+        }
+        throw new Error(data.message || 'Erro ao criar conta');
+      }
+
+      // Sucesso!
+      document.getElementById('success-email').textContent = fd.email;
+      document.getElementById('success-plan-name').textContent = data.planName || (planType === 'annual' ? 'Atlas Premium' : 'Atlas Pro');
+      goToStep(4);
+    }
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    btn.disabled = false;
+    label.innerHTML = '<i class="bi bi-lock-fill"></i> Pagar com segurança';
+  }
+}
+</script>
+</body>
+</html>
