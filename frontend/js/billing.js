@@ -317,18 +317,26 @@
 
   // ── Init ─────────────────────────────────────────────────────────────────────
 
+  function applyBillingUI(retries) {
+    // Aguarda syncProfileFromServer popular o localStorage antes de checar o plano
+    const plan = (typeof loadProfile === 'function') ? loadProfile().plan : null;
+    if (!plan && retries > 0) {
+      setTimeout(() => applyBillingUI(retries - 1), 600);
+      return;
+    }
+    addProChips();
+    addProBadge();
+    handleCheckoutReturn();
+  }
+
   function init() {
     injectUI();
     hookSwitchTab();
     hookButtons();
     hookKeyboard();
 
-    // Pequeno delay para o app.js terminar de montar o DOM
-    setTimeout(() => {
-      addProChips();
-      addProBadge();
-      handleCheckoutReturn();
-    }, 400);
+    // Aguarda app.js terminar de montar o DOM e sincronizar o perfil
+    setTimeout(() => applyBillingUI(8), 400);
   }
 
   if (document.readyState === 'loading') {
