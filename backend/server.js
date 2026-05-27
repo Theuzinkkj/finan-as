@@ -53,77 +53,80 @@ const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || 'Atlas <nore
 
 // ── Schemas de validação (Zod) ────────────────────────────────────────────────
 
+const str  = (msg) => z.string({ required_error: msg, invalid_type_error: msg });
+const num  = (msg) => z.number({ required_error: msg, invalid_type_error: msg });
+
 const schemas = {
   signup: z.object({
-    email:    z.string().email(),
-    password: z.string().min(6).max(128),
+    email:    str('Email obrigatório.').email('Email inválido.'),
+    password: str('Senha obrigatória.').min(6, 'A senha deve ter pelo menos 6 caracteres.').max(128, 'Senha muito longa.'),
   }),
 
   signin: z.object({
-    email:    z.string().email(),
-    password: z.string().min(1).max(128),
+    email:    str('Email obrigatório.').email('Email inválido.'),
+    password: str('Senha obrigatória.').min(1, 'Senha obrigatória.').max(128, 'Senha muito longa.'),
   }),
 
   resetPassword: z.object({
-    email: z.string().email(),
+    email: str('Email obrigatório.').email('Email inválido.'),
   }),
 
   updatePassword: z.object({
-    password: z.string().min(6).max(128),
+    password: str('Senha obrigatória.').min(6, 'A nova senha deve ter pelo menos 6 caracteres.').max(128, 'Senha muito longa.'),
   }),
 
   transaction: z.object({
-    amount:      z.number().positive().max(100_000_000),
-    type:        z.enum(['receita', 'despesa', 'benefício', 'beneficio']),
-    category:    z.string().min(1).max(100),
-    description: z.string().max(500).optional().default(''),
-    date:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    amount:       num('Valor obrigatório.').positive('O valor deve ser positivo.').max(100_000_000, 'Valor muito alto.'),
+    type:         z.enum(['receita', 'despesa', 'benefício', 'beneficio'], { required_error: 'Tipo obrigatório.', invalid_type_error: 'Tipo inválido.' }),
+    category:     str('Categoria obrigatória.').min(1, 'Categoria obrigatória.').max(100, 'Categoria muito longa.'),
+    description:  str().max(500, 'Descrição muito longa.').optional().default(''),
+    date:         str('Data obrigatória.').regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use o formato AAAA-MM-DD.'),
     fixed:            z.boolean().optional(),
-    paymentMethod:    z.string().max(50).optional(),
-    benefitType:      z.string().max(50).optional(),
-    invoiceItems:     z.array(z.any()).max(100).optional(),
+    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').optional(),
+    benefitType:      str().max(50).optional(),
+    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').optional(),
   }),
 
   transactionPatch: z.object({
-    amount:      z.number().positive().max(100_000_000).optional(),
-    type:        z.enum(['receita', 'despesa', 'benefício', 'beneficio']).optional(),
-    category:    z.string().min(1).max(100).optional(),
-    description: z.string().max(500).optional(),
-    date:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    amount:       num().positive('O valor deve ser positivo.').max(100_000_000, 'Valor muito alto.').optional(),
+    type:         z.enum(['receita', 'despesa', 'benefício', 'beneficio'], { invalid_type_error: 'Tipo inválido.' }).optional(),
+    category:     str().min(1, 'Categoria obrigatória.').max(100, 'Categoria muito longa.').optional(),
+    description:  str().max(500, 'Descrição muito longa.').optional(),
+    date:         str().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use o formato AAAA-MM-DD.').optional(),
     fixed:            z.boolean().optional(),
-    paymentMethod:    z.string().max(50).optional(),
-    benefitType:      z.string().max(50).optional(),
-    invoiceItems:     z.array(z.any()).max(100).optional(),
+    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').optional(),
+    benefitType:      str().max(50).optional(),
+    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').optional(),
   }),
 
   portfolio: z.object({
-    date:             z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    asset:            z.string().min(1).max(20),
-    amount:           z.number().positive().max(100_000_000),
-    notes:            z.string().max(500).optional(),
-    asset_type:       z.string().max(50).optional(),
-    transaction_type: z.enum(['compra', 'venda']).optional().default('compra'),
-    quantity:         z.number().positive().optional(),
-    price:            z.number().positive().optional(),
-    other_costs:      z.number().min(0).optional(),
+    date:             str('Data obrigatória.').regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use o formato AAAA-MM-DD.'),
+    asset:            str('Ativo obrigatório.').min(1, 'Ativo obrigatório.').max(20, 'Nome do ativo muito longo.'),
+    amount:           num('Valor obrigatório.').positive('O valor deve ser positivo.').max(100_000_000, 'Valor muito alto.'),
+    notes:            str().max(500, 'Observação muito longa.').optional(),
+    asset_type:       str().max(50).optional(),
+    transaction_type: z.enum(['compra', 'venda'], { invalid_type_error: 'Tipo inválido.' }).optional().default('compra'),
+    quantity:         num().positive('A quantidade deve ser positiva.').optional(),
+    price:            num().positive('O preço deve ser positivo.').optional(),
+    other_costs:      num().min(0, 'Custos não podem ser negativos.').optional(),
   }),
 
   profile: z.object({
-    name:    z.string().max(100).optional(),
-    phone:   z.string().max(20).optional(),
-    cpf:     z.string().max(14).optional(),
-    address: z.string().max(300).optional(),
-    budgets: z.record(z.number().min(0).max(100_000_000)).optional(),
+    name:    str().max(100, 'Nome muito longo.').optional(),
+    phone:   str().max(20, 'Telefone muito longo.').optional(),
+    cpf:     str().max(14, 'CPF inválido.').optional(),
+    address: str().max(300, 'Endereço muito longo.').optional(),
+    budgets: z.record(num().min(0, 'Valor de orçamento inválido.').max(100_000_000, 'Valor de orçamento muito alto.')).optional(),
   }),
 
   aiChat: z.object({
-    model:    z.string().max(100),
+    model:    str('Modelo obrigatório.').max(100),
     messages: z.array(z.object({
-      role:    z.enum(['user', 'assistant', 'system']),
-      content: z.string().max(20_000),
-    })).min(1).max(50),
-    temperature: z.number().min(0).max(2).optional(),
-    max_tokens:  z.number().int().min(1).max(4096).optional(),
+      role:    z.enum(['user', 'assistant', 'system'], { invalid_type_error: 'Papel inválido na mensagem.' }),
+      content: str().max(20_000, 'Mensagem muito longa (máx. 20.000 caracteres).'),
+    })).min(1, 'Nenhuma mensagem enviada.').max(50, 'Muitas mensagens no histórico.'),
+    temperature: num().min(0).max(2).optional(),
+    max_tokens:  num().int().min(1).max(4096).optional(),
   }),
 };
 
@@ -131,8 +134,7 @@ function validate(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      const msg = result.error.errors[0];
-      return res.status(400).json({ message: `${msg.path.join('.')}: ${msg.message}` });
+      return res.status(400).json({ message: result.error.errors[0].message });
     }
     req.body = result.data;
     next();
