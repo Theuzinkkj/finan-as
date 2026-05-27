@@ -36,6 +36,14 @@ if (process.env.SENTRY_DSN) {
   });
 }
 
+// ── Logger (Pino) ─────────────────────────────────────────────────────────────
+const log = require('pino')({
+  level: IS_PROD ? 'info' : 'debug',
+  ...(IS_PROD ? {} : {
+    transport: { target: 'pino-pretty', options: { colorize: true, ignore: 'pid,hostname' } },
+  }),
+});
+
 // ── Email (Nodemailer) ────────────────────────────────────────────────────────
 // Suporta SMTP genérico (Gmail, Outlook, Brevo, etc.) via variáveis de ambiente.
 // SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM
@@ -151,7 +159,7 @@ function validate(schema) {
 
 const MISSING = ['SUPABASE_URL', 'SUPABASE_KEY', 'GROQ_KEY'].filter(k => !process.env[k]);
 if (MISSING.length) {
-  console.error(`[Atlas] Variáveis de ambiente ausentes: ${MISSING.join(', ')}`);
+  log.error({ missing: MISSING }, 'Variáveis de ambiente ausentes');
   if (IS_PROD) process.exit(1);
 }
 
@@ -755,14 +763,14 @@ app.get('/api/auth/callback', async (req, res) => {
     );
 
     if (!ok || !data?.access_token) {
-      console.error('[Atlas OAuth] Token exchange failed:', data);
+      log.error({ data }, 'OAuth: token exchange falhou');
       return res.redirect('/login?error=oauth_failed');
     }
 
     setSessionCookies(res, data.access_token, data.refresh_token);
     res.redirect('/app');
   } catch (err) {
-    console.error('[Atlas OAuth] Callback error:', err);
+    log.error({ err }, 'OAuth: callback error');
     res.redirect('/login?error=oauth_failed');
   }
 });
@@ -1593,7 +1601,7 @@ async function sendEmail({ to, subject, html }) {
     await _mailer.sendMail({ from: SMTP_FROM, to, subject, html });
     return { ok: true };
   } catch (err) {
-    console.error('[Atlas] Erro ao enviar email:', err.message);
+    log.error({ err }, 'Erro ao enviar email');
     return { ok: false, reason: err.message };
   }
 }
@@ -1719,11 +1727,11 @@ async function sendMonthlySummariesToAllUsers() {
     );
     users = ok ? (data?.users || []) : [];
   } catch (err) {
-    console.error('[Atlas Cron] Falha ao listar usuários:', err.message);
+    log.error({ err }, 'Cron: falha ao listar usuários');
     return;
   }
 
-  console.log(`[Atlas Cron] Enviando resumo de ${fmtMonth} para ${users.length} usuário(s)...`);
+  log.info({ month: fmtMonth, users: users.length }, 'Cron: enviando resumo mensal');
 
   for (const user of users) {
     if (!user.email) continue;
@@ -1774,11 +1782,11 @@ async function sendMonthlySummariesToAllUsers() {
 
       await sendEmail({ to: user.email, subject, html });
     } catch (err) {
-      console.error(`[Atlas Cron] Erro ao processar ${user.email}:`, err.message);
+      log.error({ err, email: user.email }, 'Cron: erro ao processar usuário');
     }
   }
 
-  console.log(`[Atlas Cron] Resumo mensal concluído.`);
+  log.info('Cron: resumo mensal concluído');
 }
 
 // Todo dia 1 do mês às 08:00 (timezone configurável via TZ env var)
@@ -1790,7 +1798,7 @@ if (process.env.ENABLE_MONTHLY_CRON !== 'false') {
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
 function shutdown(signal) {
-  console.log(`[Atlas] ${signal} recebido — encerrando graciosamente...`);
+  log.info({ signal }, 'Servidor encerrando graciosamente');
   process.exit(0);
 }
 process.on('SIGTERM', () => shutdown('SIGTERM'));
@@ -1804,7 +1812,7 @@ app.use((err, req, res, _next) => {
   const status  = err.status || 500;
   const message = err.status ? err.message : 'Erro interno do servidor.';
   if (!err.status) {
-    console.error('[Atlas] Erro interno:', err);
+    log.error({ err }, 'Erro interno não tratado');
     if (process.env.SENTRY_DSN) Sentry.captureException(err);
   }
   res.status(status).json({ message });
@@ -1815,7 +1823,7 @@ app.use((err, req, res, _next) => {
 if (require.main === module) {
   const PORT = process.env.PORT || 3001;
   app.listen(PORT, () =>
-    console.log(`Atlas Finance → http://localhost:${PORT}  [${IS_PROD ? 'prod' : 'dev'}]`)
+    log.info({ port: PORT, env: IS_PROD ? 'prod' : 'dev' }, 'Atlas Finance iniciado')
   );
 }
 
