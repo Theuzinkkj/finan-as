@@ -165,9 +165,12 @@ app.get('/checkout',    (_req, res) => res.sendFile(fe('checkout.html')));
 app.get('/planos',      (_req, res) => res.sendFile(fe('planos.html')));
 app.get('/login',       (_req, res) => res.sendFile(fe('login.html')));
 app.get('/status',      (_req, res) => res.sendFile(fe('status.html')));
-app.get('/termos',      (_req, res) => res.sendFile(fe('termos.html')));
-app.get('/privacidade', (_req, res) => res.sendFile(fe('privacidade.html')));
-app.get('/support',    (_req, res) => res.sendFile(fe('support.html')));
+app.get('/termos',           (_req, res) => res.sendFile(fe('termos.html')));
+app.get('/termos.html',      (_req, res) => res.redirect(301, '/termos'));
+app.get('/privacidade',      (_req, res) => res.sendFile(fe('privacidade.html')));
+app.get('/privacidade.html', (_req, res) => res.redirect(301, '/privacidade'));
+app.get('/support',          (_req, res) => res.sendFile(fe('support.html')));
+app.get('/support.html',     (_req, res) => res.redirect(301, '/support'));
 // /app com injeção do billing.js (paywall) ao final do body
 app.get('/app', async (_req, res) => {
   const fs = require('fs');
