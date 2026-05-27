@@ -25,9 +25,14 @@ function resetPasswordToggles() {
 }
 
 // ─── Feedback ────────────────────────────────────────────────────────────────
-function showAuthError(msg) {
+function showAuthError(msg, { retryFn } = {}) {
   const el = document.getElementById('auth-error');
-  el.textContent = msg;
+  if (retryFn) {
+    el.innerHTML = `<span>${escHtmlLogin(msg)}</span> <button id="btn-auth-retry" style="background:none;border:none;color:inherit;text-decoration:underline;cursor:pointer;font-size:inherit;padding:0;margin-left:4px;">Tentar novamente</button>`;
+    document.getElementById('btn-auth-retry').addEventListener('click', retryFn);
+  } else {
+    el.textContent = msg;
+  }
   el.classList.remove('hidden');
 }
 
@@ -266,25 +271,30 @@ function bindAuthEvents() {
       return;
     }
 
-    setAuthLoading(true);
-    try {
-      if (isSignup) {
-        const result = await Auth.signUp(email, password);
-        if (result.confirmEmail) {
-          showResendConfirmation(email);
-          setAuthMode('signin');
-          return;
+    async function doAuth() {
+      setAuthLoading(true);
+      try {
+        if (isSignup) {
+          const result = await Auth.signUp(email, password);
+          if (result.confirmEmail) {
+            showResendConfirmation(email);
+            setAuthMode('signin');
+            return;
+          }
+        } else {
+          await Auth.signIn(email, password);
         }
-      } else {
-        await Auth.signIn(email, password);
+        sessionStorage.removeItem('atlas_app_error');
+        window.location.href = '/app';
+      } catch (err) {
+        const msg = authErrorMsg(err.message);
+        const isConnErr = msg.includes('conexão') || msg.includes('indisponível') || msg.includes('internet') || msg.includes('limite');
+        showAuthError(msg, isConnErr ? { retryFn: () => { clearAuthFeedback(); doAuth(); } } : {});
+      } finally {
+        setAuthLoading(false);
       }
-      sessionStorage.removeItem('atlas_app_error');
-      window.location.href = '/app';
-    } catch (err) {
-      showAuthError(authErrorMsg(err.message));
-    } finally {
-      setAuthLoading(false);
     }
+    doAuth();
   });
 }
 

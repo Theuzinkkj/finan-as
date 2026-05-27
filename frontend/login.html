@@ -264,5 +264,27 @@
   <script src="js/storage.js"></script>
   <script src="js/api.js"></script>
   <script src="js/login.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          if (!newSW) return;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed') {
+              // Na página de login não há estado local para proteger — ativa imediatamente
+              newSW.postMessage('skipWaiting');
+            }
+          });
+        });
+        // Se já há um SW esperando (de deploy anterior), ativa agora
+        if (reg.waiting) reg.waiting.postMessage('skipWaiting');
+      });
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
+    }
+  </script>
 </body>
 </html>
