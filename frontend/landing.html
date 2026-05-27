@@ -20,6 +20,7 @@
       This page requires JavaScript to display.
     </div>
   </noscript>
+<script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
 </head>
 <body>
   <div id="__bundler_thumbnail">
@@ -99,8 +100,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             finalBytes = new Uint8Array(totalLen);
             let offset = 0;
             for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else if (typeof pako !== 'undefined') {
+            finalBytes = pako.inflate(bytes);
           } else {
-            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+            console.warn('DecompressionStream and pako not available, asset ' + uuid + ' may not render');
           }
         }
 
