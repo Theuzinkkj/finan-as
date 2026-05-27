@@ -873,7 +873,7 @@ function updateStepper(active) {
 }
 
 /* ── Utilidades de validação ── */
-function val(id) { return (document.getElementById(id)?.value || '').trim(); }
+function val(id) { return (document.getElementById(`f-${id}`)?.value || '').trim(); }
 function setErr(id, msg) {
   const el = document.getElementById(`e-${id}`);
   if (el) el.textContent = msg;
