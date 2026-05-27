@@ -620,6 +620,16 @@ app.post('/api/auth/signup', authLimiter, validate(schemas.signup), async (req, 
       error_description: supaErrorMsg(data),
     });
 
+    const email = req.body.email;
+    const name  = data?.user?.user_metadata?.name || email.split('@')[0];
+
+    // Fire-and-forget — não bloqueia a resposta
+    sendEmail({
+      to:      email,
+      subject: `Bem-vindo ao Atlas Finance, ${name}!`,
+      html:    onboardingEmailHtml(name),
+    }).catch(() => {});
+
     if (data?.user && !data.session && !data.access_token) {
       return res.status(200).json({ ok: true, confirmEmail: true });
     }
@@ -1497,6 +1507,85 @@ app.post('/api/ai/chat', aiLimiter, requireAuth, validate(schemas.aiChat), async
 
 // ── Notifications (Email) ─────────────────────────────────────────────────────
 const notifLimiter = makeRateLimiter(60_000, 5, 'Muitas notificações. Tente em 1 minuto.');
+
+function onboardingEmailHtml(name) {
+  const appUrl  = (process.env.APP_URL || 'https://atlasfinance.page').replace(/\/+$/, '');
+  const display = name || 'por aí';
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0c12;font-family:'Segoe UI',Arial,sans-serif;color:#e2e8f0">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0c12;padding:40px 16px">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#0f1118;border:1px solid rgba(99,102,241,.25);border-radius:20px;overflow:hidden">
+
+        <!-- Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e1b4b,#312e81);padding:36px 32px;text-align:center">
+            <div style="font-size:2rem;margin-bottom:8px">💎</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-.5px">Atlas Finance</div>
+            <div style="font-size:.85rem;color:#a5b4fc;margin-top:4px">Sua vida financeira, organizada.</div>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px">
+            <p style="font-size:1.1rem;font-weight:700;color:#f1f5f9;margin:0 0 8px">Olá, ${display}! 👋</p>
+            <p style="font-size:.92rem;color:#94a3b8;line-height:1.7;margin:0 0 28px">
+              Sua conta no Atlas foi criada com sucesso. Estamos felizes em ter você aqui.
+              Veja por onde começar:
+            </p>
+
+            <!-- Steps -->
+            ${[
+              ['📥', 'Adicione sua primeira transação', 'Registre uma receita ou despesa e veja o dashboard ganhar vida.'],
+              ['🗂️', 'Organize por categorias', 'Crie categorias personalizadas e entenda para onde seu dinheiro vai.'],
+              ['📊', 'Acompanhe seu saldo', 'O resumo mensal mostra entradas, saídas e saldo de forma visual.'],
+              ['🤖', 'Converse com a IA', 'Pergunte à IA insights sobre seus gastos — disponível no plano Pro.'],
+            ].map(([icon, title, desc]) => `
+            <table width="100%" style="margin-bottom:14px">
+              <tr>
+                <td width="44" valign="top" style="padding-top:2px">
+                  <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.22);text-align:center;line-height:36px;font-size:1.1rem">${icon}</div>
+                </td>
+                <td style="padding-left:12px">
+                  <div style="font-size:.9rem;font-weight:700;color:#e2e8f0">${title}</div>
+                  <div style="font-size:.82rem;color:#64748b;margin-top:2px">${desc}</div>
+                </td>
+              </tr>
+            </table>`).join('')}
+
+            <!-- CTA -->
+            <div style="text-align:center;margin-top:28px">
+              <a href="${appUrl}/app" style="display:inline-block;padding:13px 32px;background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;font-weight:700;font-size:.95rem;text-decoration:none;border-radius:12px;box-shadow:0 4px 18px rgba(99,102,241,.4)">
+                Abrir o Atlas →
+              </a>
+            </div>
+
+            <p style="font-size:.8rem;color:#475569;text-align:center;margin:28px 0 0;line-height:1.6">
+              Dúvidas? Responda este email que a gente ajuda.<br>
+              — Equipe Atlas Finance
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding:16px 32px;border-top:1px solid rgba(255,255,255,.06);text-align:center">
+            <p style="font-size:.73rem;color:#334155;margin:0">
+              Você recebeu este email porque criou uma conta em
+              <a href="${appUrl}" style="color:#6366f1;text-decoration:none">atlasfinance.page</a>.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
 
 async function sendEmail({ to, subject, html }) {
   if (!_mailer) return { ok: false, reason: 'Email não configurado. Adicione SMTP_HOST, SMTP_USER e SMTP_PASS no .env.' };
