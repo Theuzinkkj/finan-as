@@ -7,6 +7,7 @@ const { randomBytes, createHash } = require('crypto');
 const Sentry                    = require('@sentry/node');
 const compression               = require('compression');
 const cron                      = require('node-cron');
+const { z }                     = require('zod');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 let stripe = null;
@@ -49,6 +50,94 @@ function createMailer() {
 
 const _mailer   = createMailer();
 const SMTP_FROM = process.env.SMTP_FROM || process.env.SMTP_USER || 'Atlas <noreply@atlas.app>';
+
+// ── Schemas de validação (Zod) ────────────────────────────────────────────────
+
+const schemas = {
+  signup: z.object({
+    email:    z.string().email(),
+    password: z.string().min(6).max(128),
+  }),
+
+  signin: z.object({
+    email:    z.string().email(),
+    password: z.string().min(1).max(128),
+  }),
+
+  resetPassword: z.object({
+    email: z.string().email(),
+  }),
+
+  updatePassword: z.object({
+    password: z.string().min(6).max(128),
+  }),
+
+  transaction: z.object({
+    amount:      z.number().positive().max(100_000_000),
+    type:        z.enum(['receita', 'despesa', 'benefício', 'beneficio']),
+    category:    z.string().min(1).max(100),
+    description: z.string().max(500).optional().default(''),
+    date:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    fixed:            z.boolean().optional(),
+    paymentMethod:    z.string().max(50).optional(),
+    benefitType:      z.string().max(50).optional(),
+    invoiceItems:     z.array(z.any()).max(100).optional(),
+  }),
+
+  transactionPatch: z.object({
+    amount:      z.number().positive().max(100_000_000).optional(),
+    type:        z.enum(['receita', 'despesa', 'benefício', 'beneficio']).optional(),
+    category:    z.string().min(1).max(100).optional(),
+    description: z.string().max(500).optional(),
+    date:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    fixed:            z.boolean().optional(),
+    paymentMethod:    z.string().max(50).optional(),
+    benefitType:      z.string().max(50).optional(),
+    invoiceItems:     z.array(z.any()).max(100).optional(),
+  }),
+
+  portfolio: z.object({
+    date:             z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    asset:            z.string().min(1).max(20),
+    amount:           z.number().positive().max(100_000_000),
+    notes:            z.string().max(500).optional(),
+    asset_type:       z.string().max(50).optional(),
+    transaction_type: z.enum(['compra', 'venda']).optional().default('compra'),
+    quantity:         z.number().positive().optional(),
+    price:            z.number().positive().optional(),
+    other_costs:      z.number().min(0).optional(),
+  }),
+
+  profile: z.object({
+    name:    z.string().max(100).optional(),
+    phone:   z.string().max(20).optional(),
+    cpf:     z.string().max(14).optional(),
+    address: z.string().max(300).optional(),
+    budgets: z.record(z.number().min(0).max(100_000_000)).optional(),
+  }),
+
+  aiChat: z.object({
+    model:    z.string().max(100),
+    messages: z.array(z.object({
+      role:    z.enum(['user', 'assistant', 'system']),
+      content: z.string().max(20_000),
+    })).min(1).max(50),
+    temperature: z.number().min(0).max(2).optional(),
+    max_tokens:  z.number().int().min(1).max(4096).optional(),
+  }),
+};
+
+function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      const msg = result.error.errors[0];
+      return res.status(400).json({ message: `${msg.path.join('.')}: ${msg.message}` });
+    }
+    req.body = result.data;
+    next();
+  };
+}
 
 // ── Validação de ambiente ─────────────────────────────────────────────────────
 // Falha rápido na inicialização — melhor que erros silenciosos em runtime.
@@ -496,7 +585,7 @@ async function requireAuth(req, res, next) {
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-app.post('/api/auth/signup', authLimiter, async (req, res, next) => {
+app.post('/api/auth/signup', authLimiter, validate(schemas.signup), async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/signup`, {
       method:  'POST',
@@ -521,7 +610,7 @@ app.post('/api/auth/signup', authLimiter, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post('/api/auth/signin', authLimiter, async (req, res, next) => {
+app.post('/api/auth/signin', authLimiter, validate(schemas.signin), async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(
       `${SUPA_URL}/auth/v1/token?grant_type=password`,
@@ -676,7 +765,7 @@ app.get('/api/transactions', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post('/api/transactions', requireAuth, async (req, res, next) => {
+app.post('/api/transactions', requireAuth, validate(schemas.transaction), async (req, res, next) => {
   try {
     const body = { ...req.body, user_id: req.userId };
 
@@ -707,7 +796,7 @@ app.delete('/api/transactions/:id', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.patch('/api/transactions/:id', requireAuth, async (req, res, next) => {
+app.patch('/api/transactions/:id', requireAuth, validate(schemas.transactionPatch), async (req, res, next) => {
   try {
     const url = `${SUPA_URL}/rest/v1/transactions`
               + `?id=eq.${encodeURIComponent(req.params.id)}`
@@ -832,7 +921,7 @@ app.get('/api/profile', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.patch('/api/profile', requireAuth, async (req, res, next) => {
+app.patch('/api/profile', requireAuth, validate(schemas.profile), async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
       method:  'PUT',
@@ -847,10 +936,9 @@ app.patch('/api/profile', requireAuth, async (req, res, next) => {
 // ── Auth extra ───────────────────────────────────────────────────────────────
 
 // Envia email de redefinição de senha (não requer autenticação prévia)
-app.post('/api/auth/reset-password', authLimiter, async (req, res, next) => {
+app.post('/api/auth/reset-password', authLimiter, validate(schemas.resetPassword), async (req, res, next) => {
   try {
-    const { email } = req.body || {};
-    if (!email) return res.status(400).json({ message: 'Email obrigatório.' });
+    const { email } = req.body;
 
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/recover`, {
       method:  'POST',
@@ -881,11 +969,9 @@ app.post('/api/auth/resend-confirmation', authLimiter, async (req, res, next) =>
 });
 
 // Atualiza senha do usuário autenticado (chamado após fluxo de recovery)
-app.post('/api/auth/update-password', requireAuth, async (req, res, next) => {
+app.post('/api/auth/update-password', requireAuth, validate(schemas.updatePassword), async (req, res, next) => {
   try {
-    const { password } = req.body || {};
-    if (!password || password.length < 6)
-      return res.status(400).json({ message: 'A senha deve ter pelo menos 6 caracteres.' });
+    const { password } = req.body;
 
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
       method:  'PUT',
@@ -1015,11 +1101,9 @@ app.get('/api/portfolio', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.post('/api/portfolio', requireAuth, async (req, res, next) => {
+app.post('/api/portfolio', requireAuth, validate(schemas.portfolio), async (req, res, next) => {
   try {
-    const { date, asset, amount, notes, asset_type, transaction_type, quantity, price, other_costs } = req.body || {};
-    if (!date || !asset || !amount) return res.status(400).json({ message: 'date, asset e amount são obrigatórios.' });
-    if (isNaN(amount) || +amount <= 0) return res.status(400).json({ message: 'Valor inválido.' });
+    const { date, asset, amount, notes, asset_type, transaction_type, quantity, price, other_costs } = req.body;
 
     const body = {
       date,
@@ -1055,7 +1139,7 @@ app.post('/api/portfolio', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-app.patch('/api/portfolio/:id', requireAuth, async (req, res, next) => {
+app.patch('/api/portfolio/:id', requireAuth, validate(schemas.portfolio.partial()), async (req, res, next) => {
   try {
     const { date, asset, amount, notes, asset_type, transaction_type, quantity, price, other_costs } = req.body || {};
     const updates = {};
@@ -1372,7 +1456,7 @@ app.get('/api/market-rates', async (req, res, next) => {
 
 // ── AI ────────────────────────────────────────────────────────────────────────
 
-app.post('/api/ai/chat', aiLimiter, requireAuth, async (req, res, next) => {
+app.post('/api/ai/chat', aiLimiter, requireAuth, validate(schemas.aiChat), async (req, res, next) => {
   try {
     const { ok, status, data } = await proxyFetch(
       'https://api.groq.com/openai/v1/chat/completions',
