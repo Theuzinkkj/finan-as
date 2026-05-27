@@ -874,9 +874,12 @@ function bindEvents() {
   // Redefinir senha
   document.getElementById('btn-reset-password').addEventListener('click', resetPassword);
 
+  // Exportar dados (LGPD art. 18 — portabilidade)
+  document.getElementById(‘btn-export-data’).addEventListener(‘click’, exportUserData);
+
   // Excluir conta â†’ abre confirmaÃ§Ã£o
-  document.getElementById('btn-delete-account').addEventListener('click', () => {
-    openModal('modal-confirm-delete');
+  document.getElementById(‘btn-delete-account’).addEventListener(‘click’, () => {
+    openModal(‘modal-confirm-delete’);
   });
 
   // Confirmar exclusÃ£o

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status — Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117;
+      --bg-card: rgba(20,24,32,0.9);
+      --border: rgba(255,255,255,0.08);
+      --purple: #6366f1;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --text: #f1f5f9;
+      --text-2: #94a3b8;
+      --text-3: #8896aa;
+      --font: 'Inter', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 16px 60px;
+      line-height: 1.7;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99,102,241,.18) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 85% 80%, rgba(16,185,129,.08) 0%, transparent 65%);
+    }
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding-top: 40px;
+    }
+
+    /* ── Nav ── */
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+    }
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .logo-row:hover { opacity: .85; }
+    .logo-text { font-size: 1.2rem; font-weight: 800; letter-spacing: -.01em; }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: var(--text-3);
+      text-decoration: none;
+      font-size: .82rem;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--purple); }
+
+    /* ── Overall banner ── */
+    .overall-banner {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 24px 28px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      margin-bottom: 24px;
+      transition: border-color .3s;
+    }
+    .overall-banner.operational { border-color: rgba(16,185,129,.35); }
+    .overall-banner.degraded    { border-color: rgba(245,158,11,.35); }
+    .overall-banner.incident    { border-color: rgba(239,68,68,.35); }
+
+    .overall-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.4rem;
+    }
+    .operational .overall-icon { background: rgba(16,185,129,.15); }
+    .degraded    .overall-icon { background: rgba(245,158,11,.15); }
+    .incident    .overall-icon { background: rgba(239,68,68,.15); }
+
+    .overall-info h1 { font-size: 1.1rem; font-weight: 700; margin-bottom: 2px; }
+    .overall-meta {
+      font-size: .78rem;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .refresh-btn {
+      background: none;
+      border: none;
+      color: var(--purple);
+      font-size: .78rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      font-family: var(--font);
+    }
+    .refresh-btn:hover { text-decoration: underline; }
+    #countdown { color: var(--text-3); }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(12px);
+    }
+    .card-title {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--text-3);
+      margin-bottom: 16px;
+    }
+
+    /* ── Component rows ── */
+    .component-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .component-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .component-row:first-child { padding-top: 0; }
+    .component-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .9rem;
+      font-weight: 500;
+    }
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-operational { background: var(--green); box-shadow: 0 0 6px rgba(16,185,129,.6); }
+    .dot-degraded    { background: var(--yellow); box-shadow: 0 0 6px rgba(245,158,11,.6); }
+    .dot-incident    { background: var(--red); box-shadow: 0 0 6px rgba(239,68,68,.6);
+                       animation: pulse-dot 1.4s ease-in-out infinite; }
+    .dot-maintenance { background: var(--blue); box-shadow: 0 0 6px rgba(59,130,246,.6); }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .4; }
+    }
+
+    .status-badge {
+      font-size: .75rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+    .badge-operational { background: rgba(16,185,129,.12);  color: #34d399; }
+    .badge-degraded    { background: rgba(245,158,11,.12); color: #fbbf24; }
+    .badge-incident    { background: rgba(239,68,68,.12);  color: #f87171; }
+    .badge-maintenance { background: rgba(59,130,246,.12); color: #60a5fa; }
+
+    /* ── Incidents ── */
+    .incident-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .incident-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .incident-item:first-child { padding-top: 0; }
+    .incident-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .incident-title { font-size: .93rem; font-weight: 600; }
+    .incident-severity {
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .sev-minor    { background: rgba(245,158,11,.12); color: #fbbf24; }
+    .sev-major    { background: rgba(239,68,68,.12);  color: #f87171; }
+    .sev-critical { background: rgba(239,68,68,.22);  color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+
+    .incident-updates { list-style: none; }
+    .incident-update {
+      display: flex;
+      gap: 12px;
+      padding: 6px 0;
+      font-size: .84rem;
+      color: var(--text-2);
+    }
+    .update-time {
+      color: var(--text-3);
+      font-size: .77rem;
+      white-space: nowrap;
+      padding-top: 1px;
+      min-width: 105px;
+    }
+    .incident-status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+
+    .empty-msg {
+      font-size: .88rem;
+      color: var(--text-3);
+      text-align: center;
+      padding: 18px 0 4px;
+    }
+
+    /* ── Loading skeleton ── */
+    .skeleton {
+      background: linear-gradient(90deg, rgba(255,255,255,.04) 25%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ── Footer ── */
+    .footer-links {
+      text-align: center;
+      margin-top: 40px;
+      font-size: .8rem;
+      color: var(--text-3);
+    }
+    .footer-links a { color: var(--text-3); margin: 0 8px; text-decoration: none; }
+    .footer-links a:hover { color: var(--purple); }
+
+    @media (max-width: 500px) {
+      .overall-banner { padding: 18px 18px; gap: 14px; }
+      .card { padding: 18px 18px; }
+      .overall-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <nav class="nav">
+    <a class="logo-row" href="/app">
+      <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#a5b4fc"/>
+          <stop offset="50%" stop-color="#6366f1"/>
+          <stop offset="100%" stop-color="#3730a3"/>
+        </linearGradient></defs>
+        <path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#sg)"/>
+      </svg>
+      <span class="logo-text">Atlas</span>
+    </a>
+    <a class="back-link" href="/app">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao app
+    </a>
+  </nav>
+
+  <!-- Overall status -->
+  <div class="overall-banner" id="overall-banner">
+    <div class="overall-icon" id="overall-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="overall-info">
+      <h1 id="overall-title">Verificando serviços…</h1>
+      <div class="overall-meta">
+        <span id="overall-time">—</span>
+        <span>·</span>
+        <button class="refresh-btn" onclick="fetchStatus()">↻ Atualizar</button>
+        <span id="countdown"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Components -->
+  <div class="card">
+    <div class="card-title">Componentes</div>
+    <div id="components-list">
+      <div class="component-row"><div class="skeleton" style="width:140px;height:14px"></div><div class="skeleton" style="width:80px;height:20px;border-radius:20px"></div></div>
+      <div class="component-row"><div class="skeleton" style="width:120px;height:14px"></div><div class="skeleton" style="width:80px;height:20px;border-radius:20px"></div></div>
+      <div class="component-row"><div class="skeleton" style="width:130px;height:14px"></div><div class="skeleton" style="width:80px;height:20px;border-radius:20px"></div></div>
+      <div class="component-row"><div class="skeleton" style="width:110px;height:14px"></div><div class="skeleton" style="width:80px;height:20px;border-radius:20px"></div></div>
+    </div>
+  </div>
+
+  <!-- Active incidents -->
+  <div class="card" id="active-incidents-card" style="display:none">
+    <div class="card-title">Incidentes Ativos</div>
+    <div id="active-incidents-list"></div>
+  </div>
+
+  <!-- Incident history -->
+  <div class="card">
+    <div class="card-title">Histórico de Incidentes (últimos 30 dias)</div>
+    <div id="resolved-incidents-list">
+      <p class="empty-msg">Carregando…</p>
+    </div>
+  </div>
+
+  <div class="footer-links">
+    <a href="/termos.html">Termos de uso</a>
+    <a href="/privacidade.html">Privacidade</a>
+    <a href="mailto:contato@mathsouza.online">Contato</a>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+const STATUS_LABELS = {
+  operational: 'Operacional',
+  degraded:    'Degradado',
+  incident:    'Incidente',
+  maintenance: 'Manutenção',
+};
+const INCIDENT_STATUS_LABELS = {
+  investigating: 'Investigando',
+  identified:    'Causa identificada',
+  monitoring:    'Monitorando',
+  resolved:      'Resolvido',
+};
+const SEV_LABELS = { minor: 'Menor', major: 'Maior', critical: 'Crítico' };
+
+const OVERALL_CONFIG = {
+  operational: {
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    title: 'Todos os sistemas operacionais',
+  },
+  degraded: {
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="#f59e0b" stroke="none"/><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
+    title: 'Desempenho degradado',
+  },
+  incident: {
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    title: 'Incidente em andamento',
+  },
+};
+
+function fmtTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60)  return 'há poucos segundos';
+  const m = Math.floor(s / 60);
+  if (m < 60)  return `há ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24)  return `há ${h}h`;
+  return `há ${Math.floor(h / 24)} dias`;
+}
+
+function renderComponents(components) {
+  const el = document.getElementById('components-list');
+  el.innerHTML = components.map(c => `
+    <div class="component-row">
+      <span class="component-name">
+        <span class="status-dot dot-${c.status}"></span>
+        ${c.name}
+      </span>
+      <span class="status-badge badge-${c.status}">${STATUS_LABELS[c.status] || c.status}</span>
+    </div>
+  `).join('');
+}
+
+function renderIncident(inc) {
+  const updates = (inc.updates || []).slice().reverse();
+  const sevClass = 'sev-' + (inc.severity || 'minor');
+  const sevLabel = SEV_LABELS[inc.severity] || inc.severity || '';
+  return `
+    <div class="incident-item">
+      <div class="incident-header">
+        <span class="incident-title">${inc.title}</span>
+        <span class="incident-severity ${sevClass}">${sevLabel}</span>
+      </div>
+      <div class="incident-status-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${INCIDENT_STATUS_LABELS[inc.status] || inc.status}
+        · ${fmtTime(inc.createdAt)}
+        ${inc.resolvedAt ? ' → ' + fmtTime(inc.resolvedAt) : ''}
+      </div>
+      <ul class="incident-updates">
+        ${updates.map(u => `
+          <li class="incident-update">
+            <span class="update-time">${fmtTime(u.at)}</span>
+            <span>${u.message}</span>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+function render(data) {
+  // Overall banner
+  const cfg = OVERALL_CONFIG[data.overall] || OVERALL_CONFIG.operational;
+  const banner = document.getElementById('overall-banner');
+  banner.className = 'overall-banner ' + data.overall;
+  document.getElementById('overall-icon').innerHTML = cfg.icon;
+  document.getElementById('overall-title').textContent = cfg.title;
+  document.getElementById('overall-time').textContent = 'Atualizado ' + timeAgo(data.checkedAt);
+
+  // Components
+  renderComponents(data.components || []);
+
+  // Incidents
+  const now = Date.now();
+  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+  const active   = (data.incidents || []).filter(i => i.status !== 'resolved');
+  const resolved = (data.incidents || []).filter(i =>
+    i.status === 'resolved' &&
+    (now - new Date(i.resolvedAt || i.createdAt).getTime()) < thirtyDays
+  );
+
+  const activeCard = document.getElementById('active-incidents-card');
+  if (active.length > 0) {
+    activeCard.style.display = '';
+    document.getElementById('active-incidents-list').innerHTML = active.map(renderIncident).join('');
+  } else {
+    activeCard.style.display = 'none';
+  }
+
+  const resolvedEl = document.getElementById('resolved-incidents-list');
+  if (resolved.length > 0) {
+    resolvedEl.innerHTML = resolved.map(renderIncident).join('');
+  } else {
+    resolvedEl.innerHTML = '<p class="empty-msg">Nenhum incidente nos últimos 30 dias.</p>';
+  }
+}
+
+// Auto-refresh countdown
+let countdownVal = 30;
+let countdownTimer = null;
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  countdownVal = 30;
+  countdownTimer = setInterval(() => {
+    countdownVal--;
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = '(atualiza em ' + countdownVal + 's)';
+    if (countdownVal <= 0) fetchStatus();
+  }, 1000);
+}
+
+async function fetchStatus() {
+  try {
+    const r = await fetch('/api/status');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    render(data);
+    startCountdown();
+  } catch (err) {
+    document.getElementById('overall-title').textContent = 'Erro ao verificar status';
+    document.getElementById('overall-time').textContent = err.message;
+    startCountdown();
+  }
+}
+
+fetchStatus();
+</script>
+</body>
+</html>

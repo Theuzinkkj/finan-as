@@ -164,7 +164,18 @@ app.get('/',          (_req, res) => res.redirect('/landing'));
 app.get('/checkout',  (_req, res) => res.sendFile(fe('checkout.html')));
 app.get('/planos',    (_req, res) => res.sendFile(fe('planos.html')));
 app.get('/login',     (_req, res) => res.sendFile(fe('login.html')));
-app.get('/app',       (_req, res) => res.sendFile(fe('index.html')));
+app.get('/status',    (_req, res) => res.sendFile(fe('status.html')));
+// /app com injeção do billing.js (paywall) ao final do body
+app.get('/app', async (_req, res) => {
+  const fs = require('fs');
+  try {
+    let html = await fs.promises.readFile(fe('index.html'), 'utf8');
+    html = html.replace('</body>', '<script src="/js/billing.js"></script></body>');
+    res.send(html);
+  } catch {
+    res.sendFile(fe('index.html'));
+  }
+});
 
 // /landing com injeção de script para capturar botão "Assinar"
 app.get('/landing', async (_req, res) => {
@@ -177,17 +188,27 @@ app.get('/landing', async (_req, res) => {
           document.querySelectorAll('a,button').forEach(function(el){
             if(el._hooked) return;
             var txt = el.textContent.trim().toLowerCase();
-            // Botões "Assinar / Começar" → /checkout
-            if(txt.includes('assinar')||txt.includes('assine')||txt.includes('começar')||txt.includes('comecar')||txt.includes('assine já')||txt.includes('assinar já')){
-              el._hooked = true;
-              el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();window.location.href='/checkout';},{capture:true});
-              if(el.tagName==='A') el.href='/checkout';
+            var dest = null;
+            // "Assinar / Assine" (sem "grátis") → /checkout  (compra direta Pro)
+            if((txt.includes('assinar')||txt.includes('assine'))&&!txt.includes('grátis')&&!txt.includes('gratis')){
+              dest = '/checkout';
             }
-            // Links "Ver planos / Preços" → /planos
-            if(txt.includes('ver planos')||txt.includes('preços')||txt.includes('planos')){
+            // "Testar / Começar / Criar conta" → /planos  (escolher plano)
+            else if(txt.includes('começar')||txt.includes('comecar')||txt.includes('criar conta')||txt.includes('testar')||txt.includes('experim')){
+              dest = '/planos';
+            }
+            // "Já tenho conta / Entrar / Fazer login" → /login
+            else if(txt==='entrar'||txt.includes('fazer login')||txt.includes('tenho conta')||txt.includes('já tenho')){
+              dest = '/login';
+            }
+            // "Ver planos / Preços" → /planos
+            else if(txt.includes('ver planos')||txt.includes('preços')||txt.includes('ver plano')){
+              dest = '/planos';
+            }
+            if(dest){
               el._hooked = true;
-              el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();window.location.href='/planos';},{capture:true});
-              if(el.tagName==='A') el.href='/planos';
+              el.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();window.location.href=dest;},{capture:true});
+              if(el.tagName==='A') el.href=dest;
             }
           });
         }
@@ -195,12 +216,82 @@ app.get('/landing', async (_req, res) => {
         document.addEventListener('DOMContentLoaded',hookCtaButtons);
         setTimeout(hookCtaButtons,600);
         setTimeout(hookCtaButtons,1800);
+
+        // Corrige link "Status" no footer (bundled handler não redireciona)
+        document.addEventListener('click',function(e){
+          var a=e.target.closest('footer a');
+          if(!a) return;
+          if((a.textContent||'').trim()==='Status'){
+            e.preventDefault();e.stopImmediatePropagation();
+            window.location.href='/status';
+          }
+        },true);
       })();
     </script></head>`);
     res.send(html);
   } catch {
     res.sendFile(fe('landing.html'));
   }
+});
+
+// ── Status público ────────────────────────────────────────────────────────────
+// Verificação real dos serviços com cache de 30 s para não sobrecarregar Supabase.
+
+let _statusCache = null;
+let _statusCacheAt = 0;
+const STATUS_CACHE_TTL = 30_000;
+
+async function checkHealth(url, headers = {}) {
+  try {
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 4_000);
+    const r = await fetch(url, { method: 'HEAD', headers, signal: controller.signal });
+    clearTimeout(tid);
+    return r.status < 500;
+  } catch {
+    return false;
+  }
+}
+
+app.get('/api/status', async (_req, res) => {
+  const now = Date.now();
+  if (_statusCache && now - _statusCacheAt < STATUS_CACHE_TTL) {
+    return res.json(_statusCache);
+  }
+
+  // Verifica serviços em paralelo
+  const [dbOk, authOk] = await Promise.all([
+    checkHealth(`${SUPA_URL}/rest/v1/`, { apikey: SUPA_ANON }),
+    checkHealth(`${SUPA_URL}/auth/v1/health`),
+  ]);
+
+  const components = [
+    { id: 'api',      name: 'API',                 status: 'operational' },
+    { id: 'database', name: 'Banco de Dados',       status: dbOk   ? 'operational' : 'incident' },
+    { id: 'auth',     name: 'Autenticação',         status: authOk ? 'operational' : 'incident' },
+    { id: 'storage',  name: 'Armazenamento',        status: dbOk   ? 'operational' : 'degraded' },
+  ];
+
+  // Lê incidentes do arquivo (editável manualmente)
+  let incidents = [];
+  try {
+    const { promises: fs } = require('fs');
+    const raw = await fs.readFile(path.join(__dirname, 'incidents.json'), 'utf8');
+    incidents = JSON.parse(raw).incidents || [];
+  } catch { /* sem arquivo = sem incidentes */ }
+
+  const hasRealIncident = components.some(c => c.status === 'incident');
+  const hasActiveManual = incidents.some(i => i.status !== 'resolved');
+  const hasDegraded     = components.some(c => c.status === 'degraded');
+
+  const overall = (hasRealIncident || hasActiveManual) ? 'incident'
+                : hasDegraded                          ? 'degraded'
+                : 'operational';
+
+  _statusCache = { overall, components, incidents, checkedAt: new Date().toISOString() };
+  _statusCacheAt = now;
+
+  res.json(_statusCache);
 });
 
 // ── Arquivos estáticos ────────────────────────────────────────────────────────
@@ -1014,8 +1105,19 @@ const billingLimiter = makeRateLimiter(60_000, 5, 'Muitas tentativas. Tente nova
 app.get('/api/billing/config', (_req, res) => {
   res.json({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
-    planName:       process.env.STRIPE_PLAN_NAME  || 'Atlas Pro',
-    planPrice:      process.env.STRIPE_PLAN_PRICE || 'R$ 29,90',
+    plans: {
+      monthly: {
+        name:  process.env.STRIPE_PLAN_NAME        || 'Atlas Pro',
+        price: process.env.STRIPE_PLAN_PRICE       || 'R$ 19,90',
+      },
+      annual: {
+        name:         process.env.STRIPE_ANNUAL_PLAN_NAME  || 'Atlas Premium',
+        price:        process.env.STRIPE_ANNUAL_PLAN_PRICE || 'R$ 202,80',
+        monthlyPrice: 'R$ 16,90',
+      },
+    },
+    planName:  process.env.STRIPE_PLAN_NAME  || 'Atlas Pro',
+    planPrice: process.env.STRIPE_PLAN_PRICE || 'R$ 19,90',
   });
 });
 
@@ -1025,19 +1127,24 @@ app.post('/api/billing/prepare-checkout', billingLimiter, async (req, res, next)
     if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados. Adicione STRIPE_SECRET_KEY no .env.' });
     if (!process.env.STRIPE_PRICE_ID) return res.status(503).json({ message: 'Plano não configurado. Adicione STRIPE_PRICE_ID no .env.' });
 
-    const { name, email, cpf, phone } = req.body || {};
+    const { name, email, cpf, phone, planType = 'monthly' } = req.body || {};
     if (!name || !email) return res.status(400).json({ message: 'Nome e e-mail são obrigatórios.' });
+
+    const priceId = planType === 'annual'
+      ? (process.env.STRIPE_ANNUAL_PRICE_ID || process.env.STRIPE_PRICE_ID)
+      : process.env.STRIPE_PRICE_ID;
+    if (!priceId) return res.status(503).json({ message: 'Plano não configurado. Adicione STRIPE_PRICE_ID no .env.' });
 
     const customer = await stripe.customers.create({
       name,
       email,
       phone: phone || undefined,
-      metadata: { cpf: cpf || '', source: 'atlas-checkout' },
+      metadata: { cpf: cpf || '', source: 'atlas-checkout', planType },
     });
 
     const subscription = await stripe.subscriptions.create({
       customer:         customer.id,
-      items:            [{ price: process.env.STRIPE_PRICE_ID }],
+      items:            [{ price: priceId }],
       payment_behavior: 'default_incomplete',
       payment_settings: { save_default_payment_method: 'on_subscription' },
       expand:           ['latest_invoice.payment_intent'],
@@ -1046,11 +1153,19 @@ app.post('/api/billing/prepare-checkout', billingLimiter, async (req, res, next)
     const pi = subscription.latest_invoice?.payment_intent;
     if (!pi?.client_secret) return res.status(502).json({ message: 'Erro ao criar assinatura no Stripe.' });
 
+    const planPrice = planType === 'annual'
+      ? (process.env.STRIPE_ANNUAL_PLAN_PRICE || 'R$ 202,80')
+      : (process.env.STRIPE_PLAN_PRICE        || 'R$ 19,90');
+    const planName = planType === 'annual'
+      ? (process.env.STRIPE_ANNUAL_PLAN_NAME || 'Atlas Premium')
+      : (process.env.STRIPE_PLAN_NAME        || 'Atlas Pro');
+
     res.json({
       clientSecret:   pi.client_secret,
       customerId:     customer.id,
       subscriptionId: subscription.id,
-      planPrice:      process.env.STRIPE_PLAN_PRICE || 'R$ 29,90',
+      planPrice,
+      planName,
     });
   } catch (err) { next(err); }
 });

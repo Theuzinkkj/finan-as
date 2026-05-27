@@ -111,7 +111,64 @@ function closeProfilePanel() {
 function openSettingsModal() {
   const accountSection = document.getElementById('auth-user-bar');
   if (accountSection) accountSection.classList.toggle('hidden', Demo.active);
+
+  // Injeta botão "Gerenciar assinatura" uma única vez (não aparece no modo demo)
+  if (!Demo.active && !document.getElementById('btn-manage-subscription')) {
+    const resetBtn = document.getElementById('btn-reset-password');
+    if (resetBtn) {
+      const btn = document.createElement('button');
+      btn.id        = 'btn-manage-subscription';
+      btn.type      = 'button';
+      btn.className = resetBtn.className;
+      btn.innerHTML = '<i class="bi bi-credit-card-fill"></i><span>Gerenciar assinatura</span>';
+      btn.addEventListener('click', manageSubscription);
+      resetBtn.parentNode.insertBefore(btn, resetBtn);
+    }
+  }
+
   openModal('modal-settings');
+}
+
+async function manageSubscription() {
+  const btn = document.getElementById('btn-manage-subscription');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite"></i><span>Abrindo portal…</span>'; }
+  try {
+    const data = await API.req('POST', '/api/billing/portal');
+    if (data?.url) window.location.href = data.url;
+    else toast('Erro ao abrir portal de assinatura.', 'err');
+  } catch (err) {
+    const msg = err.message || '';
+    if (msg.includes('Nenhuma assinatura')) {
+      toast('Você está no plano gratuito. Assine o Pro para gerenciar aqui.', 'err');
+      window.open('/planos', '_blank');
+    } else {
+      toast('Erro: ' + msg, 'err');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-credit-card-fill"></i><span>Gerenciar assinatura</span>'; }
+  }
+}
+
+async function exportUserData() {
+  if (Demo.active) { toast('Indisponível no modo demo.', 'err'); return; }
+  const btn = document.getElementById('btn-export-data');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/user/export', { method: 'GET', credentials: 'include' });
+    if (!res.ok) throw new Error('Erro ao exportar dados.');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'atlas-meus-dados.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Dados exportados com sucesso.');
+  } catch (err) {
+    toast('Erro ao exportar: ' + err.message, 'err');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function resetPassword() {

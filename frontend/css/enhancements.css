@@ -2,6 +2,56 @@
    ENHANCEMENTS — PWA, CSV, Tour, Badges, Confetti
    ============================================= */
 
+/* ─── LGPD consent banner ────────────────────────────────────── */
+#lgpd-consent-banner {
+  position:   fixed;
+  bottom:     0;
+  left:       0;
+  right:      0;
+  z-index:    9998;
+  background: var(--surface, #1e1e2e);
+  border-top: 1px solid var(--border, rgba(255,255,255,.1));
+  box-shadow: 0 -4px 24px rgba(0,0,0,.35);
+  padding:    14px 20px;
+  transition: transform .3s ease, opacity .3s ease;
+}
+#lgpd-consent-banner.lgpd-consent-hiding {
+  transform: translateY(100%);
+  opacity:   0;
+}
+.lgpd-consent-inner {
+  max-width:      900px;
+  margin:         0 auto;
+  display:        flex;
+  align-items:    center;
+  gap:            16px;
+  flex-wrap:      wrap;
+}
+.lgpd-consent-text {
+  flex:       1;
+  font-size:  .82rem;
+  color:      var(--text-2, #a0a0b0);
+  line-height: 1.5;
+}
+.lgpd-consent-text strong { color: var(--text, #e0e0f0); }
+.lgpd-consent-text a      { color: var(--accent, #7c3aed); text-decoration: underline; }
+.lgpd-consent-btn {
+  flex-shrink:     0;
+  padding:         7px 18px;
+  border-radius:   8px;
+  border:          1px solid var(--accent, #7c3aed);
+  background:      transparent;
+  color:           var(--accent, #7c3aed);
+  font-size:       .83rem;
+  font-weight:     600;
+  cursor:          pointer;
+  transition:      background .15s, color .15s;
+}
+.lgpd-consent-btn:hover {
+  background: var(--accent, #7c3aed);
+  color:      #fff;
+}
+
 /* ─── Demo banner ────────────────────────────────────────────── */
 @keyframes demo-shimmer {
   0%   { background-position: 0% 50%; }
