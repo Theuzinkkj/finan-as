@@ -12,7 +12,12 @@ require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 let stripe = null;
 if (process.env.STRIPE_SECRET_KEY) {
-  try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); } catch { /* stripe não instalado */ }
+  try {
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
+      timeout:           20_000,
+      maxNetworkRetries: 2,
+    });
+  } catch { /* stripe não instalado */ }
 }
 
 const app          = express();
@@ -508,27 +513,42 @@ function supaHeaders(token) {
   };
 }
 
-// Faz fetch ao proxy externo com tratamento de erro claro.
-async function proxyFetch(url, opts) {
-  let r;
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 10_000);
-    r = await fetch(url, { ...opts, signal: controller.signal });
-    clearTimeout(tid);
-  } catch (err) {
-    // Erro de rede / DNS / timeout — Supabase ou Groq inacessível
-    const isTimeout = err.name === 'AbortError';
-    const e = new Error(isTimeout ? 'Tempo limite excedido. Tente novamente.' : 'Serviço externo inacessível. Tente novamente.');
-    e.status = 502;
-    throw e;
+// Faz fetch ao proxy externo com timeout configurável e retry automático.
+// retries: número de tentativas extras (0 = sem retry). Só recomendado para
+// APIs idempotentes (Groq, Stripe reads). Nunca use retry em writes Supabase.
+async function proxyFetch(url, opts, { timeout = 10_000, retries = 0 } = {}) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) {
+      // Backoff exponencial: 600ms, 1.2s, 2.4s...
+      await new Promise(r => setTimeout(r, 600 * 2 ** (attempt - 1)));
+    }
+
+    let r;
+    try {
+      const controller = new AbortController();
+      const tid = setTimeout(() => controller.abort(), timeout);
+      try {
+        r = await fetch(url, { ...opts, signal: controller.signal });
+      } finally {
+        clearTimeout(tid);
+      }
+    } catch (err) {
+      if (attempt < retries) continue;
+      const isTimeout = err.name === 'AbortError';
+      const e = new Error(isTimeout ? 'Tempo limite excedido. Tente novamente.' : 'Serviço externo inacessível. Tente novamente.');
+      e.status = 502;
+      throw e;
+    }
+
+    const text = await r.text().catch(() => '');
+    let data;
+    try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+    // Retry em rate limit ou indisponibilidade temporária
+    if ((r.status === 429 || r.status === 503) && attempt < retries) continue;
+
+    return { ok: r.ok, status: r.status, data };
   }
-
-  const text = await r.text().catch(() => '');
-  let data;
-  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
-
-  return { ok: r.ok, status: r.status, data };
 }
 
 // Extrai a mensagem de erro do payload Supabase.
@@ -1466,7 +1486,8 @@ app.post('/api/ai/chat', aiLimiter, requireAuth, validate(schemas.aiChat), async
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
         body:    JSON.stringify(req.body),
-      }
+      },
+      { timeout: 30_000, retries: 2 }
     );
 
     if (!ok) return res.status(status).json({ message: data?.error?.message || 'Erro na IA.' });
