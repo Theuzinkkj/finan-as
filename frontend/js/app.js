@@ -481,11 +481,17 @@ function bindEvents() {
   // Emoji picker
   (function setupEmojiPicker() {
     const EMOJIS = [
-      '🏷ï¸','ðŸ•','ðŸ”','ðŸ£','ðŸº','â˜•','ðŸ›’','ðŸš—','ðŸšŒ','âœˆï¸','ðŸ ','ðŸ¥','ðŸŽ“',
-      'ðŸ“š','ðŸ’Š','ðŸ’¡','ðŸ”§','ðŸ’»','ðŸ“±','ðŸŽ®','ðŸŽµ','ðŸŽ¬','ðŸ‹ï¸','âš½','ðŸŠ','ðŸ¶',
-      'ðŸ±','ðŸŒ±','ðŸŒ','â™»ï¸','💰','ðŸ’³','💸','ðŸ¦','ðŸŽ','ðŸŽ‰','â¤ï¸','ðŸ‘”','ðŸ‘—',
-      'ðŸ’„','ðŸ§´','ðŸ›','ðŸ§¹','âš¡','ðŸ’§','ðŸ”‘','ðŸ“¦','ðŸš€','ðŸŒŸ','ðŸ””','ðŸ“…',
-    ];
+      '🏷','🕕','🔴','🍣','🎺',
+      '☕', '🛒','🚗','🚌','✈',
+      '🏠','🏥','🎓','📚','💊',
+      '💡','🔧','💻','📱','🎮',
+      '🎵','🎬','🏋','⚽', '🏊',
+      '🐶','🐱','🌱','🌍','♻',
+      '💰','💳','💸','🏦','🎁',
+      '🎉','❤', '💔','💗','💄',
+      '🧴','🛑','🧹','⚡', '💧',
+      '🔒','📦','🚀','🌟','🔔','📅',
+    ]
     const btn   = document.getElementById('btn-cat-icon');
     const panel = document.getElementById('emoji-picker-panel');
 
@@ -761,7 +767,7 @@ function bindEvents() {
     if (e.target === document.getElementById('profile-panel-overlay')) closeProfilePanel();
   });
 
-  // BotÃ£o engrenagem no topo do painel â†’ configuraÃ§Ãµes
+  // BotÃ£o engrenagem no topo do painel â†' configuraÃ§Ãµes
   document.getElementById('btn-profile-to-settings').addEventListener('click', () => {
     closeProfilePanel();
     openSettingsModal();
@@ -875,11 +881,11 @@ function bindEvents() {
   document.getElementById('btn-reset-password').addEventListener('click', resetPassword);
 
   // Exportar dados (LGPD art. 18 — portabilidade)
-  document.getElementById(‘btn-export-data’).addEventListener(‘click’, exportUserData);
+  document.getElementById('btn-export-data').addEventListener('click', exportUserData);
 
-  // Excluir conta â†’ abre confirmaÃ§Ã£o
-  document.getElementById(‘btn-delete-account’).addEventListener(‘click’, () => {
-    openModal(‘modal-confirm-delete’);
+  // Excluir conta â†' abre confirmaÃ§Ã£o
+  document.getElementById('btn-delete-account').addEventListener('click', () => {
+    openModal('modal-confirm-delete');
   });
 
   // Confirmar exclusÃ£o
