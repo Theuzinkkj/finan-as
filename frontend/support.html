@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Suporte — Atlas</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117; --bg-card: rgba(20,24,32,0.9); --border: rgba(255,255,255,0.08);
+      --border-h: rgba(255,255,255,0.16); --purple: #6366f1; --purple-l: #818cf8;
+      --green: #10b981; --yellow: #f59e0b; --red: #ef4444;
+      --text: #f1f5f9; --text-2: #94a3b8; --text-3: #8896aa; --font: 'Inter', sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font); background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 0 16px 80px; line-height: 1.7;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 15% 20%, rgba(99,102,241,.22) 0%, transparent 65%),
+        radial-gradient(ellipse 55% 45% at 85% 80%, rgba(16,185,129,.10) 0%, transparent 65%);
+    }
+    .page { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding-top: 48px; }
+
+    /* nav */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px; color: var(--text-3);
+      text-decoration: none; font-size: .84rem; font-weight: 500; margin-bottom: 32px;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--purple); }
+
+    /* header */
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .logo-text { font-size: 1.3rem; font-weight: 800; letter-spacing: -.01em; }
+    .page-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.28);
+      border-radius: 20px; padding: 4px 12px; font-size: .75rem; font-weight: 600;
+      color: var(--purple-l); margin-bottom: 12px;
+    }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -.02em; }
+    .subtitle { font-size: 1rem; color: var(--text-2); margin-bottom: 40px; }
+
+    /* search */
+    .search-wrap {
+      position: relative; margin-bottom: 44px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--text-3); pointer-events: none;
+    }
+    #search {
+      width: 100%; padding: 14px 16px 14px 44px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; color: var(--text); font-family: var(--font);
+      font-size: .95rem; outline: none; transition: border-color .2s;
+      backdrop-filter: blur(12px);
+    }
+    #search::placeholder { color: var(--text-3); }
+    #search:focus { border-color: rgba(99,102,241,.5); }
+
+    /* section title */
+    .section-label {
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--text-3); margin-bottom: 16px;
+    }
+
+    /* FAQ accordion */
+    .faq-list { margin-bottom: 44px; }
+    .faq-item {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 8px; overflow: hidden;
+      backdrop-filter: blur(12px); transition: border-color .2s;
+    }
+    .faq-item:hover { border-color: var(--border-h); }
+    .faq-item.hidden { display: none; }
+    .faq-q {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; padding: 18px 20px; cursor: pointer;
+      font-size: .9rem; font-weight: 600; color: var(--text);
+      list-style: none; user-select: none;
+    }
+    .faq-q::marker, .faq-q::-webkit-details-marker { display: none; }
+    .faq-icon {
+      flex-shrink: 0; width: 20px; height: 20px;
+      border-radius: 50%; background: rgba(99,102,241,.12);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, transform .25s;
+    }
+    details[open] .faq-icon { background: rgba(99,102,241,.25); transform: rotate(45deg); }
+    .faq-a {
+      padding: 0 20px 18px; font-size: .875rem; color: var(--text-2); line-height: 1.65;
+    }
+    .faq-a a { color: var(--purple-l); text-decoration: none; }
+    .faq-a a:hover { text-decoration: underline; }
+
+    /* contact cards grid */
+    .contact-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px; margin-bottom: 44px;
+    }
+    .contact-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px 20px; text-decoration: none;
+      display: flex; flex-direction: column; gap: 10px;
+      backdrop-filter: blur(12px); transition: border-color .2s, transform .2s;
+    }
+    .contact-card:hover { border-color: var(--border-h); transform: translateY(-2px); }
+    .contact-icon {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .contact-icon.email  { background: rgba(99,102,241,.15); }
+    .contact-icon.chat   { background: rgba(16,185,129,.15); }
+    .contact-icon.status { background: rgba(245,158,11,.15); }
+    .contact-title { font-size: .9rem; font-weight: 700; color: var(--text); }
+    .contact-desc  { font-size: .8rem; color: var(--text-2); line-height: 1.5; }
+    .contact-action {
+      font-size: .78rem; font-weight: 600; margin-top: 4px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .contact-action.purple { color: var(--purple-l); }
+    .contact-action.green  { color: var(--green); }
+    .contact-action.yellow { color: var(--yellow); }
+
+    /* status banner */
+    .status-banner {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(16,185,129,.08); border: 1px solid rgba(16,185,129,.22);
+      border-radius: 12px; padding: 14px 18px; margin-bottom: 44px;
+      font-size: .875rem;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+      flex-shrink: 0; box-shadow: 0 0 0 3px rgba(16,185,129,.25);
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(16,185,129,.25); }
+      50%       { box-shadow: 0 0 0 6px rgba(16,185,129,.10); }
+    }
+    .status-text { color: var(--text-2); }
+    .status-text strong { color: var(--green); }
+    .status-link { margin-left: auto; font-size: .8rem; color: var(--text-3); text-decoration: none; flex-shrink: 0; }
+    .status-link:hover { color: var(--green); }
+
+    /* no results */
+    #no-results {
+      display: none; text-align: center; padding: 40px 0;
+      color: var(--text-3); font-size: .9rem;
+    }
+    #no-results span { display: block; font-size: 2rem; margin-bottom: 8px; }
+
+    /* footer */
+    .footer-links {
+      text-align: center; margin-top: 40px; font-size: .8rem; color: var(--text-3);
+    }
+    .footer-links a { color: var(--text-3); margin: 0 8px; text-decoration: none; }
+    .footer-links a:hover { color: var(--purple); }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 1.5rem; }
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <a class="back-link" href="index.html">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Voltar ao app
+    </a>
+
+    <div class="logo-row">
+      <span>
+        <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a5b4fc"/><stop offset="50%" stop-color="#6366f1"/><stop offset="100%" stop-color="#3730a3"/></linearGradient></defs>
+          <path d="M16 2 L29 12 L16 30 L3 12 Z" fill="url(#lg)"/>
+        </svg>
+      </span>
+      <span class="logo-text">Atlas</span>
+    </div>
+
+    <div class="page-badge">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      Central de Suporte
+    </div>
+
+    <h1>Como podemos ajudar?</h1>
+    <p class="subtitle">Encontre respostas rápidas ou entre em contato com nossa equipe.</p>
+
+    <!-- search -->
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" type="text" placeholder="Pesquisar dúvidas…" autocomplete="off">
+    </div>
+
+    <!-- status -->
+    <div class="status-banner">
+      <div class="status-dot"></div>
+      <span class="status-text"><strong>Todos os sistemas operacionais</strong> — sem incidentes em andamento.</span>
+      <a class="status-link" href="status.html">Ver status →</a>
+    </div>
+
+    <!-- faq -->
+    <p class="section-label">Perguntas frequentes</p>
+    <div class="faq-list" id="faq-list">
+
+      <details class="faq-item" data-tags="conta senha login acesso entrar">
+        <summary class="faq-q">
+          Esqueci minha senha. Como recupero o acesso?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Na tela de login, clique em <strong>"Esqueceu a senha?"</strong>. Você receberá um e-mail com um link para criar uma nova senha. Verifique também a pasta de spam. O link é válido por 30 minutos.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="plano pro upgrade assinar pagamento">
+        <summary class="faq-q">
+          Como assino o plano Pro?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Acesse <strong>Configurações → Plano</strong> no app, ou clique em "Ver planos" no menu. Você pode assinar via cartão de crédito ou PIX. Assim que o pagamento for confirmado, os recursos Pro são liberados imediatamente.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="plano pro cancelar cancelamento cobrança reembolso">
+        <summary class="faq-q">
+          Posso cancelar o plano Pro a qualquer momento?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Sim. Cancele em <strong>Configurações → Plano → Cancelar assinatura</strong>. O acesso Pro permanece ativo até o fim do período já pago. Não há multa por cancelamento.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="dados exportar csv excel backup">
+        <summary class="faq-q">
+          Como exporto meus dados financeiros?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Na tela principal, toque no ícone de menu (⋯) e selecione <strong>"Exportar"</strong>. Você pode exportar em CSV (compatível com Excel e Google Sheets) ou PDF. Usuários do plano Gratuito exportam o mês atual; o plano Pro permite exportar qualquer intervalo de datas.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="ia inteligência artificial chat análise assistente">
+        <summary class="faq-q">
+          O assistente de IA tem acesso a todas as minhas transações?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          O assistente recebe apenas um <strong>resumo agregado</strong> das suas finanças do mês (totais por categoria, saldo geral), nunca os nomes individuais das transações nem dados pessoais. Leia nossa <a href="privacidade.html">Política de Privacidade</a> para mais detalhes.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="app atualizar versão android ios web">
+        <summary class="faq-q">
+          Como atualizo o Atlas para a versão mais recente?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          O Atlas é um aplicativo web — as atualizações chegam automaticamente quando você abre o app. Se algo parecer desatualizado, force a recarga da página (<strong>Ctrl + Shift + R</strong> no desktop, ou "Limpar dados do site" no celular).
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="excluir conta deletar dados privacidade">
+        <summary class="faq-q">
+          Como excluo minha conta e todos os meus dados?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Acesse <strong>Configurações → Conta → Excluir conta</strong>. Todos os seus dados são removidos permanentemente dos nossos servidores em até 30 dias. Exporte seus dados antes, pois a exclusão é irreversível.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="modo demo teste gratuito sem cadastro">
+        <summary class="faq-q">
+          O que é o modo demo?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          O modo demo permite explorar o Atlas sem criar uma conta. Os dados ficam salvos apenas no seu dispositivo e são apagados ao sair. É ótimo para conhecer o app antes de se cadastrar.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="notificação lembrete alerta push">
+        <summary class="faq-q">
+          Posso receber lembretes para lançar transações?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Sim. Em <strong>Configurações → Notificações</strong>, ative os lembretes diários ou semanais. Você define o horário preferido. Os lembretes precisam de permissão de notificação no navegador.
+        </div>
+      </details>
+
+      <details class="faq-item" data-tags="bug erro problema falha não funciona">
+        <summary class="faq-q">
+          Encontrei um bug. Como reporto?
+          <span class="faq-icon">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </span>
+        </summary>
+        <div class="faq-a">
+          Envie um e-mail para <a href="mailto:suporte@atlasfinance.app">suporte@atlasfinance.app</a> descrevendo o que aconteceu, em qual dispositivo/navegador e, se possível, um print da tela. Quanto mais detalhes, mais rápido conseguimos resolver.
+        </div>
+      </details>
+
+    </div>
+
+    <div id="no-results">
+      <span>🔍</span>
+      Nenhuma dúvida encontrada para "<strong id="no-results-term"></strong>". Tente outros termos ou entre em contato.
+    </div>
+
+    <!-- contact -->
+    <p class="section-label">Falar com a equipe</p>
+    <div class="contact-grid">
+
+      <a class="contact-card" href="mailto:suporte@atlasfinance.app">
+        <div class="contact-icon email">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </div>
+        <div class="contact-title">E-mail</div>
+        <div class="contact-desc">Resposta em até 24 horas nos dias úteis.</div>
+        <span class="contact-action purple">suporte@atlasfinance.app →</span>
+      </a>
+
+      <a class="contact-card" href="index.html#chat">
+        <div class="contact-icon chat">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="contact-title">Chat no app</div>
+        <div class="contact-desc">Abra o assistente e pergunte qualquer coisa sobre o Atlas.</div>
+        <span class="contact-action green">Abrir chat →</span>
+      </a>
+
+      <a class="contact-card" href="status.html">
+        <div class="contact-icon status">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="contact-title">Status do sistema</div>
+        <div class="contact-desc">Verifique incidentes, manutenções e disponibilidade.</div>
+        <span class="contact-action yellow">Ver status →</span>
+      </a>
+
+    </div>
+
+    <div class="footer-links">
+      <a href="termos.html">Termos de Uso</a>
+      <a href="privacidade.html">Privacidade</a>
+      <a href="status.html">Status</a>
+      <a href="index.html">Voltar ao Atlas</a>
+    </div>
+
+  </div>
+
+  <script>
+    const input = document.getElementById('search');
+    const items = document.querySelectorAll('.faq-item');
+    const noResults = document.getElementById('no-results');
+    const noResultsTerm = document.getElementById('no-results-term');
+
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let visible = 0;
+
+      items.forEach(item => {
+        const text = (item.textContent + ' ' + (item.dataset.tags || '')).toLowerCase();
+        const match = !q || text.includes(q);
+        item.classList.toggle('hidden', !match);
+        if (match) visible++;
+      });
+
+      const empty = q && visible === 0;
+      noResults.style.display = empty ? 'block' : 'none';
+      noResultsTerm.textContent = input.value.trim();
+    });
+  </script>
+</body>
+</html>

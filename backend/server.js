@@ -161,10 +161,13 @@ app.use((_req, res, next) => {
 const fe = f => path.join(__dirname, '..', 'frontend', f);
 
 app.get('/',          (_req, res) => res.redirect('/landing'));
-app.get('/checkout',  (_req, res) => res.sendFile(fe('checkout.html')));
-app.get('/planos',    (_req, res) => res.sendFile(fe('planos.html')));
-app.get('/login',     (_req, res) => res.sendFile(fe('login.html')));
-app.get('/status',    (_req, res) => res.sendFile(fe('status.html')));
+app.get('/checkout',    (_req, res) => res.sendFile(fe('checkout.html')));
+app.get('/planos',      (_req, res) => res.sendFile(fe('planos.html')));
+app.get('/login',       (_req, res) => res.sendFile(fe('login.html')));
+app.get('/status',      (_req, res) => res.sendFile(fe('status.html')));
+app.get('/termos',      (_req, res) => res.sendFile(fe('termos.html')));
+app.get('/privacidade', (_req, res) => res.sendFile(fe('privacidade.html')));
+app.get('/support',    (_req, res) => res.sendFile(fe('support.html')));
 // /app com injeção do billing.js (paywall) ao final do body
 app.get('/app', async (_req, res) => {
   const fs = require('fs');
@@ -1417,7 +1420,7 @@ app.post('/api/notify/budget-alert', notifLimiter, requireAuth, async (req, res,
         <div style="color:#94a3b8;font-size:.85rem;margin-bottom:24px">
           Ainda restam <strong style="color:#f1f5f9">${fmtBRL(limit - spent)}</strong> no orçamento. Monitore seus gastos para não ultrapassar o limite.
         </div>
-        <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=dashboard"
+        <a href="${process.env.APP_URL || 'https://atlasfinance.page'}/app?tab=dashboard"
            style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
           Ver meus gastos →
         </a>
@@ -1477,7 +1480,7 @@ app.post('/api/notify/monthly-summary', notifLimiter, requireAuth, async (req, r
             <div style="font-weight:600">${top_category}</div>
           </div>` : ''}
         </div>
-        <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=analysis"
+        <a href="${process.env.APP_URL || 'https://atlasfinance.page'}/app?tab=analysis"
            style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
           Ver análise completa →
         </a>
@@ -1561,7 +1564,7 @@ async function sendMonthlySummariesToAllUsers() {
               </div>
             </div>
           </div>
-          <a href="${process.env.APP_URL || 'https://app.mathsouza.online'}/app?tab=analysis"
+          <a href="${process.env.APP_URL || 'https://atlasfinance.page'}/app?tab=analysis"
              style="display:inline-block;background:#7c3aed;color:#fff;text-decoration:none;padding:10px 22px;border-radius:10px;font-weight:600;font-size:.9rem">
             Ver análise completa →
           </a>
