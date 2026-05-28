@@ -355,8 +355,7 @@ app.get('/landing', async (_req, res) => {
           btn.addEventListener('mouseleave',function(){this.style.background='rgba(255,255,255,0.07)';this.style.color='#cbd5e1';});
           btn.addEventListener('click',function(e){
             e.preventDefault();e.stopPropagation();
-            localStorage.setItem('financeai_demo','1');
-            window.location.href='/app';
+            window.location.href='/app?demo=1';
           },{capture:true});
           primaryCta.insertAdjacentElement('afterend', btn);
         }
