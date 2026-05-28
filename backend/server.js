@@ -148,7 +148,8 @@ function validate(schema) {
   return (req, res, next) => {
     const result = schema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: result.error.errors[0].message });
+      const message = result.error.issues?.[0]?.message ?? 'Dados inválidos.';
+      return res.status(400).json({ message });
     }
     req.body = result.data;
     next();
@@ -332,6 +333,36 @@ app.get('/landing', async (_req, res) => {
         document.addEventListener('DOMContentLoaded',hookCtaButtons);
         setTimeout(hookCtaButtons,600);
         setTimeout(hookCtaButtons,1800);
+
+        // Injeta botão "Ver demo" próximo ao CTA principal
+        function injectDemoButton(){
+          if(document.getElementById('__atlas_demo_btn')) return;
+          var primaryCta = null;
+          document.querySelectorAll('a,button').forEach(function(el){
+            if(primaryCta) return;
+            var txt = el.textContent.trim().toLowerCase();
+            if(txt.includes('começar')||txt.includes('comecar')||txt.includes('criar conta')||txt.includes('testar')||txt.includes('assinar')){
+              primaryCta = el;
+            }
+          });
+          if(!primaryCta) return;
+          var btn = document.createElement('a');
+          btn.id = '__atlas_demo_btn';
+          btn.href = '#';
+          btn.innerHTML = '&#9654; Ver demo interativo';
+          btn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:#cbd5e1;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .2s,color .2s;margin-left:12px;vertical-align:middle;';
+          btn.addEventListener('mouseenter',function(){this.style.background='rgba(255,255,255,0.13)';this.style.color='#f1f5f9';});
+          btn.addEventListener('mouseleave',function(){this.style.background='rgba(255,255,255,0.07)';this.style.color='#cbd5e1';});
+          btn.addEventListener('click',function(e){
+            e.preventDefault();e.stopPropagation();
+            localStorage.setItem('financeai_demo','1');
+            window.location.href='/app';
+          },{capture:true});
+          primaryCta.insertAdjacentElement('afterend', btn);
+        }
+        setTimeout(injectDemoButton,900);
+        setTimeout(injectDemoButton,1800);
+        setTimeout(injectDemoButton,3500);
 
         // Corrige link "Status" no footer (bundled handler não redireciona)
         document.addEventListener('click',function(e){
