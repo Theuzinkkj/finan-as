@@ -644,14 +644,14 @@ app.post('/api/auth/signup', authLimiter, validate(schemas.signup), async (req, 
       html:    onboardingEmailHtml(name),
     }).catch(() => {});
 
-    if (data?.user && !data.session && !data.access_token) {
+    const token   = data?.session?.access_token || data?.access_token;
+    const refresh = data?.session?.refresh_token || data?.refresh_token;
+
+    if (!token) {
       return res.status(200).json({ ok: true, confirmEmail: true });
     }
 
-    const token   = data?.session?.access_token || data?.access_token;
-    const refresh = data?.session?.refresh_token || data?.refresh_token;
-    if (token) setSessionCookies(res, token, refresh);
-
+    setSessionCookies(res, token, refresh);
     res.status(200).json({ ok: true });
   } catch (err) { next(err); }
 });
