@@ -10,7 +10,7 @@
   // ── Features que exigem Pro ──────────────────────────────────────────────────
 
   // Abas bloqueadas para free
-  const PRO_TABS = new Set(['investments']);
+  const PRO_TABS = new Set(['investments', 'analysis']);
 
   // Botões bloqueados para free (IDs do DOM)
   const PRO_BTN_IDS = new Set([
@@ -22,6 +22,7 @@
   // Info exibida no modal por feature
   const FEATURE_INFO = {
     investments:              { name: 'Investimentos',          desc: 'Acompanhe carteira, rentabilidade e cotações de ações em tempo real.' },
+    analysis:                 { name: 'Análise IA',             desc: 'Obtenha análises inteligentes dos seus gastos, padrões financeiros e projeções personalizadas com IA.' },
     'btn-chat':               { name: 'IA Assistente',          desc: 'Obtenha insights financeiros personalizados com inteligência artificial.' },
     'btn-chat-inline':        { name: 'IA Assistente',          desc: 'Obtenha insights financeiros personalizados com inteligência artificial.' },
     'btn-export-excel':       { name: 'Exportação Excel / CSV', desc: 'Exporte todas as suas transações para Excel ou CSV.' },
@@ -254,14 +255,24 @@
   function addProChips() {
     if (isPro()) return;
 
-    // Aba investments no nav desktop
-    document.querySelectorAll('.nav-tab[data-tab="investments"]').forEach(el => {
-      if (!el.querySelector('.pro-chip')) {
-        el.insertAdjacentHTML('beforeend', '<span class="pro-chip"><i class="bi bi-gem"></i>Pro</span>');
+    // Abas Pro no nav desktop
+    ['investments', 'analysis'].forEach(tab => {
+      document.querySelectorAll(`.nav-tab[data-tab="${tab}"]`).forEach(el => {
+        if (!el.querySelector('.pro-chip')) {
+          el.insertAdjacentHTML('beforeend', '<span class="pro-chip"><i class="bi bi-gem"></i>Pro</span>');
+        }
+      });
+    });
+
+    // Mobile nav tabs Pro
+    ['mobile-nav-tab-investments', 'mobile-nav-tab-analysis'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.querySelector('.pro-chip')) {
+        el.insertAdjacentHTML('beforeend', '<span class="pro-chip"><i class="bi bi-gem"></i></span>');
       }
     });
 
-    // Botão invest mobile
+    // FAB option "Aporte" (investimentos mobile)
     const mobInvest = document.getElementById('mob-opt-invest');
     if (mobInvest && !mobInvest.querySelector('.pro-chip')) {
       mobInvest.insertAdjacentHTML('beforeend', '<span class="pro-chip"><i class="bi bi-gem"></i></span>');
