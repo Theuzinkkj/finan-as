@@ -277,8 +277,8 @@ function bindAuthEvents() {
         if (isSignup) {
           const result = await Auth.signUp(email, password);
           if (result.confirmEmail) {
-            showResendConfirmation(email);
             setAuthMode('signin');
+            showResendConfirmation(email);
             return;
           }
         } else {
