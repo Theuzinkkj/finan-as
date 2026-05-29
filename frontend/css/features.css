@@ -74,6 +74,16 @@
   border-color:  rgba(255,90,106,.35);
   color:         var(--coral, #ff5a6a);
 }
+.tx-detail-action-paid:hover {
+  background:    rgba(20,195,142,.15);
+  border-color:  rgba(20,195,142,.35);
+  color:         var(--emerald, #14c38e);
+}
+.tx-detail-action-paid-active {
+  background:    rgba(20,195,142,.18) !important;
+  border-color:  rgba(20,195,142,.5)  !important;
+  color:         var(--emerald, #14c38e) !important;
+}
 .tx-detail-close-btn {
   width:         30px;
   height:        30px;

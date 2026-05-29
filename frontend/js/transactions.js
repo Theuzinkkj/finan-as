@@ -296,7 +296,11 @@ function openMobTxSheet(id) {
     <div style="display:flex;gap:8px;margin-top:18px;">
       <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-pencil"></i> Editar</button>
       <button onclick="closeMobTxSheet();deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-trash"></i> Excluir</button>
-    </div>`;
+    </div>
+    ${tx.type === 'despesa' ? `
+    <button onclick="togglePaid('${tx.id}')" style="width:100%;margin-top:8px;padding:12px;background:${tx.paid ? 'rgba(20,195,142,.15)' : 'var(--surface)'};color:${tx.paid ? 'var(--emerald)' : 'var(--text)'};border:1px solid ${tx.paid ? 'rgba(20,195,142,.4)' : 'var(--border)'};border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;">
+      <i class="bi bi-${tx.paid ? 'check-circle-fill' : 'check-circle'}"></i> ${tx.paid ? 'Pago ✓ — Desmarcar' : 'Marcar como pago'}
+    </button>` : ''}`;
 
   document.getElementById('mob-tx-overlay').classList.add('open');
   document.getElementById('mob-tx-sheet').classList.add('open');
@@ -305,6 +309,40 @@ function openMobTxSheet(id) {
 function closeMobTxSheet() {
   document.getElementById('mob-tx-overlay')?.classList.remove('open');
   document.getElementById('mob-tx-sheet')?.classList.remove('open');
+}
+
+// =============================================
+//  TRANSACTIONS — TOGGLE PAID
+// =============================================
+async function togglePaid(id) {
+  const tx = transactions.find(t => t.id === id);
+  if (!tx || tx.type !== 'despesa') return;
+
+  const newPaid = !tx.paid;
+  tx.paid = newPaid;
+  renderAll();
+
+  // Reabre o painel para refletir o novo estado
+  if (window.innerWidth <= 900) {
+    openMobTxSheet(id);
+  } else {
+    openTxDetailPanel(id);
+  }
+
+  if (Demo.active) {
+    toast(newPaid ? 'Marcado como pago! (modo demo)' : 'Desmarcado. (modo demo)');
+    return;
+  }
+
+  try {
+    await DB.put(tx);
+    await _cloudUpdate(tx);
+    toast(newPaid ? 'Marcado como pago!' : 'Desmarcado.');
+  } catch {
+    tx.paid = !newPaid;
+    renderAll();
+    toast('Erro ao atualizar transação.', 'err');
+  }
 }
 
 function hideTxMenu() {

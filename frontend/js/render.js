@@ -16,8 +16,9 @@ function renderMonthLabel() {
 //  RENDER — SUMMARY CARDS
 // =============================================
 function renderCards(txs) {
-  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+  const paidAmount = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
+  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0) - paidAmount;
+  const expense = txs.filter(t => t.type === 'despesa' && !t.paid).reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
   document.getElementById('income-value').textContent  = fmt(income);
@@ -167,6 +168,7 @@ function txHTML(t) {
   const note        = t.notes ? `<div class="tx-note"><i class="bi bi-pencil-square"></i> ${escHtml(t.notes)}</div>` : '';
   const fixedBadge  = t.fixed ? '<span class="badge-fixed"><i class="bi bi-arrow-repeat"></i> Fixo</span>' : '';
   const benefitBadge = bt ? `<span class="badge-benefit">${bt.label}</span>` : '';
+  const paidBadge   = t.paid ? '<span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Pago</span>' : '';
   const isSel       = selectedTxIds.has(t.id);
   const hasFatura   = t.invoiceItems && t.invoiceItems.length > 0;
   const faturaBtn   = hasFatura
@@ -180,11 +182,11 @@ function txHTML(t) {
   const metaLabel = isIncome ? 'Receita' : cat.label;
   const icon      = isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon;
   return `
-    <div class="tx-item${isSel ? ' tx-selected' : ''}" role="button" tabindex="0" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
+    <div class="tx-item${isSel ? ' tx-selected' : ''}${t.paid ? ' tx-paid' : ''}" role="button" tabindex="0" data-id="${t.id}" onclick="toggleTxSelection('${t.id}', event)">
       <div class="tx-select-check${isSel ? ' checked' : ''}"></div>
       <div class="tx-icon">${icon}</div>
       <div class="tx-info">
-        <div class="tx-desc">${escHtml(t.description)}${fixedBadge}${benefitBadge}${faturaBtn}</div>
+        <div class="tx-desc">${escHtml(t.description)}${fixedBadge}${benefitBadge}${paidBadge}${faturaBtn}</div>
         <div class="tx-meta">${metaLabel} &bull; ${fmtDate(t.date)}</div>
         ${note}
       </div>
@@ -283,8 +285,19 @@ function openTxDetailPanel(id) {
 
   const editBtn   = document.getElementById('tx-detail-edit-btn');
   const deleteBtn = document.getElementById('tx-detail-delete-btn');
+  const paidBtn   = document.getElementById('tx-detail-paid-btn');
   editBtn.onclick   = () => { closeTxDetailPanel(); activeTxId = id; openRenameModal(); };
   deleteBtn.onclick = () => { closeTxDetailPanel(); deleteTx(id); };
+  if (paidBtn) {
+    if (tx.type === 'despesa') {
+      paidBtn.classList.remove('hidden');
+      paidBtn.title = tx.paid ? 'Desmarcar como pago' : 'Marcar como pago';
+      paidBtn.classList.toggle('tx-detail-action-paid-active', !!tx.paid);
+      paidBtn.onclick = () => togglePaid(id);
+    } else {
+      paidBtn.classList.add('hidden');
+    }
+  }
 
   document.getElementById('tx-detail-overlay').classList.add('open');
   document.getElementById('tx-detail-panel').classList.add('open');

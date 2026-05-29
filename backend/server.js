@@ -101,6 +101,7 @@ const schemas = {
     paymentMethod:    str().max(50, 'Método de pagamento muito longo.').nullish(),
     benefitType:      str().max(50).nullish(),
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
+    paid:             z.boolean().nullish(),
   }),
 
   transactionPatch: z.object({
@@ -114,6 +115,7 @@ const schemas = {
     paymentMethod:    str().max(50, 'Método de pagamento muito longo.').nullish(),
     benefitType:      str().max(50).nullish(),
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
+    paid:             z.boolean().nullish(),
   }),
 
   portfolio: z.object({

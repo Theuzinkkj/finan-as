@@ -1523,6 +1523,33 @@
   letter-spacing:   .01em;
 }
 
+.badge-paid {
+  display:          inline-flex;
+  align-items:      center;
+  gap:              3px;
+  font-size:        .64rem;
+  font-weight:      600;
+  color:            var(--emerald, #14c38e);
+  background:       rgba(20,195,142,.15);
+  border:           1px solid rgba(20,195,142,.35);
+  border-radius:    5px;
+  padding:          1px 5px;
+  margin-left:      5px;
+  vertical-align:   middle;
+  letter-spacing:   .01em;
+}
+
+.tx-item.tx-paid {
+  background:       rgba(20,195,142,.07);
+  border-color:     rgba(20,195,142,.25);
+}
+.tx-item.tx-paid:hover {
+  background:       rgba(20,195,142,.12);
+  border-color:     rgba(20,195,142,.4);
+}
+[data-theme="light"] .tx-item.tx-paid       { background: rgba(20,195,142,.06); border-color: rgba(20,195,142,.2); }
+[data-theme="light"] .tx-item.tx-paid:hover { background: rgba(20,195,142,.1);  border-color: rgba(20,195,142,.35); }
+
 .badge-benefit {
   display:        inline-flex;
   align-items:    center;
