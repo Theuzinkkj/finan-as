@@ -60,7 +60,7 @@ self.addEventListener('fetch', event => {
   // Não cacheia requisições de API — sempre vai ao servidor
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(err => {
+      fetch(new Request(request, { credentials: 'include' })).catch(err => {
         let message;
         if (err.name === 'AbortError') {
           message = 'Tempo limite excedido. Verifique sua conexão.';
