@@ -336,7 +336,19 @@ async function togglePaid(id) {
 
   try {
     await DB.put(tx);
-    await _cloudUpdate(tx);
+
+    // PATCH mínimo: só envia o campo alterado, evita conflito com colunas
+    // que podem não existir ainda no Supabase (ex.: primeira vez rodando migration)
+    const result = await CloudDB.update({ id: tx.id, paid: newPaid }).catch(err => {
+      toast('Nuvem: ' + err.message, 'err');
+      return null;
+    });
+    if (result?.queued) {
+      await _updatePendingBadge();
+    } else if (result !== null) {
+      setCloudStatus('connected', `${transactions.length} transações sincronizadas`);
+    }
+
     toast(newPaid ? 'Marcado como pago!' : 'Desmarcado.');
   } catch {
     tx.paid = !newPaid;
