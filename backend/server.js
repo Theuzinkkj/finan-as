@@ -223,8 +223,9 @@ app.use((req, res, next) => {
   if (!origin) return next();
 
   // Same-origin: browser envia Origin mesmo em fetch() POST same-origin.
-  // Comparar com o Host header resolve sem precisar configurar ALLOWED_ORIGINS.
-  const host = req.headers.host || '';
+  // Railway (e outros proxies) preservam o domínio original em X-Forwarded-Host.
+  const host = (req.headers['x-forwarded-host'] || req.headers.host || '')
+    .split(',')[0].trim().replace(/\/+$/, '');
   const isSameOrigin = origin === `https://${host}` || origin === `http://${host}`;
 
   const isAllowed =
