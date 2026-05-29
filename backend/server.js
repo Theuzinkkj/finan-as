@@ -219,8 +219,8 @@ const extraOrigins = new Set(
 app.use((req, res, next) => {
   const origin = (req.headers.origin || '').replace(/\/+$/, '');
 
-  // Sem Origin = same-origin (GET sem fetch, curl, Postman)
-  if (!origin) return next();
+  // Sem Origin ou Origin: null = same-origin ou Service Worker da mesma origem
+  if (!origin || origin === 'null') return next();
 
   // Same-origin: browser envia Origin mesmo em fetch() POST same-origin.
   // Railway (e outros proxies) preservam o domínio original em X-Forwarded-Host.
@@ -235,7 +235,7 @@ app.use((req, res, next) => {
     /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
 
   if (!isAllowed) {
-    return res.status(403).json({ message: 'Origem não permitida.', _debug: { origin, host, xfh: req.headers['x-forwarded-host'], rawHost: req.headers.host } });
+    return res.status(403).json({ message: 'Origem não permitida.' });
   }
 
   // Cabeçalhos CORS para origens permitidas
