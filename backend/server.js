@@ -94,11 +94,12 @@ const schemas = {
     type:         z.enum(['receita', 'despesa', 'benefício', 'beneficio'], { required_error: 'Tipo obrigatório.', invalid_type_error: 'Tipo inválido.' }),
     category:     str('Categoria obrigatória.').min(1, 'Categoria obrigatória.').max(100, 'Categoria muito longa.'),
     description:  str().max(500, 'Descrição muito longa.').optional().default(''),
+    notes:        str().max(500, 'Observação muito longa.').nullish(),
     date:         str('Data obrigatória.').regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use o formato AAAA-MM-DD.'),
-    fixed:            z.boolean().optional(),
-    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').optional(),
-    benefitType:      str().max(50).optional(),
-    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').optional(),
+    fixed:            z.boolean().nullish(),
+    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').nullish(),
+    benefitType:      str().max(50).nullish(),
+    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
   }),
 
   transactionPatch: z.object({
@@ -106,11 +107,12 @@ const schemas = {
     type:         z.enum(['receita', 'despesa', 'benefício', 'beneficio'], { invalid_type_error: 'Tipo inválido.' }).optional(),
     category:     str().min(1, 'Categoria obrigatória.').max(100, 'Categoria muito longa.').optional(),
     description:  str().max(500, 'Descrição muito longa.').optional(),
+    notes:        str().max(500, 'Observação muito longa.').nullish(),
     date:         str().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida. Use o formato AAAA-MM-DD.').optional(),
-    fixed:            z.boolean().optional(),
-    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').optional(),
-    benefitType:      str().max(50).optional(),
-    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').optional(),
+    fixed:            z.boolean().nullish(),
+    paymentMethod:    str().max(50, 'Método de pagamento muito longo.').nullish(),
+    benefitType:      str().max(50).nullish(),
+    invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
   }),
 
   portfolio: z.object({
