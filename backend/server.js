@@ -235,6 +235,7 @@ app.use((req, res, next) => {
     /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
 
   if (!isAllowed) {
+    console.warn('[CORS] bloqueado | origin:', origin, '| host:', host, '| x-forwarded-host:', req.headers['x-forwarded-host'], '| req.host:', req.headers.host);
     return res.status(403).json({ message: 'Origem não permitida.' });
   }
 
