@@ -44,15 +44,26 @@ async function syncFromCloud(monthOnly) {
       const remoteIds = new Set(remote.map(t => t.id));
       const local     = await DB.getAll();
 
+      // Itens com operação pendente não devem ser deletados — ainda não chegaram ao cloud
+      const pendingOps = await PendingQueue.getAll().catch(() => []);
+      const pendingTxIds = new Set(pendingOps
+        .filter(op => op.type === 'add' || op.type === 'update')
+        .map(op => op.payload?.id)
+        .filter(Boolean)
+      );
+
       for (const tx of remote) await DB.put(tx);
       // Remove do cache local apenas registros dentro do período que não estão no remoto
-      for (const tx of local.filter(t => t.date >= since && !remoteIds.has(t.id))) {
+      // e que não têm operações pendentes aguardando envio ao cloud
+      for (const tx of local.filter(t => t.date >= since && !remoteIds.has(t.id) && !pendingTxIds.has(t.id))) {
         await DB.remove(tx.id);
       }
 
-      transactions = remote;
+      // Inclui transações locais com operações pendentes (ainda não enviadas ao cloud)
+      const pendingLocalTxs = local.filter(t => pendingTxIds.has(t.id) && !remoteIds.has(t.id));
+      transactions = [...remote, ...pendingLocalTxs];
       _cachedMonths.clear();
-      remote.forEach(t => _cachedMonths.add(t.date.slice(0, 7)));
+      transactions.forEach(t => _cachedMonths.add(t.date.slice(0, 7)));
     }
 
     renderAll();

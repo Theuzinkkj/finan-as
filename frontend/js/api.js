@@ -78,7 +78,7 @@ const PendingQueue = {
   _del(qid)  { return DB._op(DB.PENDING, 'readwrite', s => s.delete(qid)); },
   count()    { return DB._op(DB.PENDING, 'readonly',  s => s.count()); },
 
-  // Tenta enviar todos os pendentes. Para no primeiro erro (ainda offline).
+  // Tenta enviar todos os pendentes. Para se ficar offline; pula itens com erros online.
   async flush() {
     const items = await this.getAll();
     let synced = 0;
@@ -89,7 +89,10 @@ const PendingQueue = {
         else if (item.type === 'update') await CloudDB._updateDirect(item.payload);
         await this._del(item.qid);
         synced++;
-      } catch { break; }
+      } catch {
+        if (!navigator.onLine) break; // Sem internet: para e tenta depois
+        // Erro online: pula este item e continua os demais
+      }
     }
     return synced;
   },
@@ -159,40 +162,33 @@ const CloudDB = {
     return API.req('PATCH', `/api/transactions/${id}`, payload);
   },
 
-  // Métodos públicos: tentam cloud; se offline enfileiram para sync posterior
+  // Métodos públicos: tentam cloud; sempre enfileiram para sync em caso de falha
   async add(tx) {
     try {
       return await this._addDirect(tx);
-    } catch (err) {
-      if (!navigator.onLine) {
-        await PendingQueue.push({ type: 'add', payload: tx });
-        return { queued: true };
-      }
-      throw err;
+    } catch {
+      // Enfileira independente do estado de conexão para garantir que a
+      // transação não seja perdida quando o syncFromCloud limpar o cache local
+      await PendingQueue.push({ type: 'add', payload: tx });
+      return { queued: true };
     }
   },
 
   async remove(id) {
     try {
       return await this._removeDirect(id);
-    } catch (err) {
-      if (!navigator.onLine) {
-        await PendingQueue.push({ type: 'remove', payload: id });
-        return { queued: true };
-      }
-      throw err;
+    } catch {
+      await PendingQueue.push({ type: 'remove', payload: id });
+      return { queued: true };
     }
   },
 
   async update(tx) {
     try {
       return await this._updateDirect(tx);
-    } catch (err) {
-      if (!navigator.onLine) {
-        await PendingQueue.push({ type: 'update', payload: tx });
-        return { queued: true };
-      }
-      throw err;
+    } catch {
+      await PendingQueue.push({ type: 'update', payload: tx });
+      return { queued: true };
     }
   },
 };

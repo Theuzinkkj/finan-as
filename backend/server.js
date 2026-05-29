@@ -849,7 +849,9 @@ app.post('/api/transactions', requireAuth, validate(schemas.transaction), async 
 
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/rest/v1/transactions`, {
       method:  'POST',
-      headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=minimal' },
+      // resolution=merge-duplicates: se o ID já existe, atualiza em vez de falhar
+      // garante que re-envios da pending_queue sejam idempotentes
+      headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=minimal,resolution=merge-duplicates' },
       body:    JSON.stringify(body),
     });
 
