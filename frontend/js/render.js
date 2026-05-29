@@ -199,6 +199,22 @@ function txHTML(t) {
 function toggleTxSelection(id, event) {
   if (event.target.closest('.tx-menu-btn, .tx-fatura-btn')) return;
   if (event.currentTarget.closest('#tab-dashboard')) return;
+
+  // Clique na bolinha de seleção → seleciona/deseleciona
+  if (event.target.closest('.tx-select-check')) {
+    if (selectedTxIds.has(id)) {
+      selectedTxIds.delete(id);
+    } else {
+      selectedTxIds.add(id);
+    }
+    const el = event.currentTarget;
+    el.classList.toggle('tx-selected', selectedTxIds.has(id));
+    el.querySelector('.tx-select-check')?.classList.toggle('checked', selectedTxIds.has(id));
+    renderSelectionBar();
+    return;
+  }
+
+  // Clique no resto da linha → abre detalhes
   if (window.innerWidth <= 900) { openMobTxSheet(id); return; }
   openTxDetailPanel(id);
 }
