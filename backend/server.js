@@ -90,6 +90,7 @@ const schemas = {
   }),
 
   transaction: z.object({
+    id:           str().optional(),
     amount:       num('Valor obrigatório.').positive('O valor deve ser positivo.').max(100_000_000, 'Valor muito alto.'),
     type:         z.enum(['receita', 'despesa', 'benefício', 'beneficio'], { required_error: 'Tipo obrigatório.', invalid_type_error: 'Tipo inválido.' }),
     category:     str('Categoria obrigatória.').min(1, 'Categoria obrigatória.').max(100, 'Categoria muito longa.'),
