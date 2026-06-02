@@ -39,61 +39,7 @@ function applyTheme(theme) {
 //  RECURRING — AUTO-GENERATION
 // =============================================
 async function autoGenerateRecurring() {
-  if (Demo.active) return;
-  const now        = new Date();
-  const currentKey = mkKey(now);
-
-  const templates = transactions.filter(t => t.fixed && t.date.slice(0, 7) < currentKey);
-  if (!templates.length) return;
-
-  // Calcula todos os meses desde a criaÃ§Ã£o do template atÃ© o mÃªs atual
-  function monthsBetween(startKey, endKey) {
-    const [sy, sm] = startKey.split('-').map(Number);
-    const [ey, em] = endKey.split('-').map(Number);
-    const months = [];
-    let y = sy, m = sm + 1; // comeÃ§a no mÃªs seguinte ao template
-    while (y < ey || (y === ey && m <= em)) {
-      months.push(`${y}-${pad2(m)}`);
-      m++;
-      if (m > 12) { m = 1; y++; }
-    }
-    return months;
-  }
-
-  const created = [];
-
-  for (const tpl of templates) {
-    const tplKey  = tpl.date.slice(0, 7);
-    const pending = monthsBetween(tplKey, currentKey);
-
-    for (const key of pending) {
-      const exists = transactions.some(t => t.recurringId === tpl.id && t.date.startsWith(key));
-      if (exists) continue;
-
-      const [ty, tm]    = key.split('-').map(Number);
-      const daysInMonth = new Date(ty, tm, 0).getDate();
-      const day         = Math.min(parseInt(tpl.date.slice(8, 10), 10), daysInMonth);
-      const newTx = {
-        ...tpl,
-        id:          genId(),
-        date:        `${key}-${pad2(day)}`,
-        fixed:       false,
-        recurringId: tpl.id,
-      };
-      try {
-        await DB.put(newTx);
-        transactions.push(newTx);
-        created.push(newTx);
-      } catch { /* ignore */ }
-    }
-  }
-
-  if (created.length) {
-    Promise.all(created.map(tx => CloudDB.add(tx))).catch(() => {});
-    const n = created.length;
-    toast(`ðŸ”„ ${n} transaÃ§${n === 1 ? 'Ã£o fixa criada' : 'Ãµes fixas criadas'} automaticamente!`);
-    renderAll();
-  }
+  return;
 }
 
 // =============================================

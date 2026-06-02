@@ -102,6 +102,7 @@ const schemas = {
     benefitType:      str().max(50).nullish(),
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
     paid:             z.boolean().nullish(),
+    recurringId:      str().max(100).nullish(),
   }),
 
   transactionPatch: z.object({
@@ -116,6 +117,7 @@ const schemas = {
     benefitType:      str().max(50).nullish(),
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
     paid:             z.boolean().nullish(),
+    recurringId:      str().max(100).nullish(),
   }),
 
   portfolio: z.object({

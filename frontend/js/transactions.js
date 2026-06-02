@@ -161,7 +161,7 @@ async function handleFormSubmit(e) {
 //  TRANSACTIONS — DELETE
 // =============================================
 async function deleteTx(id) {
-  const tx = transactions.find(t => t.id === id);
+  const tx = await materializeDisplayTx(id, { sync: false });
   if (!tx) return;
 
   transactions = transactions.filter(t => t.id !== id);
@@ -239,7 +239,7 @@ function openTxMenu(id, event) {
   const deleteBtn = menu.querySelector('.tx-menu-danger');
   if (deleteBtn) deleteBtn.classList.toggle('hidden', inDashboard);
 
-  const tx = transactions.find(t => t.id === id);
+  const tx = findDisplayTx(id);
   const fixedBtn = document.getElementById('btn-menu-fixed');
   if (fixedBtn) fixedBtn.innerHTML = tx?.fixed ? '<i class="bi bi-stop-fill"></i> Parar de repetir' : '<i class="bi bi-arrow-repeat"></i> Repetir todo mês';
   const btn  = event.currentTarget;
@@ -266,7 +266,7 @@ function closeTxMenu() {
 //  MOBILE — TRANSACTION BOTTOM SHEET
 // =============================================
 function openMobTxSheet(id) {
-  const tx = transactions.find(t => t.id === id);
+  const tx = findDisplayTx(id);
   if (!tx) return;
   const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;
   const isIncome  = tx.type === 'receita';
@@ -315,7 +315,7 @@ function closeMobTxSheet() {
 //  TRANSACTIONS — TOGGLE PAID
 // =============================================
 async function togglePaid(id) {
-  const tx = transactions.find(t => t.id === id);
+  const tx = await materializeDisplayTx(id);
   if (!tx || tx.type !== 'despesa') return;
 
   const newPaid = !tx.paid;
@@ -366,7 +366,7 @@ function hideTxMenu() {
 // =============================================
 function openRenameModal() {
   if (!activeTxId) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = findDisplayTx(activeTxId);
   if (!tx) return;
   const modal = document.getElementById('modal-rename-tx');
   modal.dataset.txId = activeTxId;
@@ -381,7 +381,7 @@ async function saveRenameTx() {
   if (!txId) return;
   const newDesc = document.getElementById('rename-input').value.trim();
   if (!newDesc) return;
-  const tx = transactions.find(t => t.id === txId);
+  const tx = await materializeDisplayTx(txId);
   if (!tx) return;
   tx.description = newDesc;
   closeModal('modal-rename-tx');
@@ -397,7 +397,7 @@ async function saveRenameTx() {
 
 function openEditAmountModal() {
   if (!activeTxId) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = findDisplayTx(activeTxId);
   if (!tx) return;
   const modal = document.getElementById('modal-edit-amount');
   modal.dataset.txId = activeTxId;
@@ -412,7 +412,7 @@ async function saveEditAmount() {
   if (!txId) return;
   const newAmount = parseFloat(document.getElementById('edit-amount-input').value);
   if (!newAmount || newAmount <= 0) return;
-  const tx = transactions.find(t => t.id === txId);
+  const tx = await materializeDisplayTx(txId);
   if (!tx) return;
   tx.amount = newAmount;
   closeModal('modal-edit-amount');
@@ -428,7 +428,7 @@ async function saveEditAmount() {
 
 function openChangeCatModal() {
   if (!activeTxId) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = findDisplayTx(activeTxId);
   if (!tx) return;
   const modal = document.getElementById('modal-change-cat');
   modal.dataset.txId = activeTxId;
@@ -485,7 +485,7 @@ function openChangeCatModal() {
 async function saveChangeCat() {
   const txId = document.getElementById('modal-change-cat').dataset.txId;
   if (!txId || !activeChangeCat) return;
-  const tx = transactions.find(t => t.id === txId);
+  const tx = await materializeDisplayTx(txId);
   if (!tx) return;
   tx.category     = activeChangeCat;
   activeChangeCat = null;
@@ -502,17 +502,20 @@ async function saveChangeCat() {
 
 async function toggleFixedTx() {
   if (!activeTxId) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = findDisplayTx(activeTxId);
   if (!tx) return;
+  const realId = tx._templateId || tx.recurringId || tx.id;
+  const realTx = transactions.find(t => t.id === realId) || tx;
   tx.fixed = !tx.fixed;
+  realTx.fixed = tx.fixed;
   closeTxMenu();
 
   if (Demo.active) { renderAll(); toast(tx.fixed ? 'Marcado como fixo. (modo demo)' : 'Removido recorrência. (modo demo)'); return; }
   try {
-    await DB.put(tx);
+    await DB.put(realTx);
     renderAll();
     toast(tx.fixed ? 'Transação marcada como fixa.' : 'Recorrência removida.');
-    _cloudUpdate(tx);
+    _cloudUpdate(realTx);
   } catch (err) { toast('Erro ao atualizar transação.', 'err'); }
 }
 
@@ -523,7 +526,7 @@ let faturaEditItems = [];
 
 function openAddToFaturaModal() {
   if (!activeTxId) return;
-  const tx = transactions.find(t => t.id === activeTxId);
+  const tx = findDisplayTx(activeTxId);
   if (!tx) return;
   const modal = document.getElementById('modal-add-fatura');
   modal.dataset.txId = activeTxId;
@@ -548,7 +551,7 @@ function renderFaturaEditItems() {
 async function saveAddToFatura() {
   const txId = document.getElementById('modal-add-fatura').dataset.txId;
   if (!txId || faturaEditItems.length === 0) { toast('Adicione pelo menos um item.', 'err'); return; }
-  const tx = transactions.find(t => t.id === txId);
+  const tx = await materializeDisplayTx(txId);
   if (!tx) return;
 
   tx.invoiceItems = [...faturaEditItems];
@@ -567,7 +570,7 @@ async function saveAddToFatura() {
 
 function openViewFaturaModal(id, event) {
   event.stopPropagation();
-  const tx = transactions.find(t => t.id === id);
+  const tx = findDisplayTx(id);
   if (!tx || !tx.invoiceItems || tx.invoiceItems.length === 0) return;
 
   document.getElementById('modal-view-fatura').dataset.txId = id;

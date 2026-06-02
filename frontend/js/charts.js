@@ -365,7 +365,9 @@ function drawLine(allTxs, range = 30) {
     });
   });
 
-  [...regular, ...virtual].forEach(t => {
+  const plotted = [...regular, ...virtual.filter(t => !regular.some(r => sameRecurringOccurrence(r, t)))];
+
+  plotted.forEach(t => {
     let g;
     if (range <= 30)       g = groups.find(g => g.key === t.date);
     else if (range === 90) g = groups.find(g => t.date >= g.start && t.date <= g.end);

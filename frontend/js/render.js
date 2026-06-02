@@ -225,7 +225,7 @@ function toggleTxSelection(id, event) {
 //  DESKTOP — TRANSACTION DETAIL PANEL
 // =============================================
 function openTxDetailPanel(id) {
-  const tx = transactions.find(t => t.id === id);
+  const tx = findDisplayTx(id);
   if (!tx) return;
 
   const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;

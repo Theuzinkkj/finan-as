@@ -37,7 +37,8 @@ CREATE POLICY "users_update_own" ON transactions
 ALTER TABLE transactions
   ADD COLUMN IF NOT EXISTS fixed           BOOLEAN DEFAULT FALSE,
   ADD COLUMN IF NOT EXISTS "paymentMethod" TEXT,
-  ADD COLUMN IF NOT EXISTS "invoiceItems"  JSONB;
+  ADD COLUMN IF NOT EXISTS "invoiceItems"  JSONB,
+  ADD COLUMN IF NOT EXISTS "recurringId"   TEXT;
 
 
 -- ================================================================

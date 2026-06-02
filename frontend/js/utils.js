@@ -37,17 +37,74 @@ function txOfMonth(d = currentDate) {
   const [ty, tm] = key.split('-').map(Number);
   const daysInMonth = new Date(ty, tm, 0).getDate();
 
-  const regular = transactions.filter(t => !t.fixed && t.date.startsWith(key));
+  const regular = uniqueTxs(transactions.filter(t => !t.fixed && t.date.startsWith(key)));
 
   const generatedTemplateIds = new Set(regular.filter(t => t.recurringId).map(t => t.recurringId));
   const fixed = transactions
     .filter(t => t.fixed && t.date.slice(0, 7) <= key && !generatedTemplateIds.has(t.id))
     .map(t => {
       const day = Math.min(parseInt(t.date.slice(8, 10), 10), daysInMonth);
-      return { ...t, date: `${key}-${pad2(day)}` };
-    });
+      return {
+        ...t,
+        id: `${t.id}__${key}`,
+        date: `${key}-${pad2(day)}`,
+        recurringId: t.id,
+        _virtualFixed: true,
+        _templateId: t.id,
+      };
+    })
+    .filter(t => !regular.some(r => sameRecurringOccurrence(r, t)));
 
   return [...regular, ...fixed];
+}
+
+function sameRecurringOccurrence(a, b) {
+  return a.date === b.date &&
+    a.type === b.type &&
+    Number(a.amount) === Number(b.amount) &&
+    (a.category || '') === (b.category || '') &&
+    (a.description || '').trim().toLowerCase() === (b.description || '').trim().toLowerCase();
+}
+
+function uniqueTxs(txs) {
+  const seen = new Set();
+  return txs.filter(t => {
+    if (!t?.id) return true;
+    if (seen.has(t.id)) return false;
+    seen.add(t.id);
+    return true;
+  });
+}
+
+function findDisplayTx(id) {
+  return transactions.find(t => t.id === id) || txOfMonth().find(t => t.id === id);
+}
+
+async function materializeDisplayTx(id, { sync = true } = {}) {
+  const direct = transactions.find(t => t.id === id);
+  if (direct) return direct;
+
+  const virtual = txOfMonth().find(t => t.id === id);
+  if (!virtual?._virtualFixed) return null;
+
+  const { _virtualFixed, _templateId, ...copy } = virtual;
+  const tx = {
+    ...copy,
+    id: genId(),
+    fixed: false,
+    recurringId: _templateId || virtual.recurringId,
+  };
+
+  await DB.put(tx);
+  transactions.push(tx);
+  _cachedMonths.add(tx.date.slice(0, 7));
+
+  if (sync && !Demo.active) {
+    const result = await CloudDB.add(tx);
+    if (result?.queued) await _updatePendingBadge();
+  }
+
+  return tx;
 }
 
 function escHtml(str) {
