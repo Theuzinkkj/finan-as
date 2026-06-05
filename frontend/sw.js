@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'atlas-v9';
+const CACHE_NAME = 'atlas-v10';
 const OFFLINE_URL = '/app';
 
 // Arquivos essenciais para funcionar offline

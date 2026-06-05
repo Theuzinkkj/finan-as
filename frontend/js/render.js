@@ -19,17 +19,18 @@ function renderCards(txs) {
   const income       = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
   const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
+  const pendingExpense = totalExpense - paidExpense;
   const balance      = income - paidExpense;
 
   document.getElementById('income-value').textContent  = fmt(income);
-  document.getElementById('expense-value').textContent = fmt(paidExpense);
+  document.getElementById('expense-value').textContent = fmt(pendingExpense);
   document.getElementById('balance-value').textContent = fmt(balance);
   document.getElementById('balance-value').style.color = balance >= 0 ? 'var(--green-l)' : '#f87171';
 
   const mobInc = document.getElementById('mob-income-val');
   const mobExp = document.getElementById('mob-expense-val');
   if (mobInc) mobInc.textContent = fmt(income);
-  if (mobExp) mobExp.textContent = fmt(paidExpense);
+  if (mobExp) mobExp.textContent = fmt(pendingExpense);
 
   const heroSub = document.getElementById('dash-hero-sub');
   if (heroSub) {
