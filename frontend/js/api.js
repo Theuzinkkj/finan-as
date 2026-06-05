@@ -41,6 +41,7 @@ const DB = {
   },
 
   getAll()    { return this._op(this.STORE, 'readonly',  s => s.getAll()); },
+  get(id)     { return this._op(this.STORE, 'readonly',  s => s.get(id)); },
   put(record) { return this._op(this.STORE, 'readwrite', s => s.put(record)); },
   remove(id)  { return this._op(this.STORE, 'readwrite', s => s.delete(id)); },
 
@@ -84,14 +85,17 @@ const PendingQueue = {
     let synced = 0;
     for (const item of items) {
       try {
-        if      (item.type === 'add')    await CloudDB._addDirect(item.payload);
+        if (item.type === 'add') {
+          const latest = await DB.get(item.payload?.id).catch(() => null);
+          await CloudDB._addDirect(latest || item.payload);
+        }
         else if (item.type === 'remove') await CloudDB._removeDirect(item.payload);
         else if (item.type === 'update') await CloudDB._updateDirect(item.payload);
         await this._del(item.qid);
         synced++;
-      } catch {
+      } catch (err) {
         if (!navigator.onLine) break; // Sem internet: para e tenta depois
-        // Erro online: pula este item e continua os demais
+        console.warn('Pending sync error:', err.message);
       }
     }
     return synced;
@@ -151,15 +155,31 @@ const CloudDB = {
 
   // Chamadas diretas ao servidor (usadas pelo PendingQueue.flush)
   async _addDirect(tx) {
-    const { user_id: _d, ...payload } = tx;
+    const payload = this._cloudPayload(tx);
     return API.req('POST', '/api/transactions', payload);
   },
   async _removeDirect(id) {
     return API.req('DELETE', `/api/transactions/${id}`);
   },
   async _updateDirect(tx) {
-    const { id, user_id: _d, ...payload } = tx;
+    const normalized = this._cloudPayload(tx);
+    const { id, ...payload } = normalized;
     return API.req('PATCH', `/api/transactions/${id}`, payload);
+  },
+
+  _cloudPayload(tx) {
+    const {
+      user_id: _userId,
+      recurringId,
+      _virtualFixed,
+      _templateId,
+      ...payload
+    } = tx;
+
+    if (recurringId && payload.date) {
+      payload.id = `${recurringId}__${payload.date.slice(0, 7)}`;
+    }
+    return payload;
   },
 
   // Métodos públicos: tentam cloud; sempre enfileiram para sync em caso de falha

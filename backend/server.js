@@ -290,9 +290,14 @@ app.get('/privacidade',      (_req, res) => res.sendFile(fe('privacidade.html'))
 app.get('/privacidade.html', (_req, res) => res.redirect(301, '/privacidade'));
 app.get('/support',          (_req, res) => res.sendFile(fe('support.html')));
 app.get('/support.html',     (_req, res) => res.redirect(301, '/support'));
+app.get('/sw.js', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(fe('sw.js'));
+});
 // /app com injeção do billing.js (paywall) ao final do body
 app.get('/app', async (_req, res) => {
   const fs = require('fs');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   try {
     let html = await fs.promises.readFile(fe('index.html'), 'utf8');
     html = html.replace('</body>', '<script src="/js/billing.js"></script></body>');
@@ -851,7 +856,11 @@ app.get('/api/transactions', requireAuth, async (req, res, next) => {
 
 app.post('/api/transactions', requireAuth, validate(schemas.transaction), async (req, res, next) => {
   try {
-    const body = { ...req.body, user_id: req.userId };
+    const { recurringId, ...transaction } = req.body;
+    if (recurringId && transaction.date) {
+      transaction.id = `${recurringId}__${transaction.date.slice(0, 7)}`;
+    }
+    const body = { ...transaction, user_id: req.userId };
 
     const { ok, status, data } = await proxyFetch(`${SUPA_URL}/rest/v1/transactions`, {
       method:  'POST',
@@ -884,6 +893,7 @@ app.delete('/api/transactions/:id', requireAuth, async (req, res, next) => {
 
 app.patch('/api/transactions/:id', requireAuth, validate(schemas.transactionPatch), async (req, res, next) => {
   try {
+    const { recurringId: _recurringId, ...patch } = req.body;
     const url = `${SUPA_URL}/rest/v1/transactions`
               + `?id=eq.${encodeURIComponent(req.params.id)}`
               + `&user_id=eq.${encodeURIComponent(req.userId)}`;
@@ -891,7 +901,7 @@ app.patch('/api/transactions/:id', requireAuth, validate(schemas.transactionPatc
     const { ok, status, data } = await proxyFetch(url, {
       method:  'PATCH',
       headers: { ...supaHeaders(req.authToken), 'Prefer': 'return=minimal' },
-      body:    JSON.stringify(req.body),
+      body:    JSON.stringify(patch),
     });
 
     if (!ok) return res.status(status).json({ message: supaErrorMsg(data) });

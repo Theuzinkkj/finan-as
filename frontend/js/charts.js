@@ -343,7 +343,7 @@ function drawLine(allTxs, range = 30) {
   // replicando a lógica de txOfMonth para evitar que receitas/despesas fixas sumam do gráfico
   const arr = allTxs || [];
   const regular = arr.filter(t => !t.fixed && t.date >= startStr && t.date <= todayStr);
-  const generatedIds = new Set(regular.filter(t => t.recurringId).map(t => t.recurringId));
+  const generatedIds = new Set(regular.map(recurringTemplateId).filter(Boolean));
 
   const monthsInRange = new Set();
   const cursor = new Date(startStr + 'T12:00:00');

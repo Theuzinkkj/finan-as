@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'atlas-v7';
+const CACHE_NAME = 'atlas-v8';
 const OFFLINE_URL = '/app';
 
 // Arquivos essenciais para funcionar offline
@@ -41,7 +41,9 @@ self.addEventListener('install', event => {
   // login, que não exibe o banner de atualização.
   self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(PRECACHE.map(url => cache.add(url)))
+    )
   );
 });
 
@@ -57,29 +59,15 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Não cacheia requisições de API — sempre vai ao servidor
+  // API passa direto para a rede; erros são tratados pelo cliente HTTP.
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(new Request(request, { credentials: 'include' })).catch(err => {
-        let message;
-        if (err.name === 'AbortError') {
-          message = 'Tempo limite excedido. Verifique sua conexão.';
-        } else if (self.navigator?.onLine === false) {
-          message = 'Sem conexão. Verifique sua internet.';
-        } else {
-          message = 'Servidor indisponível. Tente novamente em instantes.';
-        }
-        return new Response(JSON.stringify({ message }), {
-          status: 503,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      })
-    );
     return;
   }
 
-  // JS: network-first para sempre servir a versão mais recente
-  if (url.pathname.startsWith('/js/')) {
+  // Navegação, JS e CSS: network-first para aplicar deploys imediatamente.
+  if (request.mode === 'navigate' ||
+      url.pathname.startsWith('/js/') ||
+      url.pathname.startsWith('/css/')) {
     event.respondWith(
       fetch(request).then(response => {
         if (response && response.status === 200) {
@@ -88,7 +76,9 @@ self.addEventListener('fetch', event => {
         return response;
       }).catch(async () => {
         const cached = await caches.match(request);
-        return cached || new Response('Offline', { status: 503 });
+        if (cached) return cached;
+        if (request.mode === 'navigate') return caches.match(OFFLINE_URL);
+        return new Response('Offline', { status: 503 });
       })
     );
     return;

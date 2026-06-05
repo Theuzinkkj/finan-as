@@ -39,7 +39,7 @@ function txOfMonth(d = currentDate) {
 
   const regular = uniqueTxs(transactions.filter(t => !t.fixed && t.date.startsWith(key)));
 
-  const generatedTemplateIds = new Set(regular.filter(t => t.recurringId).map(t => t.recurringId));
+  const generatedTemplateIds = new Set(regular.map(recurringTemplateId).filter(Boolean));
   const fixed = transactions
     .filter(t => t.fixed && t.date.slice(0, 7) <= key && !generatedTemplateIds.has(t.id))
     .map(t => {
@@ -59,6 +59,14 @@ function txOfMonth(d = currentDate) {
     .filter(t => !regular.some(r => sameRecurringOccurrence(r, t)));
 
   return [...regular, ...fixed];
+}
+
+function recurringTemplateId(tx) {
+  if (tx?.recurringId) return tx.recurringId;
+  const month = tx?.date?.slice(0, 7);
+  const suffix = month ? `__${month}` : '';
+  if (suffix && tx?.id?.endsWith(suffix)) return tx.id.slice(0, -suffix.length);
+  return null;
 }
 
 function sameRecurringOccurrence(a, b) {
@@ -90,12 +98,11 @@ async function materializeDisplayTx(id, { sync = true } = {}) {
   const virtual = txOfMonth().find(t => t.id === id);
   if (!virtual?._virtualFixed) return null;
 
-  const { _virtualFixed, _templateId, ...copy } = virtual;
+  const { _virtualFixed, _templateId, recurringId: _recurringId, ...copy } = virtual;
   const tx = {
     ...copy,
-    id: genId(),
+    id: virtual.id,
     fixed: false,
-    recurringId: _templateId || virtual.recurringId,
   };
 
   await DB.put(tx);
