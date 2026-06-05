@@ -16,19 +16,20 @@ function renderMonthLabel() {
 //  RENDER — SUMMARY CARDS
 // =============================================
 function renderCards(txs) {
-  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
-  const balance = income - expense;
+  const income       = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
+  const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
+  const balance      = income - paidExpense;
 
   document.getElementById('income-value').textContent  = fmt(income);
-  document.getElementById('expense-value').textContent = fmt(expense);
+  document.getElementById('expense-value').textContent = fmt(paidExpense);
   document.getElementById('balance-value').textContent = fmt(balance);
   document.getElementById('balance-value').style.color = balance >= 0 ? 'var(--green-l)' : '#f87171';
 
   const mobInc = document.getElementById('mob-income-val');
   const mobExp = document.getElementById('mob-expense-val');
   if (mobInc) mobInc.textContent = fmt(income);
-  if (mobExp) mobExp.textContent = fmt(expense);
+  if (mobExp) mobExp.textContent = fmt(paidExpense);
 
   const heroSub = document.getElementById('dash-hero-sub');
   if (heroSub) {
@@ -61,7 +62,7 @@ function renderCards(txs) {
     txSub.innerHTML = [
       count ? `<span>${count}</span>` : '',
       `<span class="sep">·</span><span class="inc">+${fmt(income)} receitas</span>`,
-      `<span class="sep">·</span><span class="exp">−${fmt(expense)} despesas</span>`,
+      `<span class="sep">·</span><span class="exp">−${fmt(totalExpense)} despesas</span>`,
     ].join('');
   }
   const txMonthTitle = document.getElementById('tx-page-month-title');
@@ -69,7 +70,7 @@ function renderCards(txs) {
     txMonthTitle.textContent = monthLabel(currentDate);
   }
   document.getElementById('balance-sub').textContent = income > 0
-    ? `${((expense / income) * 100).toFixed(0)}% da receita gasto`
+    ? `${((paidExpense / income) * 100).toFixed(0)}% da receita pago`
     : 'Sem receitas no mês';
 
   const invValueEl = document.getElementById('invested-value');
