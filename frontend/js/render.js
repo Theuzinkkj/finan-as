@@ -20,7 +20,7 @@ function renderCards(txs) {
   const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingExpense = totalExpense - paidExpense;
-  const balance      = income - paidExpense;
+  const balance      = income - pendingExpense;
 
   document.getElementById('income-value').textContent  = fmt(income);
   document.getElementById('expense-value').textContent = fmt(pendingExpense);
@@ -71,7 +71,7 @@ function renderCards(txs) {
     txMonthTitle.textContent = monthLabel(currentDate);
   }
   document.getElementById('balance-sub').textContent = income > 0
-    ? `${((paidExpense / income) * 100).toFixed(0)}% da receita pago`
+    ? `${((pendingExpense / income) * 100).toFixed(0)}% da receita comprometido`
     : 'Sem receitas no mês';
 
   const invValueEl = document.getElementById('invested-value');
