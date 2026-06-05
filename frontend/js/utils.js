@@ -48,6 +48,9 @@ function txOfMonth(d = currentDate) {
         ...t,
         id: `${t.id}__${key}`,
         date: `${key}-${pad2(day)}`,
+        // O pagamento pertence à competência mensal, não ao modelo recorrente.
+        // Mantém compatibilidade com lançamentos antigos apenas no mês original.
+        paid: t.date.slice(0, 7) === key ? !!t.paid : false,
         recurringId: t.id,
         _virtualFixed: true,
         _templateId: t.id,

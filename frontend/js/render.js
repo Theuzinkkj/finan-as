@@ -16,9 +16,8 @@ function renderMonthLabel() {
 //  RENDER — SUMMARY CARDS
 // =============================================
 function renderCards(txs) {
-  const paidAmount = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
-  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0) - paidAmount;
-  const expense = txs.filter(t => t.type === 'despesa' && !t.paid).reduce((s, t) => s + t.amount, 0);
+  const income  = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const balance = income - expense;
 
   document.getElementById('income-value').textContent  = fmt(income);
