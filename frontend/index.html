@@ -174,14 +174,21 @@
     <!-- ======= DASHBOARD ======= -->
     <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
       <div class="dashboard-command-center">
-        <aside class="command-sidebar command-sidebar-left" aria-label="Metas e conquistas">
+        <aside class="command-sidebar command-sidebar-left" aria-label="Objetivos financeiros, reserva e conquistas">
           <section class="command-panel">
             <div class="command-panel-header">
-              <div><span class="command-kicker">PLANEJAMENTO</span><h2><i class="bi bi-bullseye"></i> Metas financeiras</h2></div>
-              <button class="command-icon-btn" type="button" onclick="openGoalModal()" title="Nova meta"><i class="bi bi-plus-lg"></i></button>
+              <div><span class="command-kicker">PARA CONQUISTAR</span><h2><i class="bi bi-bullseye"></i> Objetivos financeiros</h2></div>
+              <button class="command-icon-btn" type="button" onclick="openGoalModal()" title="Novo objetivo financeiro"><i class="bi bi-plus-lg"></i></button>
             </div>
             <div class="command-goals-list" id="command-goals-list"></div>
-            <button class="command-add-btn" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Nova Meta</button>
+            <button class="command-add-btn" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Novo objetivo</button>
+          </section>
+
+          <section class="command-panel command-reserve-panel" onclick="openGoalModal()" title="Editar reserva financeira">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">SEGURANÇA</span><h2><i class="bi bi-shield-check"></i> Reserva de emergência</h2></div>
+            </div>
+            <div id="command-reserve-content"></div>
           </section>
 
           <section class="command-panel">
@@ -189,13 +196,6 @@
               <div><span class="command-kicker">PROGRESSO</span><h2><i class="bi bi-trophy-fill"></i> Conquistas</h2></div>
             </div>
             <div class="command-achievements" id="command-achievements"></div>
-          </section>
-
-          <section class="command-panel command-reserve-panel" onclick="openGoalModal()" title="Editar reserva financeira">
-            <div class="command-panel-header">
-              <div><span class="command-kicker">SEGURANÇA</span><h2><i class="bi bi-shield-check"></i> Reserva financeira</h2></div>
-            </div>
-            <div id="command-reserve-content"></div>
           </section>
         </aside>
 
@@ -340,7 +340,15 @@
       </div>
         </div>
 
-        <aside class="command-sidebar command-sidebar-right" aria-label="Benefícios, inteligência e alertas">
+        <aside class="command-sidebar command-sidebar-right" aria-label="Controle de gastos, benefícios, inteligência e alertas">
+          <section class="command-panel command-spending-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">PARA GASTAR MENOS</span><h2><i class="bi bi-speedometer2"></i> Controle de Gastos</h2></div>
+              <button class="command-icon-btn" type="button" onclick="openBudgetConfig()" title="Configurar limites de gastos"><i class="bi bi-sliders2"></i></button>
+            </div>
+            <div class="command-spending-list" id="command-spending-list"></div>
+          </section>
+
           <section class="command-panel">
             <div class="command-panel-header">
               <div><span class="command-kicker">SALDOS CORPORATIVOS</span><h2><i class="bi bi-credit-card-2-front"></i> Benefícios</h2></div>
@@ -375,22 +383,22 @@
             <p id="goals-hero-message">Acompanhe seu progresso e use melhor os recursos disponíveis.</p>
           </div>
           <div class="goals-hero-actions">
-            <button class="goals-action goals-action-primary" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Nova Meta</button>
+            <button class="goals-action goals-action-primary" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Novo objetivo</button>
             <button class="goals-action" type="button" id="btn-benefits-setup-top"><i class="bi bi-plus-lg"></i> Novo Benefício</button>
           </div>
         </div>
 
         <div class="goals-summary-grid" aria-label="Resumo de metas e benefícios">
           <div class="goals-summary-item goals-summary-highlight"><span class="goals-summary-icon"><i class="bi bi-piggy-bank-fill"></i></span><div><span class="goals-summary-label">Economizado no mês</span><strong id="goals-saved-month">R$ 0,00</strong></div></div>
-          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-flag-fill"></i></span><div><span class="goals-summary-label">Metas ativas</span><strong id="goals-active-count">0</strong></div></div>
+          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-flag-fill"></i></span><div><span class="goals-summary-label">Objetivos ativos</span><strong id="goals-active-count">0</strong></div></div>
           <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-wallet2"></i></span><div><span class="goals-summary-label">Benefícios disponíveis</span><strong id="benefits-available-total">R$ 0,00</strong></div></div>
-          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-graph-up-arrow"></i></span><div><span class="goals-summary-label">Progresso médio</span><strong id="goals-average-progress">0%</strong></div></div>
+          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-graph-up-arrow"></i></span><div><span class="goals-summary-label">Objetivo concluído</span><strong id="goals-average-progress">0%</strong></div></div>
         </div>
 
         <div class="goals-content-grid">
           <div class="goals-column">
             <div class="goals-section-heading">
-              <div><span class="goals-section-kicker">OBJETIVOS</span><h3>Suas metas</h3></div>
+              <div><span class="goals-section-kicker">PARA CONQUISTAR</span><h3>Objetivos financeiros</h3></div>
               <button class="goals-text-action" type="button" onclick="openBudgetConfig()">Gerenciar limites</button>
             </div>
             <div id="financial-goal-grid"></div>
@@ -398,7 +406,7 @@
               <div class="benefits-header">
                 <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="true">
                   <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                  <span class="section-label">Metas de controle mensal</span>
+                  <span class="section-label">Controle de gastos mensal</span>
                   <span class="budget-summary" id="budget-summary"></span>
                 </button>
               </div>
@@ -1787,7 +1795,7 @@
   <div class="modal-overlay hidden" id="modal-budget-config">
     <div class="modal modal-budget" role="dialog" aria-modal="true" aria-labelledby="modal-budget-title">
       <div class="modal-header">
-        <h2 id="modal-budget-title">Configurar Metas</h2>
+        <h2 id="modal-budget-title">Controle de Gastos</h2>
         <button class="modal-close" data-close="modal-budget-config">✕</button>
       </div>
       <p class="modal-budget-desc">Defina quanto quer gastar por categoria. Deixe em branco para sem limite.</p>

@@ -577,6 +577,7 @@
   }
 
   .command-goals-list,
+  .command-spending-list,
   .command-benefits-list,
   .command-ai-list,
   .command-alerts-list {
@@ -586,6 +587,7 @@
   }
 
   .command-goal-item,
+  .command-spending-item,
   .command-benefit-item {
     padding: 10px;
     border: 1px solid rgba(255,255,255,.055);
@@ -596,6 +598,7 @@
   }
 
   .command-goal-item:hover,
+  .command-spending-item:hover,
   .command-benefit-item:hover {
     transform: translateY(-1px);
     border-color: rgba(129,140,248,.3);
@@ -645,6 +648,9 @@
   }
 
   .command-benefit-item .command-progress > span { background: var(--item-color, var(--purple)); }
+  .command-spending-item .command-progress > span { background: var(--green); }
+  .command-spending-item.warning .command-progress > span { background: var(--yellow); }
+  .command-spending-item.danger .command-progress > span { background: var(--red); }
 
   @keyframes commandProgressIn { from { width: 0; } }
 
@@ -658,6 +664,63 @@
     font-size: 10px;
     font-weight: 600;
   }
+
+  .command-goal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 7px;
+    margin-top: 8px;
+    padding-top: 7px;
+    border-top: 1px solid rgba(255,255,255,.055);
+    color: var(--text-3);
+    font-size: 8px;
+  }
+
+  .command-goal-footer i { margin-right: 3px; color: var(--purple-l); }
+
+  .command-spending-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .command-spending-icon {
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 7px;
+    background: rgba(16,185,129,.1);
+    color: var(--green-l);
+    font-size: 11px;
+  }
+
+  .command-spending-item.warning .command-spending-icon {
+    background: rgba(245,158,11,.1);
+    color: var(--yellow);
+  }
+
+  .command-spending-item.danger .command-spending-icon {
+    background: rgba(239,68,68,.1);
+    color: var(--red);
+  }
+
+  .command-spending-item .command-item-pct { color: var(--green-l); }
+  .command-spending-item.warning .command-item-pct { color: var(--yellow); }
+  .command-spending-item.danger .command-item-pct { color: var(--red); }
+
+  .command-spending-status {
+    margin-top: 7px;
+    color: var(--green-l);
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .command-spending-item.warning .command-spending-status { color: var(--yellow); }
+  .command-spending-item.danger .command-spending-status { color: var(--red); }
 
   .command-add-btn {
     width: 100%;
@@ -873,10 +936,12 @@
   .command-panel { padding: 12px; }
   .command-panel-header { margin-bottom: 9px; }
   .command-goals-list,
+  .command-spending-list,
   .command-benefits-list,
   .command-ai-list,
   .command-alerts-list { gap: 6px; }
   .command-goal-item,
+  .command-spending-item,
   .command-benefit-item { padding: 8px; }
   .command-main .dash-hero { min-height: 42px; padding-bottom: 7px; }
   .command-main .summary-grid > .card { min-height: 69px; padding: 10px 12px; }
