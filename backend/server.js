@@ -362,15 +362,18 @@ app.get('/landing', async (_req, res) => {
           var btn = document.createElement('a');
           btn.id = '__atlas_demo_btn';
           btn.href = '#';
-          btn.innerHTML = '&#9654; Ver demo interativo';
-          btn.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:#cbd5e1;font-size:.9rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .2s,color .2s;margin-left:12px;vertical-align:middle;';
+          btn.className = 'btn btn-ghost nav-cta nav-cta-demo';
+          btn.innerHTML = '<span class="nav-cta-demo-icon" aria-hidden="true">&#9654;</span><span>Ver demo interativo</span>';
+          btn.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;height:44px;min-height:44px;padding:0 18px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.16);color:#cbd5e1;font-size:14px;line-height:1;font-weight:600;text-decoration:none;cursor:pointer;transition:background .2s,color .2s;vertical-align:middle;white-space:nowrap;box-sizing:border-box;transform:none;';
           btn.addEventListener('mouseenter',function(){this.style.background='rgba(255,255,255,0.13)';this.style.color='#f1f5f9';});
           btn.addEventListener('mouseleave',function(){this.style.background='rgba(255,255,255,0.07)';this.style.color='#cbd5e1';});
           btn.addEventListener('click',function(e){
             e.preventDefault();e.stopPropagation();
             window.location.href='/app?demo=1';
           },{capture:true});
-          primaryCta.insertAdjacentElement('afterend', btn);
+          var ctaGroup = primaryCta.closest('.nav-ctas');
+          if(ctaGroup) ctaGroup.appendChild(btn);
+          else primaryCta.insertAdjacentElement('afterend', btn);
         }
         setTimeout(injectDemoButton,900);
         setTimeout(injectDemoButton,1800);
