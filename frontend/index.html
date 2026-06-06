@@ -676,38 +676,61 @@
         </div>
       </div>
 
-      <!-- Main Row: Chart + AI Side by Side -->
+      <!-- Workspace: dados à esquerda + análise IA à direita -->
       <div class="analysis-main-row">
-
-        <!-- Gráfico de Gastos -->
-        <div class="card analysis-chart-col">
-          <div class="analysis-chart-header">
-            <span class="chart-title-main">Análise de Gastos</span>
-            <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
-              <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/><rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/><rect x="1" y="10" width="10" height="2.5" rx="1.2"/></svg>
-                Barras
-              </button>
-              <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="M7 7V1.5M7 7L11.7 4.2"/></svg>
-                Pizza
-              </button>
-              <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 4,5 7,8 10,3 13,6"/><circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/></svg>
-                Linha
-              </button>
-              <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/><polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
-                Radar
-              </button>
+        <div class="analysis-data-column">
+          <!-- Gráfico de Gastos -->
+          <div class="card analysis-chart-col">
+            <div class="analysis-chart-header">
+              <span class="chart-title-main">Análise de Gastos</span>
+              <div class="chart-type-selector" role="group" aria-label="Tipo de gráfico">
+                <button class="chart-type-btn active" data-type="bars" title="Barras horizontais">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="1.5" width="12" height="2.5" rx="1.2"/><rect x="1" y="5.75" width="8" height="2.5" rx="1.2"/><rect x="1" y="10" width="10" height="2.5" rx="1.2"/></svg>
+                  Barras
+                </button>
+                <button class="chart-type-btn" data-type="pie" title="Gráfico de pizza">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="5.5"/><path d="M7 7V1.5M7 7L11.7 4.2"/></svg>
+                  Pizza
+                </button>
+                <button class="chart-type-btn" data-type="line" title="Gráfico de linha">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,11 4,5 7,8 10,3 13,6"/><circle cx="1" cy="11" r="1.2" fill="currentColor" stroke="none"/><circle cx="10" cy="3" r="1.2" fill="currentColor" stroke="none"/></svg>
+                  Linha
+                </button>
+                <button class="chart-type-btn" data-type="radar" title="Gráfico radar">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="7,1 12.5,4.5 12.5,9.5 7,13 1.5,9.5 1.5,4.5"/><polygon points="7,4 10,5.75 10,8.25 7,10 4,8.25 4,5.75" stroke-opacity="0.5"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/></svg>
+                  Radar
+                </button>
+              </div>
             </div>
+            <canvas id="analysis-chart"></canvas>
+            <div id="analysis-legend" class="analysis-legend"></div>
           </div>
-          <canvas id="analysis-chart"></canvas>
-          <div id="analysis-legend" class="analysis-legend"></div>
+
+          <!-- Histórico Anual -->
+          <div class="card" id="annual-history-card">
+            <div class="card-header">
+              <div class="annual-header-left">
+                <h3>Histórico Anual — <span id="annual-year-label"></span></h3>
+                <div class="annual-year-nav">
+                  <button class="annual-year-btn" id="btn-annual-prev" title="Ano anterior">‹</button>
+                  <button class="annual-year-btn" id="btn-annual-next" title="Próximo ano">›</button>
+                </div>
+              </div>
+              <div class="annual-legend">
+                <span class="annual-legend-item"><span class="annual-dot" style="background:var(--green)"></span>Receitas</span>
+                <span class="annual-legend-item"><span class="annual-dot" style="background:#f87171"></span>Despesas</span>
+              </div>
+            </div>
+            <div class="annual-chart-wrap">
+              <canvas id="annual-chart"></canvas>
+              <div id="annual-tooltip" class="annual-tooltip hidden"></div>
+            </div>
+            <div id="annual-summary" class="annual-summary"></div>
+          </div>
         </div>
 
         <!-- Análise IA (resultado) -->
-        <div class="card analysis-ai-col">
+        <aside class="card analysis-ai-col">
           <div class="ai-col-header">
             <div class="ai-title-group">
               <span class="ai-badge"><i class="bi bi-stars"></i> IA</span>
@@ -721,30 +744,7 @@
               <p class="ai-placeholder-sub">A IA identifica padrões, gastos desnecessários e onde você pode economizar.</p>
             </div>
           </div>
-        </div>
-
-      </div>
-
-      <!-- Histórico Anual (full width) -->
-      <div class="card" id="annual-history-card">
-        <div class="card-header">
-          <div class="annual-header-left">
-            <h3>Histórico Anual — <span id="annual-year-label"></span></h3>
-            <div class="annual-year-nav">
-              <button class="annual-year-btn" id="btn-annual-prev" title="Ano anterior">‹</button>
-              <button class="annual-year-btn" id="btn-annual-next" title="Próximo ano">›</button>
-            </div>
-          </div>
-          <div class="annual-legend">
-            <span class="annual-legend-item"><span class="annual-dot" style="background:var(--green)"></span>Receitas</span>
-            <span class="annual-legend-item"><span class="annual-dot" style="background:#f87171"></span>Despesas</span>
-          </div>
-        </div>
-        <div class="annual-chart-wrap">
-          <canvas id="annual-chart"></canvas>
-          <div id="annual-tooltip" class="annual-tooltip hidden"></div>
-        </div>
-        <div id="annual-summary" class="annual-summary"></div>
+        </aside>
       </div>
 
       <!-- Bottom Row: Projeção + Score -->
