@@ -607,13 +607,6 @@
 
   .command-item-top,
   .command-item-values,
-  .command-reserve-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
   .command-item-name {
     min-width: 0;
     overflow: hidden;
@@ -777,12 +770,6 @@
 
   .command-achievement-row span { color: var(--text-3); font-size: 9px; }
   .command-achievement-row strong { color: var(--text); font-size: 11px; font-variant-numeric: tabular-nums; }
-
-  .command-reserve-panel { cursor: pointer; }
-  .command-reserve-value { margin-bottom: 4px; color: var(--text); font-size: 18px; font-weight: 700; }
-  .command-reserve-value span { color: var(--text-3); font-size: 10px; font-weight: 400; }
-  .command-reserve-meta { margin-top: 8px; color: var(--text-3); font-size: 9px; }
-  .command-reserve-meta i { margin-right: 3px; color: var(--purple-l); }
 
   .command-benefit-icon {
     width: 26px;

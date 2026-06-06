@@ -523,23 +523,6 @@ function renderGoalsBenefitsOverview(txs = txOfMonth()) {
       <div class="command-achievement-row"><i class="bi bi-fire"></i><span>Sequência positiva</span><strong>${savingStreak}m</strong></div>`;
   }
 
-  const reserveEl = document.getElementById('command-reserve-content');
-  if (reserveEl) {
-    const isReserveGoal = goal && /reserva|emerg/i.test(goal.name);
-    if (isReserveGoal) {
-      const reserveRemaining = Math.max(0, goal.amount - portfolioData.totalSaved);
-      const reserveDate = goal.date
-        ? new Date(`${goal.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
-        : 'Sem previsão';
-      reserveEl.innerHTML = `
-        <div class="command-reserve-value">${fmt(portfolioData.totalSaved)} <span>/ ${fmt(goal.amount)}</span></div>
-        <div class="command-progress"><span style="--progress:${goalPct.toFixed(1)}%"></span></div>
-        <div class="command-reserve-meta"><span><i class="bi bi-wallet2"></i>${goalPct >= 100 ? 'Concluída' : `Faltam ${fmt(reserveRemaining)}`}</span><span><i class="bi bi-calendar3"></i>${reserveDate}</span></div>`;
-    } else {
-      reserveEl.innerHTML = '<div class="command-empty">Crie um objetivo chamado Reserva de Emergência para acompanhar sua segurança financeira.</div>';
-    }
-  }
-
   const commandBenefitsEl = document.getElementById('command-benefits-list');
   if (commandBenefitsEl) {
     const benefitItems = Object.entries(BENEFIT_TYPES).map(([key, bt]) => {
