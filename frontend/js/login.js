@@ -245,9 +245,6 @@ function bindAuthEvents() {
   document.getElementById('btn-google-login')?.addEventListener('click', () => {
     window.location.href = '/api/auth/oauth/google';
   });
-  document.getElementById('btn-apple-login')?.addEventListener('click', () => {
-    window.location.href = '/api/auth/oauth/apple';
-  });
 
   document.getElementById('btn-demo').addEventListener('click', () => {
     Demo.enter();
