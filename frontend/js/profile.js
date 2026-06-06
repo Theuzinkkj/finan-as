@@ -136,6 +136,12 @@ async function manageSubscription() {
   try {
     const data = await API.req('POST', '/api/billing/portal');
     if (data?.url) window.location.href = data.url;
+    else if (data?.provider === 'mercadopago') {
+      const confirmed = window.confirm('Deseja cancelar a renovação da assinatura pelo Mercado Pago?');
+      if (!confirmed) return;
+      await API.req('POST', '/api/billing/mercadopago/cancel');
+      toast('Assinatura cancelada. Seu plano não será renovado.', 'ok');
+    }
     else toast('Erro ao abrir portal de assinatura.', 'err');
   } catch (err) {
     const msg = err.message || '';

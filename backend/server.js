@@ -3,7 +3,7 @@
 const express                   = require('express');
 const path                      = require('path');
 const nodemailer                = require('nodemailer');
-const { randomBytes, createHash } = require('crypto');
+const { randomBytes, createHash, createHmac, timingSafeEqual } = require('crypto');
 const Sentry                    = require('@sentry/node');
 const compression               = require('compression');
 const helmet                    = require('helmet');
@@ -1298,11 +1298,122 @@ app.delete('/api/portfolio/:id', requireAuth, async (req, res, next) => {
 // ── Billing (Stripe) ─────────────────────────────────────────────────────────
 
 const billingLimiter = makeRateLimiter(60_000, 5, 'Muitas tentativas. Tente novamente em 1 minuto.');
+const MP_API_URL = 'https://api.mercadopago.com';
+
+function serviceHeaders() {
+  return {
+    'Content-Type':  'application/json',
+    'apikey':        SUPA_SERVICE,
+    'Authorization': `Bearer ${SUPA_SERVICE}`,
+  };
+}
+
+async function mercadoPagoRequest(endpoint, { method = 'GET', body, idempotencyKey } = {}) {
+  if (!process.env.MP_ACCESS_TOKEN) {
+    const err = new Error('Mercado Pago não configurado. Adicione MP_ACCESS_TOKEN no ambiente.');
+    err.status = 503;
+    throw err;
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+  };
+  if (idempotencyKey) headers['X-Idempotency-Key'] = idempotencyKey;
+
+  const { ok, status, data } = await proxyFetch(`${MP_API_URL}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  }, { timeout: 20_000, retries: 1 });
+
+  if (!ok) {
+    const err = new Error(data?.message || data?.error || 'Erro ao comunicar com o Mercado Pago.');
+    err.status = status;
+    err.details = data;
+    throw err;
+  }
+  return data;
+}
+
+async function updateAdminUserMetadata(userId, patch) {
+  const current = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    headers: serviceHeaders(),
+  });
+  if (!current.ok) {
+    const err = new Error(supaErrorMsg(current.data));
+    err.status = current.status;
+    throw err;
+  }
+
+  const metadata = { ...(current.data?.user_metadata || {}), ...patch };
+  const updated = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
+    method:  'PUT',
+    headers: serviceHeaders(),
+    body:    JSON.stringify({ user_metadata: metadata }),
+  });
+  if (!updated.ok) {
+    const err = new Error(supaErrorMsg(updated.data));
+    err.status = updated.status;
+    throw err;
+  }
+  return metadata;
+}
+
+async function syncMercadoPagoSubscription(subscription) {
+  const userId = subscription?.external_reference;
+  if (!userId) return null;
+
+  const status = subscription.status || 'pending';
+  const patch = {
+    billing_provider:       'mercadopago',
+    mp_subscription_id:     String(subscription.id),
+    mp_subscription_status: status,
+    billing_pending:        status === 'pending',
+  };
+
+  if (status === 'authorized') {
+    patch.plan = 'pro';
+    patch.billing_pending = false;
+  } else if (status === 'canceled') {
+    patch.plan = 'free';
+    patch.billing_pending = false;
+  }
+
+  return updateAdminUserMetadata(userId, patch);
+}
+
+function mercadoPagoSignatureIsValid(req, dataId) {
+  const secret = process.env.MP_WEBHOOK_SECRET;
+  const signature = req.headers['x-signature'];
+  const requestId = req.headers['x-request-id'];
+  if (!secret || !signature || !requestId || !dataId) return false;
+
+  const parts = Object.fromEntries(
+    String(signature).split(',').map(part => part.trim().split('=')).filter(pair => pair.length === 2)
+  );
+  if (!parts.ts || !parts.v1) return false;
+
+  const manifest = `id:${String(dataId).toLowerCase()};request-id:${requestId};ts:${parts.ts};`;
+  const expected = createHmac('sha256', secret).update(manifest).digest('hex');
+  const received = String(parts.v1);
+  if (expected.length !== received.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+}
+
+function moneyEnv(value, fallback) {
+  if (!value) return fallback;
+  const clean = String(value).replace(/[^\d,.-]/g, '');
+  const normalized = clean.includes(',') ? clean.replace(/\./g, '').replace(',', '.') : clean;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
 
 // Retorna publishable key + info do plano para o frontend
 app.get('/api/billing/config', (_req, res) => {
   res.json({
     publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
+    mercadoPagoEnabled: Boolean(process.env.MP_ACCESS_TOKEN),
     plans: {
       monthly: {
         name:  process.env.STRIPE_PLAN_NAME        || 'Atlas Pro',
@@ -1317,6 +1428,149 @@ app.get('/api/billing/config', (_req, res) => {
     planName:  process.env.STRIPE_PLAN_NAME  || 'Atlas Pro',
     planPrice: process.env.STRIPE_PLAN_PRICE || 'R$ 19,90',
   });
+});
+
+// Cria a conta pendente e redireciona para a autorização da assinatura no Mercado Pago.
+app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, next) => {
+  let createdUserId = null;
+  let createdSubscriptionId = null;
+  try {
+    const {
+      email, password, name, cpf, phone, address, planType = 'monthly',
+    } = req.body || {};
+    if (!email || !password || !name) {
+      return res.status(400).json({ message: 'Nome, e-mail e senha são obrigatórios.' });
+    }
+    if (String(password).length < 8) {
+      return res.status(400).json({ message: 'A senha deve ter pelo menos 8 caracteres.' });
+    }
+
+    const created = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users`, {
+      method:  'POST',
+      headers: serviceHeaders(),
+      body: JSON.stringify({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          name,
+          cpf,
+          phone,
+          address,
+          plan:             'free',
+          plan_type:        planType,
+          billing_provider: 'mercadopago',
+          billing_pending:  true,
+        },
+      }),
+    });
+
+    if (!created.ok) {
+      const msg = supaErrorMsg(created.data);
+      if (created.status === 422 || msg.toLowerCase().includes('already')) {
+        return res.status(409).json({ message: 'Este e-mail já está cadastrado. Faça login.' });
+      }
+      return res.status(created.status).json({ message: msg });
+    }
+    createdUserId = created.data.id;
+
+    const annual = planType === 'annual';
+    const amount = annual
+      ? moneyEnv(process.env.MP_ANNUAL_PRICE || process.env.STRIPE_ANNUAL_PLAN_PRICE, 202.80)
+      : moneyEnv(process.env.MP_MONTHLY_PRICE || process.env.STRIPE_PLAN_PRICE, 19.90);
+    const planName = annual
+      ? (process.env.STRIPE_ANNUAL_PLAN_NAME || 'Atlas Premium')
+      : (process.env.STRIPE_PLAN_NAME || 'Atlas Pro');
+    const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/+$/, '');
+
+    const subscription = await mercadoPagoRequest('/preapproval', {
+      method: 'POST',
+      idempotencyKey: randomBytes(16).toString('hex'),
+      body: {
+        reason:             `${planName} - ${annual ? 'anual' : 'mensal'}`,
+        external_reference: createdUserId,
+        payer_email:        email,
+        auto_recurring: {
+          frequency:          annual ? 12 : 1,
+          frequency_type:     'months',
+          transaction_amount: amount,
+          currency_id:        'BRL',
+        },
+        back_url: `${appUrl}/checkout?provider=mercadopago&status=return`,
+        status:   'pending',
+      },
+    });
+    createdSubscriptionId = String(subscription.id);
+
+    await updateAdminUserMetadata(createdUserId, {
+      mp_subscription_id:     createdSubscriptionId,
+      mp_subscription_status: subscription.status || 'pending',
+    });
+
+    res.json({
+      initPoint:       subscription.init_point,
+      subscriptionId: String(subscription.id),
+      planName,
+    });
+  } catch (err) {
+    if (createdSubscriptionId) {
+      await mercadoPagoRequest(`/preapproval/${encodeURIComponent(createdSubscriptionId)}`, {
+        method: 'PUT',
+        body: { status: 'canceled' },
+      }).catch(() => {});
+    }
+    if (createdUserId) {
+      await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(createdUserId)}`, {
+        method: 'DELETE',
+        headers: serviceHeaders(),
+      }).catch(() => {});
+    }
+    next(err);
+  }
+});
+
+// O retorno do checkout consulta o provedor; a query string nunca ativa o plano.
+app.get('/api/billing/mercadopago/status', billingLimiter, async (req, res, next) => {
+  try {
+    const id = String(req.query.subscriptionId || '');
+    if (!id || id.length > 100) return res.status(400).json({ message: 'Assinatura inválida.' });
+    const subscription = await mercadoPagoRequest(`/preapproval/${encodeURIComponent(id)}`);
+    await syncMercadoPagoSubscription(subscription);
+    res.json({ status: subscription.status, authorized: subscription.status === 'authorized' });
+  } catch (err) { next(err); }
+});
+
+app.post('/api/billing/mercadopago/webhook', async (req, res, next) => {
+  try {
+    const dataId = req.body?.data?.id || req.query['data.id'];
+    if (!mercadoPagoSignatureIsValid(req, dataId)) {
+      return res.status(401).json({ message: 'Assinatura do webhook inválida.' });
+    }
+    if (req.body?.type !== 'subscription_preapproval') {
+      return res.json({ received: true, ignored: true });
+    }
+
+    const subscription = await mercadoPagoRequest(`/preapproval/${encodeURIComponent(dataId)}`);
+    await syncMercadoPagoSubscription(subscription);
+    res.json({ received: true });
+  } catch (err) { next(err); }
+});
+
+app.post('/api/billing/mercadopago/cancel', requireAuth, async (req, res, next) => {
+  try {
+    const user = await proxyFetch(`${SUPA_URL}/auth/v1/user`, { headers: supaHeaders(req.authToken) });
+    const id = user.data?.user_metadata?.mp_subscription_id;
+    if (!user.ok || !id) {
+      return res.status(400).json({ message: 'Nenhuma assinatura do Mercado Pago encontrada.' });
+    }
+
+    const subscription = await mercadoPagoRequest(`/preapproval/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: { status: 'canceled' },
+    });
+    await syncMercadoPagoSubscription(subscription);
+    res.json({ ok: true });
+  } catch (err) { next(err); }
 });
 
 // Cria customer + subscription no Stripe → retorna clientSecret para confirmar pagamento
@@ -1418,13 +1672,17 @@ app.post('/api/billing/complete-registration', billingLimiter, async (req, res, 
 // Cria sessão no Stripe Billing Portal para o usuário autenticado gerenciar a assinatura
 app.post('/api/billing/portal', requireAuth, async (req, res, next) => {
   try {
-    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
-
     const { ok, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
       headers: supaHeaders(req.authToken),
     });
 
-    const customerId = data?.user_metadata?.stripe_customer_id;
+    const metadata = data?.user_metadata || {};
+    if (ok && metadata.billing_provider === 'mercadopago' && metadata.mp_subscription_id) {
+      return res.json({ provider: 'mercadopago', status: metadata.mp_subscription_status });
+    }
+
+    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
+    const customerId = metadata.stripe_customer_id;
     if (!ok || !customerId) {
       return res.status(400).json({ message: 'Nenhuma assinatura encontrada para esta conta.' });
     }
