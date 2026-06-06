@@ -292,13 +292,13 @@ function updateNotesFieldForType(type) {
   const textarea = document.getElementById('input-notes');
   if (type === 'receita') {
     if (label) label.textContent = '(de onde veio?)';
-    textarea.placeholder = 'Ex: SalÃ¡rio, hora extra, freelance, rendimento de investimento...';
+    textarea.placeholder = 'Ex: Salário, hora extra, freelance, rendimento de investimento...';
   } else if (type === 'beneficio') {
     if (label) label.textContent = '(onde usou?)';
-    textarea.placeholder = 'Ex: AlmoÃ§o no restaurante, compra no mercado...';
+    textarea.placeholder = 'Ex: Almoço no restaurante, compra no mercado...';
   } else {
     if (label) label.textContent = '(por que gastou isso?)';
-    textarea.placeholder = 'Ex: ComemoraÃ§Ã£o de aniversÃ¡rio, compra por impulso, mensalidade obrigatÃ³ria...';
+    textarea.placeholder = 'Ex: Comemoração de aniversário, compra por impulso, mensalidade obrigatória...';
   }
 }
 
