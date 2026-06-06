@@ -558,7 +558,9 @@ function renderGoalsBenefitsOverview(txs = txOfMonth()) {
     const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
     const quickInsights = [];
     if (topCategory && totalExpenses > 0) {
-      quickInsights.push(`<strong>${CATEGORIES[topCategory[0]]?.label || topCategory[0]}</strong> representa ${(topCategory[1] / totalExpenses * 100).toFixed(0)}% dos gastos.`);
+      const sampleTx = txs.find(tx => tx.type === 'despesa' && tx.category === topCategory[0]);
+      const category = getCategoryMeta(topCategory[0], sampleTx);
+      quickInsights.push(`<strong>${escHtml(category.label)}</strong> representa ${(topCategory[1] / totalExpenses * 100).toFixed(0)}% dos gastos.`);
     }
     if (goal) {
       quickInsights.push(`Seu objetivo <strong>${escHtml(goal.name)}</strong> está ${goalPct.toFixed(0)}% concluído${goal.date ? `, com previsão para ${new Date(`${goal.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}` : ''}.`);

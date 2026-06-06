@@ -164,7 +164,7 @@ const PAYMENT_LABELS = {
 function txHTML(t) {
   const isIncome    = t.type === 'receita';
   const isBenefit   = t.type === 'beneficio';
-  const cat         = CATEGORIES[t.category] || CATEGORIES.outros;
+  const cat         = getCategoryMeta(t.category, t);
   const bt          = isBenefit && t.benefitType ? BENEFIT_TYPES[t.benefitType] : null;
   const note        = t.notes ? `<div class="tx-note"><i class="bi bi-pencil-square"></i> ${escHtml(t.notes)}</div>` : '';
   const fixedBadge  = t.fixed ? '<span class="badge-fixed"><i class="bi bi-arrow-repeat"></i> Fixo</span>' : '';
@@ -229,7 +229,7 @@ function openTxDetailPanel(id) {
   const tx = findDisplayTx(id);
   if (!tx) return;
 
-  const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;
+  const cat       = getCategoryMeta(tx.category, tx);
   const isIncome  = tx.type === 'receita';
   const isBenefit = tx.type === 'beneficio';
   const amtSign   = isIncome ? '+' : '−';

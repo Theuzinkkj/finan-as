@@ -123,6 +123,34 @@ function escHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+function getCategoryMeta(key, tx = null) {
+  if (CATEGORIES[key]) return CATEGORIES[key];
+  if (String(key || '').startsWith('custom_')) {
+    const currentSaved = Storage.getJSON(Storage.catsKey(), {});
+    const anonymousSaved = Storage.getJSON('atlas_custom_cats_anon', {});
+    const recovered = currentSaved?.[key] || anonymousSaved?.[key];
+    if (recovered) {
+      CATEGORIES[key] = recovered;
+      return recovered;
+    }
+  }
+  if (tx?.categoryLabel) {
+    return {
+      label: tx.categoryLabel,
+      icon: tx.categoryIcon || '<i class="bi bi-tag-fill"></i>',
+      color: tx.categoryColor || '#94a3b8',
+    };
+  }
+  if (String(key || '').startsWith('custom_')) {
+    return {
+      label: 'Categoria personalizada',
+      icon: '<i class="bi bi-tag-fill"></i>',
+      color: '#94a3b8',
+    };
+  }
+  return CATEGORIES.outros;
+}
+
 function toast(msg, type = 'ok', undoFn = null) {
   const el = document.getElementById('toast');
   el.style.borderColor = type === 'err' ? 'rgba(239,68,68,.4)' : 'rgba(255,255,255,.15)';

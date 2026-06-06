@@ -95,12 +95,16 @@ async function handleFormSubmit(e) {
     : amount;
 
   if (!finalAmount || finalAmount <= 0) return;
+  const selectedCategory = selectedType === 'receita' ? CATEGORIES.outros : getCategoryMeta(selectedCat);
 
   const tx = {
     id:            genId(),
     type:          selectedType,
     amount:        finalAmount,
     category:      selectedType === 'receita' ? 'outros' : selectedCat,
+    categoryLabel: selectedCategory.label,
+    categoryIcon:  selectedCategory.icon,
+    categoryColor: selectedCategory.color,
     description:   desc,
     notes,
     date,
@@ -268,7 +272,7 @@ function closeTxMenu() {
 function openMobTxSheet(id) {
   const tx = findDisplayTx(id);
   if (!tx) return;
-  const cat       = CATEGORIES[tx.category] || CATEGORIES.outros;
+  const cat       = getCategoryMeta(tx.category, tx);
   const isIncome  = tx.type === 'receita';
   const isBenefit = tx.type === 'beneficio';
   const amtSign   = isIncome ? '+' : '−';
@@ -487,7 +491,11 @@ async function saveChangeCat() {
   if (!txId || !activeChangeCat) return;
   const tx = await materializeDisplayTx(txId);
   if (!tx) return;
-  tx.category     = activeChangeCat;
+  const category = getCategoryMeta(activeChangeCat);
+  tx.category      = activeChangeCat;
+  tx.categoryLabel = category.label;
+  tx.categoryIcon  = category.icon;
+  tx.categoryColor = category.color;
   activeChangeCat = null;
   closeModal('modal-change-cat');
 
