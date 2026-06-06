@@ -1068,11 +1068,11 @@ async function handleMercadoPagoReturn() {
     const res = await fetch(`/api/billing/mercadopago/status?subscriptionId=${encodeURIComponent(subscriptionId)}`);
     const data = await res.json();
     if (!res.ok) throw new Error(data.message);
-    if (!data.authorized) {
+    if (!data.authorized || !data.accountReady) {
       document.querySelector('.success-title').textContent = 'Autorização em processamento';
       document.querySelector('.success-msg').innerHTML =
-        `Sua conta foi criada com o e-mail <strong>${email}</strong>.<br><br>` +
-        'Assim que o Mercado Pago confirmar a assinatura, o plano Pro será ativado automaticamente.';
+        `Seu cadastro será concluído com o e-mail <strong>${email}</strong>.<br><br>` +
+        'Assim que o Mercado Pago confirmar a assinatura, sua conta Pro será criada automaticamente.';
     }
   } catch {
     document.querySelector('.success-title').textContent = 'Pagamento em processamento';

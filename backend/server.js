@@ -3,7 +3,9 @@
 const express                   = require('express');
 const path                      = require('path');
 const nodemailer                = require('nodemailer');
-const { randomBytes, createHash, createHmac, timingSafeEqual } = require('crypto');
+const {
+  randomBytes, createHash, createHmac, timingSafeEqual, createCipheriv, createDecipheriv,
+} = require('crypto');
 const Sentry                    = require('@sentry/node');
 const compression               = require('compression');
 const helmet                    = require('helmet');
@@ -1373,51 +1375,157 @@ async function mercadoPagoRequest(endpoint, { method = 'GET', body, idempotencyK
   return data;
 }
 
-async function updateAdminUserMetadata(userId, patch) {
-  const current = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
-    headers: serviceHeaders(),
-  });
-  if (!current.ok) {
-    const err = new Error(supaErrorMsg(current.data));
-    err.status = current.status;
-    throw err;
-  }
+function checkoutEncryptionKey() {
+  const secret = process.env.CHECKOUT_ENCRYPTION_KEY
+    || `${SUPA_SERVICE}:${process.env.MP_WEBHOOK_SECRET || ''}`;
+  return createHash('sha256').update(secret).digest();
+}
 
-  const metadata = { ...(current.data?.user_metadata || {}), ...patch };
-  const updated = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
-    method:  'PUT',
-    headers: serviceHeaders(),
-    body:    JSON.stringify({ user_metadata: metadata }),
-  });
-  if (!updated.ok) {
-    const err = new Error(supaErrorMsg(updated.data));
-    err.status = updated.status;
+function encryptCheckoutPayload(payload) {
+  const iv = randomBytes(12);
+  const cipher = createCipheriv('aes-256-gcm', checkoutEncryptionKey(), iv);
+  const encrypted = Buffer.concat([
+    cipher.update(JSON.stringify(payload), 'utf8'),
+    cipher.final(),
+  ]);
+  return [
+    iv.toString('base64url'),
+    cipher.getAuthTag().toString('base64url'),
+    encrypted.toString('base64url'),
+  ].join('.');
+}
+
+function decryptCheckoutPayload(value) {
+  const [iv, tag, encrypted] = String(value || '').split('.');
+  if (!iv || !tag || !encrypted) throw new Error('Cadastro pendente inválido.');
+  const decipher = createDecipheriv('aes-256-gcm', checkoutEncryptionKey(), Buffer.from(iv, 'base64url'));
+  decipher.setAuthTag(Buffer.from(tag, 'base64url'));
+  return JSON.parse(Buffer.concat([
+    decipher.update(Buffer.from(encrypted, 'base64url')),
+    decipher.final(),
+  ]).toString('utf8'));
+}
+
+async function getPendingCheckout(checkoutId) {
+  const result = await proxyFetch(
+    `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}&select=*&limit=1`,
+    { headers: { ...serviceHeaders(), Accept: 'application/json' } }
+  );
+  if (!result.ok) {
+    const err = new Error(
+      result.status === 404
+        ? 'Execute pending-checkouts-migration.sql no Supabase.'
+        : supaErrorMsg(result.data)
+    );
+    err.status = result.status === 404 ? 503 : result.status;
     throw err;
   }
-  return metadata;
+  return result.data?.[0] || null;
 }
 
 async function syncMercadoPagoSubscription(subscription) {
-  const userId = subscription?.external_reference;
-  if (!userId) return null;
-
+  const checkoutId = subscription?.external_reference;
+  if (!checkoutId) return null;
+  const pending = await getPendingCheckout(checkoutId);
+  if (!pending) return null;
   const status = subscription.status || 'pending';
-  const patch = {
-    billing_provider:       'mercadopago',
-    mp_subscription_id:     String(subscription.id),
-    mp_subscription_status: status,
-    billing_pending:        status === 'pending',
-  };
 
-  if (status === 'authorized') {
-    patch.plan = 'pro';
-    patch.billing_pending = false;
-  } else if (status === 'canceled') {
-    patch.plan = 'free';
-    patch.billing_pending = false;
+  if (status !== 'authorized') {
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          subscription_id: String(subscription.id),
+          status,
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
+    return { status, accountReady: false };
   }
 
-  return updateAdminUserMetadata(userId, patch);
+  if (pending.status === 'completed' && pending.user_id) {
+    return { status, accountReady: true, userId: pending.user_id };
+  }
+
+  const claimed = await proxyFetch(
+    `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}&status=in.(pending,authorized)`,
+    {
+      method: 'PATCH',
+      headers: { ...serviceHeaders(), Prefer: 'return=representation' },
+      body: JSON.stringify({
+        status: 'processing',
+        subscription_id: String(subscription.id),
+        updated_at: new Date().toISOString(),
+      }),
+    }
+  );
+  if (!claimed.ok) {
+    const err = new Error(supaErrorMsg(claimed.data));
+    err.status = claimed.status;
+    throw err;
+  }
+  if (!claimed.data?.length) {
+    const latest = await getPendingCheckout(checkoutId);
+    return { status, accountReady: latest?.status === 'completed', userId: latest?.user_id };
+  }
+
+  try {
+    const registration = decryptCheckoutPayload(pending.encrypted_payload);
+    const created = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: serviceHeaders(),
+      body: JSON.stringify({
+        email: registration.email,
+        password: registration.password,
+        email_confirm: true,
+        user_metadata: {
+          name: registration.name,
+          cpf: registration.cpf,
+          phone: registration.phone,
+          address: registration.address,
+          plan: 'pro',
+          plan_type: registration.planType,
+          billing_provider: 'mercadopago',
+          billing_pending: false,
+          mp_subscription_id: String(subscription.id),
+          mp_subscription_status: status,
+        },
+      }),
+    });
+    if (!created.ok) {
+      const err = new Error(supaErrorMsg(created.data));
+      err.status = created.status;
+      throw err;
+    }
+
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          status: 'completed',
+          user_id: created.data.id,
+          encrypted_payload: null,
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
+    return { status, accountReady: true, userId: created.data.id };
+  } catch (err) {
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({ status: 'authorized', updated_at: new Date().toISOString() }),
+      }
+    ).catch(() => {});
+    throw err;
+  }
 }
 
 function mercadoPagoSignatureIsValid(req, dataId) {
@@ -1466,9 +1574,10 @@ app.get('/api/billing/config', (_req, res) => {
   });
 });
 
-// Cria a conta pendente e redireciona para a autorização da assinatura no Mercado Pago.
+// Guarda o cadastro criptografado e redireciona para autorização no Mercado Pago.
+// A conta Supabase só é criada após a confirmação do pagamento.
 app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, next) => {
-  let createdUserId = null;
+  let checkoutId = null;
   let createdSubscriptionId = null;
   try {
     const {
@@ -1481,34 +1590,20 @@ app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, ne
       return res.status(400).json({ message: 'A senha deve ter pelo menos 8 caracteres.' });
     }
 
-    const created = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users`, {
-      method:  'POST',
+    const registered = await proxyFetch(`${SUPA_URL}/rest/v1/rpc/atlas_email_registered`, {
+      method: 'POST',
       headers: serviceHeaders(),
-      body: JSON.stringify({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          name,
-          cpf,
-          phone,
-          address,
-          plan:             'free',
-          plan_type:        planType,
-          billing_provider: 'mercadopago',
-          billing_pending:  true,
-        },
-      }),
+      body: JSON.stringify({ p_email: String(email).trim().toLowerCase() }),
     });
-
-    if (!created.ok) {
-      const msg = supaErrorMsg(created.data);
-      if (created.status === 422 || msg.toLowerCase().includes('already')) {
-        return res.status(409).json({ message: 'Este e-mail já está cadastrado. Faça login.' });
-      }
-      return res.status(created.status).json({ message: msg });
+    if (!registered.ok) {
+      const message = registered.status === 404
+        ? 'Execute pending-checkouts-migration.sql no Supabase.'
+        : supaErrorMsg(registered.data);
+      return res.status(registered.status === 404 ? 503 : registered.status).json({ message });
     }
-    createdUserId = created.data.id;
+    if (registered.data === true) {
+      return res.status(409).json({ message: 'Este e-mail já está cadastrado. Faça login.' });
+    }
 
     const annual = planType === 'annual';
     const amount = annual
@@ -1518,13 +1613,41 @@ app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, ne
       ? (process.env.MP_ANNUAL_PLAN_NAME || 'Atlas Premium')
       : (process.env.MP_MONTHLY_PLAN_NAME || 'Atlas Pro');
     const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/+$/, '');
+    checkoutId = randomBytes(24).toString('base64url');
+
+    const pending = await proxyFetch(`${SUPA_URL}/rest/v1/pending_checkouts`, {
+      method: 'POST',
+      headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        id: checkoutId,
+        email: String(email).trim().toLowerCase(),
+        encrypted_payload: encryptCheckoutPayload({
+          email: String(email).trim().toLowerCase(),
+          password,
+          name,
+          cpf,
+          phone,
+          address,
+          planType,
+        }),
+      }),
+    });
+    if (!pending.ok) {
+      const err = new Error(
+        pending.status === 404
+          ? 'Execute pending-checkouts-migration.sql no Supabase.'
+          : supaErrorMsg(pending.data)
+      );
+      err.status = pending.status === 404 ? 503 : pending.status;
+      throw err;
+    }
 
     const subscription = await mercadoPagoRequest('/preapproval', {
       method: 'POST',
       idempotencyKey: randomBytes(16).toString('hex'),
       body: {
         reason:             `${planName} - ${annual ? 'anual' : 'mensal'}`,
-        external_reference: createdUserId,
+        external_reference: checkoutId,
         payer_email:        email,
         auto_recurring: {
           frequency:          annual ? 12 : 1,
@@ -1538,10 +1661,18 @@ app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, ne
     });
     createdSubscriptionId = String(subscription.id);
 
-    await updateAdminUserMetadata(createdUserId, {
-      mp_subscription_id:     createdSubscriptionId,
-      mp_subscription_status: subscription.status || 'pending',
-    });
+    await proxyFetch(
+      `${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}`,
+      {
+        method: 'PATCH',
+        headers: { ...serviceHeaders(), Prefer: 'return=minimal' },
+        body: JSON.stringify({
+          subscription_id: createdSubscriptionId,
+          status: subscription.status || 'pending',
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
 
     res.json({
       initPoint:       subscription.init_point,
@@ -1555,8 +1686,8 @@ app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, ne
         body: { status: 'canceled' },
       }).catch(() => {});
     }
-    if (createdUserId) {
-      await proxyFetch(`${SUPA_URL}/auth/v1/admin/users/${encodeURIComponent(createdUserId)}`, {
+    if (checkoutId) {
+      await proxyFetch(`${SUPA_URL}/rest/v1/pending_checkouts?id=eq.${encodeURIComponent(checkoutId)}`, {
         method: 'DELETE',
         headers: serviceHeaders(),
       }).catch(() => {});
@@ -1571,8 +1702,12 @@ app.get('/api/billing/mercadopago/status', billingLimiter, async (req, res, next
     const id = String(req.query.subscriptionId || '');
     if (!id || id.length > 100) return res.status(400).json({ message: 'Assinatura inválida.' });
     const subscription = await mercadoPagoRequest(`/preapproval/${encodeURIComponent(id)}`);
-    await syncMercadoPagoSubscription(subscription);
-    res.json({ status: subscription.status, authorized: subscription.status === 'authorized' });
+    const sync = await syncMercadoPagoSubscription(subscription);
+    res.json({
+      status: subscription.status,
+      authorized: subscription.status === 'authorized',
+      accountReady: Boolean(sync?.accountReady),
+    });
   } catch (err) { next(err); }
 });
 
@@ -2024,6 +2159,19 @@ if (process.env.ENABLE_MONTHLY_CRON !== 'false') {
     timezone: process.env.TZ || 'America/Sao_Paulo',
   });
 }
+
+// Remove cadastros abandonados sem criar usuários no Auth.
+cron.schedule('17 * * * *', async () => {
+  try {
+    await proxyFetch(`${SUPA_URL}/rest/v1/rpc/cleanup_pending_checkouts`, {
+      method: 'POST',
+      headers: serviceHeaders(),
+      body: '{}',
+    });
+  } catch (err) {
+    log.warn({ err }, 'Cron: falha ao limpar checkouts pendentes');
+  }
+}, { timezone: process.env.TZ || 'America/Sao_Paulo' });
 
 // ── Graceful shutdown ─────────────────────────────────────────────────────────
 function shutdown(signal) {
