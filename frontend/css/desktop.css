@@ -863,7 +863,6 @@
   .command-main .tx-meta { font-size: 8px; }
   .command-main .tx-amount { font-size: 10px; }
 
-  body.tab-dashboard > .floating-dock,
   body.tab-dashboard .page-footer { display: none !important; }
 
   body.tab-dashboard .dash-metas-card { display: none; }
