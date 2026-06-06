@@ -11,16 +11,6 @@ const cron                      = require('node-cron');
 const { z }                     = require('zod');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
-let stripe = null;
-if (process.env.STRIPE_SECRET_KEY) {
-  try {
-    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY, {
-      timeout:           20_000,
-      maxNetworkRetries: 2,
-    });
-  } catch { /* stripe não instalado */ }
-}
-
 const app          = express();
 const SUPA_URL     = (process.env.SUPABASE_URL || '').replace(/\/+$/, '');
 const SUPA_ANON    = process.env.SUPABASE_KEY         || '';
@@ -182,34 +172,6 @@ app.use(helmet({
 // Compressão gzip/brotli em todas as respostas (reduz ~70% do payload)
 app.use(compression());
 
-// ── Stripe webhook (raw body obrigatório — antes do express.json) ─────────────
-app.post('/api/billing/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) return res.status(400).end();
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], process.env.STRIPE_WEBHOOK_SECRET);
-  } catch {
-    return res.status(400).end();
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object;
-    // Baixar plano para free quando assinatura for cancelada pelo Stripe
-    try {
-      await proxyFetch(
-        `${SUPA_URL}/rest/v1/profiles?stripe_customer_id=eq.${encodeURIComponent(sub.customer)}`,
-        {
-          method:  'PATCH',
-          headers: { 'Content-Type': 'application/json', 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}`, 'Prefer': 'return=minimal' },
-          body:    JSON.stringify({ plan: 'free' }),
-        }
-      );
-    } catch { /* non-fatal */ }
-  }
-
-  res.json({ received: true });
-});
-
 app.use(express.json({ limit: '7mb' }));
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
@@ -260,12 +222,12 @@ app.use((req, res, next) => {
 app.use((_req, res, next) => {
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://js.stripe.com",
+    "script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com",
     "style-src 'self' 'unsafe-inline' blob: https://fonts.googleapis.com https://cdn.jsdelivr.net",
     "font-src 'self' blob: https://fonts.gstatic.com https://cdn.jsdelivr.net",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' blob: https: https://viacep.com.br",
-    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    "frame-src 'none'",
     "worker-src 'self' blob:",
   ].join('; '));
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -575,7 +537,7 @@ function supaHeaders(token) {
 
 // Faz fetch ao proxy externo com timeout configurável e retry automático.
 // retries: número de tentativas extras (0 = sem retry). Só recomendado para
-// APIs idempotentes (Groq, Stripe reads). Nunca use retry em writes Supabase.
+// APIs idempotentes podem usar retry. Nunca use retry em writes Supabase.
 async function proxyFetch(url, opts, { timeout = 10_000, retries = 0 } = {}) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     if (attempt > 0) {
@@ -1370,7 +1332,7 @@ app.delete('/api/portfolio/:id', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// ── Billing (Stripe) ─────────────────────────────────────────────────────────
+// ── Billing (Mercado Pago) ───────────────────────────────────────────────────
 
 const billingLimiter = makeRateLimiter(60_000, 5, 'Muitas tentativas. Tente novamente em 1 minuto.');
 const MP_API_URL = 'https://api.mercadopago.com';
@@ -1484,24 +1446,23 @@ function moneyEnv(value, fallback) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-// Retorna publishable key + info do plano para o frontend
+// Retorna a disponibilidade do provedor e os dados dos planos.
 app.get('/api/billing/config', (_req, res) => {
   res.json({
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY || '',
     mercadoPagoEnabled: Boolean(process.env.MP_ACCESS_TOKEN),
     plans: {
       monthly: {
-        name:  process.env.STRIPE_PLAN_NAME        || 'Atlas Pro',
-        price: process.env.STRIPE_PLAN_PRICE       || 'R$ 19,90',
+        name:  process.env.MP_MONTHLY_PLAN_NAME || 'Atlas Pro',
+        price: process.env.MP_MONTHLY_PRICE_LABEL || 'R$ 19,90',
       },
       annual: {
-        name:         process.env.STRIPE_ANNUAL_PLAN_NAME  || 'Atlas Premium',
-        price:        process.env.STRIPE_ANNUAL_PLAN_PRICE || 'R$ 202,80',
-        monthlyPrice: 'R$ 16,90',
+        name:         process.env.MP_ANNUAL_PLAN_NAME || 'Atlas Premium',
+        price:        process.env.MP_ANNUAL_PRICE_LABEL || 'R$ 202,80',
+        monthlyPrice: process.env.MP_ANNUAL_MONTHLY_PRICE_LABEL || 'R$ 16,90',
       },
     },
-    planName:  process.env.STRIPE_PLAN_NAME  || 'Atlas Pro',
-    planPrice: process.env.STRIPE_PLAN_PRICE || 'R$ 19,90',
+    planName:  process.env.MP_MONTHLY_PLAN_NAME || 'Atlas Pro',
+    planPrice: process.env.MP_MONTHLY_PRICE_LABEL || 'R$ 19,90',
   });
 });
 
@@ -1551,11 +1512,11 @@ app.post('/api/billing/mercadopago/prepare', billingLimiter, async (req, res, ne
 
     const annual = planType === 'annual';
     const amount = annual
-      ? moneyEnv(process.env.MP_ANNUAL_PRICE || process.env.STRIPE_ANNUAL_PLAN_PRICE, 202.80)
-      : moneyEnv(process.env.MP_MONTHLY_PRICE || process.env.STRIPE_PLAN_PRICE, 19.90);
+      ? moneyEnv(process.env.MP_ANNUAL_PRICE, 202.80)
+      : moneyEnv(process.env.MP_MONTHLY_PRICE, 19.90);
     const planName = annual
-      ? (process.env.STRIPE_ANNUAL_PLAN_NAME || 'Atlas Premium')
-      : (process.env.STRIPE_PLAN_NAME || 'Atlas Pro');
+      ? (process.env.MP_ANNUAL_PLAN_NAME || 'Atlas Premium')
+      : (process.env.MP_MONTHLY_PLAN_NAME || 'Atlas Pro');
     const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/+$/, '');
 
     const subscription = await mercadoPagoRequest('/preapproval', {
@@ -1645,130 +1606,6 @@ app.post('/api/billing/mercadopago/cancel', requireAuth, async (req, res, next) 
     });
     await syncMercadoPagoSubscription(subscription);
     res.json({ ok: true });
-  } catch (err) { next(err); }
-});
-
-// Cria customer + subscription no Stripe → retorna clientSecret para confirmar pagamento
-app.post('/api/billing/prepare-checkout', billingLimiter, async (req, res, next) => {
-  try {
-    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados. Adicione STRIPE_SECRET_KEY no .env.' });
-    if (!process.env.STRIPE_PRICE_ID) return res.status(503).json({ message: 'Plano não configurado. Adicione STRIPE_PRICE_ID no .env.' });
-
-    const { name, email, cpf, phone, planType = 'monthly' } = req.body || {};
-    if (!name || !email) return res.status(400).json({ message: 'Nome e e-mail são obrigatórios.' });
-
-    const priceId = planType === 'annual'
-      ? (process.env.STRIPE_ANNUAL_PRICE_ID || process.env.STRIPE_PRICE_ID)
-      : process.env.STRIPE_PRICE_ID;
-    if (!priceId) return res.status(503).json({ message: 'Plano não configurado. Adicione STRIPE_PRICE_ID no .env.' });
-
-    const customer = await stripe.customers.create({
-      name,
-      email,
-      phone: phone || undefined,
-      metadata: { cpf: cpf || '', source: 'atlas-checkout', planType },
-    });
-
-    const subscription = await stripe.subscriptions.create({
-      customer:         customer.id,
-      items:            [{ price: priceId }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand:           ['latest_invoice.payment_intent'],
-    });
-
-    const pi = subscription.latest_invoice?.payment_intent;
-    if (!pi?.client_secret) return res.status(502).json({ message: 'Erro ao criar assinatura no Stripe.' });
-
-    const planPrice = planType === 'annual'
-      ? (process.env.STRIPE_ANNUAL_PLAN_PRICE || 'R$ 202,80')
-      : (process.env.STRIPE_PLAN_PRICE        || 'R$ 19,90');
-    const planName = planType === 'annual'
-      ? (process.env.STRIPE_ANNUAL_PLAN_NAME || 'Atlas Premium')
-      : (process.env.STRIPE_PLAN_NAME        || 'Atlas Pro');
-
-    res.json({
-      clientSecret:   pi.client_secret,
-      customerId:     customer.id,
-      subscriptionId: subscription.id,
-      planPrice,
-      planName,
-    });
-  } catch (err) { next(err); }
-});
-
-// Verifica pagamento + cria conta Supabase
-app.post('/api/billing/complete-registration', billingLimiter, async (req, res, next) => {
-  try {
-    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
-
-    const { email, password, name, cpf, phone, address, stripeCustomerId, paymentIntentId } = req.body || {};
-    if (!email || !password || !stripeCustomerId || !paymentIntentId) {
-      return res.status(400).json({ message: 'Dados incompletos.' });
-    }
-
-    // Verifica pagamento no Stripe
-    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
-    if (pi.status !== 'succeeded') {
-      return res.status(400).json({ message: 'Pagamento não confirmado. Tente novamente.' });
-    }
-
-    // Cria usuário no Supabase (admin, sem email de confirmação)
-    const { ok, status, data } = await proxyFetch(`${SUPA_URL}/auth/v1/admin/users`, {
-      method:  'POST',
-      headers: {
-        'Content-Type':  'application/json',
-        'apikey':        SUPA_SERVICE,
-        'Authorization': `Bearer ${SUPA_SERVICE}`,
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: { name, cpf, phone, address, stripe_customer_id: stripeCustomerId, plan: 'pro' },
-      }),
-    });
-
-    if (!ok) {
-      const msg = supaErrorMsg(data);
-      if (status === 422 || msg.toLowerCase().includes('already')) {
-        return res.status(409).json({ message: 'Este e-mail já está cadastrado. Faça login.' });
-      }
-      return res.status(status).json({ message: msg });
-    }
-
-    // Associa user_id ao customer do Stripe (não-fatal)
-    try { await stripe.customers.update(stripeCustomerId, { metadata: { supabase_user_id: data.id } }); } catch { /* ok */ }
-
-    res.json({ ok: true });
-  } catch (err) { next(err); }
-});
-
-// Cria sessão no Stripe Billing Portal para o usuário autenticado gerenciar a assinatura
-app.post('/api/billing/portal', requireAuth, async (req, res, next) => {
-  try {
-    const { ok, data } = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
-      headers: supaHeaders(req.authToken),
-    });
-
-    const metadata = data?.user_metadata || {};
-    if (ok && metadata.billing_provider === 'mercadopago' && metadata.mp_subscription_id) {
-      return res.json({ provider: 'mercadopago', status: metadata.mp_subscription_status });
-    }
-
-    if (!stripe) return res.status(503).json({ message: 'Pagamentos não configurados.' });
-    const customerId = metadata.stripe_customer_id;
-    if (!ok || !customerId) {
-      return res.status(400).json({ message: 'Nenhuma assinatura encontrada para esta conta.' });
-    }
-
-    const appUrl = (process.env.APP_URL || `http://localhost:${process.env.PORT || 3001}`).replace(/\/+$/, '');
-    const session = await stripe.billingPortal.sessions.create({
-      customer:   customerId,
-      return_url: `${appUrl}/app`,
-    });
-
-    res.json({ url: session.url });
   } catch (err) { next(err); }
 });
 

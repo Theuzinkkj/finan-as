@@ -11,7 +11,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <script src="https://js.stripe.com/v3/"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -395,25 +394,6 @@
     }
     .btn-back:hover { border-color: var(--border-h); color: var(--text); }
 
-    /* ── Stripe card element ── */
-    .stripe-wrap {
-      background: rgba(255,255,255,.05);
-      border: 1px solid var(--border-h);
-      border-radius: 10px;
-      padding: 13px 14px;
-      transition: border-color .2s, box-shadow .2s;
-      margin-bottom: 6px;
-    }
-    .stripe-wrap.focused {
-      border-color: var(--purple);
-      box-shadow: 0 0 0 3px rgba(99,102,241,.18);
-    }
-    #card-errors {
-      font-size: .75rem;
-      color: var(--red);
-      min-height: 18px;
-      margin-bottom: 4px;
-    }
     #payment-error {
       font-size: .80rem;
       color: var(--red);
@@ -435,7 +415,7 @@
     .payment-summary-name { font-size: .88rem; font-weight: 600; }
     .payment-summary-price { font-size: 1.1rem; font-weight: 800; color: var(--purple-l); }
 
-    .stripe-badge {
+    .payment-security {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -444,35 +424,7 @@
       color: var(--text-3);
       margin-top: 12px;
     }
-    .stripe-badge i { font-size: .8rem; color: var(--green); }
-
-    .payment-methods {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-    .payment-method {
-      min-height: 70px;
-      padding: 12px;
-      border: 1px solid var(--border-h);
-      border-radius: 12px;
-      background: rgba(255,255,255,.035);
-      color: var(--text);
-      font: 700 .88rem 'Inter', sans-serif;
-      cursor: pointer;
-      transition: border-color .2s, background .2s, transform .1s;
-    }
-    .payment-method:hover { transform: translateY(-1px); border-color: var(--purple); }
-    .payment-method:disabled { opacity: .42; cursor: not-allowed; transform: none; }
-    .payment-method.active {
-      border-color: var(--purple);
-      background: rgba(99,102,241,.12);
-      box-shadow: 0 0 0 2px rgba(99,102,241,.12);
-    }
-    .payment-method i { display: block; font-size: 1.25rem; margin-bottom: 5px; }
-    .payment-panel { display: none; }
-    .payment-panel.active { display: block; }
+    .payment-security i { font-size: .8rem; color: var(--green); }
     .btn-mercadopago {
       background: #009ee3;
       box-shadow: 0 8px 28px rgba(0,158,227,.22);
@@ -569,7 +521,6 @@
       .form-row.col-2 { grid-template-columns: 1fr; }
       .co-stepper { gap: 0; }
       .co-step-label { display: none; }
-      .payment-methods { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -594,7 +545,7 @@
     </a>
     <div class="co-secure">
       <i class="bi bi-shield-lock-fill"></i>
-      Pagamento seguro via Mercado Pago ou Stripe
+      Pagamento seguro via Mercado Pago
     </div>
   </header>
 
@@ -790,48 +741,15 @@
             <div class="payment-summary-price" id="payment-price-label">R$ 19,90</div>
           </div>
 
-          <div class="payment-methods">
-            <button type="button" class="payment-method" id="method-mp" onclick="choosePaymentMethod('mercadopago')">
-              <i class="bi bi-wallet2"></i>Mercado Pago
-            </button>
-            <button type="button" class="payment-method" id="method-stripe" onclick="choosePaymentMethod('stripe')">
-              <i class="bi bi-credit-card"></i>Cartão
-            </button>
-          </div>
-
           <div id="payment-error"></div>
 
-          <div class="payment-panel" id="panel-mp">
-            <button class="btn-primary btn-mercadopago" id="btn-mp" onclick="submitMercadoPago()">
-              <i class="bi bi-box-arrow-up-right"></i>
-              <span id="btn-mp-label">Continuar no Mercado Pago</span>
-            </button>
-            <div class="stripe-badge">
-              <i class="bi bi-shield-check"></i>
-              A ativação ocorre após a confirmação do Mercado Pago
-            </div>
-          </div>
-
-          <div class="payment-panel" id="panel-stripe">
-            <div class="payment-loading" id="payment-loading" style="display:none">
-              <div class="spinner"></div>
-              <span style="font-size:.82rem;color:var(--text-2)">Preparando cartão…</span>
-            </div>
-            <div id="stripe-content">
-              <div class="field" style="margin-bottom:16px">
-                <label>Dados do cartão <span class="req">*</span></label>
-                <div class="stripe-wrap" id="stripe-wrap"><div id="card-element"></div></div>
-                <div id="card-errors"></div>
-              </div>
-              <button class="btn-primary" id="btn-pay" onclick="submitPayment()">
-                <i class="bi bi-lock-fill"></i>
-                <span id="btn-pay-label">Pagar com segurança</span>
-              </button>
-              <div class="stripe-badge">
-                <i class="bi bi-shield-check"></i>
-                Seus dados são criptografados pelo Stripe
-              </div>
-            </div>
+          <button class="btn-primary btn-mercadopago" id="btn-mp" onclick="submitMercadoPago()">
+            <i class="bi bi-box-arrow-up-right"></i>
+            <span id="btn-mp-label">Continuar no Mercado Pago</span>
+          </button>
+          <div class="payment-security">
+            <i class="bi bi-shield-check"></i>
+            A ativação ocorre após a confirmação do Mercado Pago
           </div>
         </div>
       </div>
@@ -863,7 +781,6 @@
 /* ── Estado global ── */
 let currentStep = 1;
 const fd = {}; // form data acumulado entre steps
-let stripe = null, cardElement = null, clientSecret = null, customerId = null;
 let planPrice = 'R$ 19,90';
 let mercadoPagoEnabled = false;
 
@@ -874,10 +791,8 @@ const planType = new URLSearchParams(window.location.search).get('plan') === 'an
   try {
     const res  = await fetch('/api/billing/config');
     const data = await res.json();
-    if (data.publishableKey) stripe = Stripe(data.publishableKey);
     mercadoPagoEnabled = Boolean(data.mercadoPagoEnabled);
-    document.getElementById('method-mp').disabled = !mercadoPagoEnabled;
-    document.getElementById('method-stripe').disabled = !stripe;
+    document.getElementById('btn-mp').disabled = !mercadoPagoEnabled;
 
     const plan = planType === 'annual' ? data.plans?.annual : data.plans?.monthly;
     if (plan) {
@@ -1083,97 +998,14 @@ function submitStep2() {
   goToStep(3);
 }
 
-/* ── Step 3 — Escolher e preparar pagamento ── */
-let stripePaymentReady = false;
-
+/* ── Step 3 — Preparar pagamento ── */
 function preparePaymentStep() {
   document.getElementById('payment-price-label').textContent = planPrice;
   document.getElementById('payment-plan-label').innerHTML =
     `<i class="bi bi-gem" style="color:var(--purple-l);margin-right:6px"></i>${planType === 'annual' ? 'Atlas Premium · anual' : 'Atlas Pro · mensal'}`;
 
-  if (mercadoPagoEnabled) choosePaymentMethod('mercadopago');
-  else if (stripe) choosePaymentMethod('stripe');
-  else document.getElementById('payment-error').textContent =
+  if (!mercadoPagoEnabled) document.getElementById('payment-error').textContent =
     'Pagamentos não disponíveis. Entre em contato com o suporte.';
-}
-
-function choosePaymentMethod(method) {
-  if (method === 'mercadopago' && !mercadoPagoEnabled) return;
-  if (method === 'stripe' && !stripe) return;
-  document.getElementById('payment-error').textContent = '';
-  document.getElementById('method-mp').classList.toggle('active', method === 'mercadopago');
-  document.getElementById('method-stripe').classList.toggle('active', method === 'stripe');
-  document.getElementById('panel-mp').classList.toggle('active', method === 'mercadopago');
-  document.getElementById('panel-stripe').classList.toggle('active', method === 'stripe');
-
-  if (method === 'stripe') prepareStripePayment();
-}
-
-async function prepareStripePayment() {
-  if (stripePaymentReady) return;
-  const loadEl = document.getElementById('payment-loading');
-  const contentEl = document.getElementById('stripe-content');
-  loadEl.style.display = 'flex';
-  contentEl.style.display = 'none';
-
-  if (!stripe) {
-    loadEl.style.display = 'none';
-    contentEl.style.display = 'block';
-    document.getElementById('payment-error').textContent = 'Pagamento por cartão não configurado.';
-    document.getElementById('btn-pay').disabled = true;
-    return;
-  }
-
-  try {
-    const res = await fetch('/api/billing/prepare-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: fd.nome, email: fd.email, cpf: fd.cpf, phone: fd.tel, planType }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Erro ao preparar pagamento');
-
-    clientSecret = data.clientSecret;
-    customerId   = data.customerId;
-
-    // Montar Stripe CardElement
-    const elements = stripe.elements();
-    cardElement = elements.create('card', {
-      style: {
-        base: {
-          color: '#f1f5f9',
-          fontFamily: 'Inter, sans-serif',
-          fontSize:   '15px',
-          '::placeholder': { color: '#64748b' },
-          iconColor: '#818cf8',
-        },
-        invalid: { color: '#ef4444' },
-      },
-      hidePostalCode: true,
-    });
-    cardElement.mount('#card-element');
-    cardElement.on('ready', () => {});
-    cardElement.on('focus', () => document.getElementById('stripe-wrap').classList.add('focused'));
-    cardElement.on('blur',  () => document.getElementById('stripe-wrap').classList.remove('focused'));
-    cardElement.on('change', e => {
-      document.getElementById('card-errors').textContent = e.error?.message || '';
-    });
-
-    // Atualizar sumário de pagamento
-    const resolvedPrice = data.planPrice || planPrice;
-    const resolvedName  = data.planName  || (planType === 'annual' ? 'Atlas Premium' : 'Atlas Pro');
-    planPrice = resolvedPrice;
-    document.getElementById('payment-price-label').textContent = resolvedPrice;
-    document.getElementById('payment-plan-label').innerHTML =
-      `<i class="bi bi-gem" style="color:var(--purple-l);margin-right:6px"></i>${resolvedName} · ${planType === 'annual' ? 'anual' : 'mensal'}`;
-
-    stripePaymentReady = true;
-  } catch (err) {
-    document.getElementById('payment-error').textContent = err.message;
-  } finally {
-    loadEl.style.display = 'none';
-    contentEl.style.display = 'block';
-  }
 }
 
 async function submitMercadoPago() {
@@ -1250,71 +1082,6 @@ async function handleMercadoPagoReturn() {
   }
 }
 
-/* ── Step 3 — Confirmar pagamento ── */
-async function submitPayment() {
-  if (!stripe || !cardElement || !clientSecret) return;
-
-  const btn   = document.getElementById('btn-pay');
-  const label = document.getElementById('btn-pay-label');
-  const errEl = document.getElementById('payment-error');
-
-  btn.disabled = true;
-  label.innerHTML = '<span class="btn-spinner"></span> Processando…';
-  errEl.textContent = '';
-
-  try {
-    const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: { name: fd.nome, email: fd.email },
-      },
-    });
-
-    if (error) {
-      errEl.textContent = error.message;
-      return;
-    }
-
-    if (paymentIntent.status === 'succeeded') {
-      // Criar conta no backend
-      const res = await fetch('/api/billing/complete-registration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email:            fd.email,
-          password:         fd.senha,
-          name:             fd.nome,
-          cpf:              fd.cpf,
-          phone:            fd.tel,
-          address:          fd.endereco,
-          stripeCustomerId: customerId,
-          paymentIntentId:  paymentIntent.id,
-        }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Email já cadastrado
-        if (res.status === 409) {
-          errEl.textContent = data.message + ' Redirecionando para login…';
-          setTimeout(() => window.location.href = '/login', 2500);
-          return;
-        }
-        throw new Error(data.message || 'Erro ao criar conta');
-      }
-
-      // Sucesso!
-      document.getElementById('success-email').textContent = fd.email;
-      document.getElementById('success-plan-name').textContent = data.planName || (planType === 'annual' ? 'Atlas Premium' : 'Atlas Pro');
-      goToStep(4);
-    }
-  } catch (err) {
-    errEl.textContent = err.message;
-  } finally {
-    btn.disabled = false;
-    label.innerHTML = '<i class="bi bi-lock-fill"></i> Pagar com segurança';
-  }
-}
 </script>
 </body>
 </html>

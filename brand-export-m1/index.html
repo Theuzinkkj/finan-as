@@ -50,25 +50,6 @@
   .preview-bg-light .name { color: #1A1726; }
   .preview-bg-light .file { color: rgba(0,0,0,0.45); }
 
-  .stripe-card {
-    background: #fff; color: #0a2540; padding: 22px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.30); border-radius: 12px;
-    border: 1px solid #e3e3e5;
-  }
-  .stripe-card .head2 {
-    display: flex; align-items: center; gap: 12px;
-    padding-bottom: 18px; border-bottom: 1px solid #f0f0f2;
-  }
-  .stripe-card .icon-wrap {
-    width: 48px; height: 48px; border-radius: 10px;
-    background: #0B0B16;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .stripe-card .brand-name { font-size: 15px; font-weight: 600; }
-  .stripe-card .brand-url { font-family: "JetBrains Mono", monospace; font-size: 11px; color: #697386; }
-  .stripe-card .amount-label { font-size: 12px; color: #697386; margin-top: 18px; }
-  .stripe-card .amount { font-size: 30px; font-weight: 700; letter-spacing: -0.5px; }
-
   code {
     background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;
     font-family: "JetBrains Mono", monospace; font-size: 12px;
@@ -180,56 +161,14 @@
     </div>
   </div>
 
-  <h2>4 · Ícone para fatura Stripe</h2>
-  <div class="grid grid-2" style="align-items: flex-start;">
-    <div class="card">
-      <span class="label">256 × 256 · upload no Stripe</span>
-      <img src="stripe-icon-256.png" alt="" style="width: 128px; height: 128px; border-radius: 12px;">
-      <span class="file">stripe-icon-256.png</span>
-      <p style="font-size: 11px; color: #6E6B85; max-width: 220px; margin: 6px 0 0; line-height: 1.5;">
-        Fundo escuro sólido. Vai dentro de container do Stripe, sem padding extra.
-      </p>
-    </div>
-
-    <!-- Mockup recibo Stripe -->
-    <div class="stripe-card">
-      <div class="head2">
-        <div class="icon-wrap">
-          <img src="logo-mark.svg" alt="" style="width: 30px; height: 30px;">
-        </div>
-        <div>
-          <div class="brand-name">Atlas</div>
-          <div class="brand-url">atlas.io</div>
-        </div>
-        <div style="margin-left: auto; text-align: right;">
-          <div class="brand-url" style="font-size: 10px; letter-spacing: 0.5px;">RECIBO</div>
-          <div class="brand-url" style="font-size: 11px; color: #0a2540; margin-top: 2px;">#1A2B-3F4D</div>
-        </div>
-      </div>
-      <div class="amount-label">Valor pago</div>
-      <div class="amount">R$ 19,90</div>
-      <div class="brand-url" style="margin-top: 4px;">21 mai 2026 · 14:32</div>
-      <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0f0f2; font-size: 12px;">
-        <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-          <span style="color: #697386;">Descrição</span>
-          <span style="font-weight: 500;">Atlas Pro · Mensal</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; padding: 5px 0;">
-          <span style="color: #697386;">Cartão</span>
-          <span style="font-weight: 500;">•••• 4242</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <h2>5 · Cole no seu &lt;head&gt;</h2>
+  <h2>4 · Cole no seu &lt;head&gt;</h2>
   <div class="code-block"><span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/svg+xml"</span> <span class="attr">href</span>=<span class="val">"/favicon.svg"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/png"</span> <span class="attr">sizes</span>=<span class="val">"32x32"</span> <span class="attr">href</span>=<span class="val">"/favicon-32.png"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"icon"</span> <span class="attr">type</span>=<span class="val">"image/png"</span> <span class="attr">sizes</span>=<span class="val">"16x16"</span> <span class="attr">href</span>=<span class="val">"/favicon-16.png"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"apple-touch-icon"</span> <span class="attr">sizes</span>=<span class="val">"180x180"</span> <span class="attr">href</span>=<span class="val">"/apple-touch-icon.png"</span><span class="tag">&gt;</span>
 <span class="tag">&lt;link</span> <span class="attr">rel</span>=<span class="val">"manifest"</span> <span class="attr">href</span>=<span class="val">"/manifest.json"</span><span class="tag">&gt;</span></div>
 
-  <h2>6 · manifest.json (PWA)</h2>
+  <h2>5 · manifest.json (PWA)</h2>
   <div class="code-block">{
   <span class="attr">"name"</span>: <span class="val">"Atlas"</span>,
   <span class="attr">"short_name"</span>: <span class="val">"Atlas"</span>,
@@ -241,21 +180,12 @@
   <span class="attr">"background_color"</span>: <span class="val">"#0B0B16"</span>
 }</div>
 
-  <h2>7 · Stripe Dashboard</h2>
-  <div class="note">
-    <strong>Onde colocar o ícone na Stripe:</strong><br>
-    Dashboard → Settings → Branding → <em>Icon</em> (logo da empresa nas faturas/recibos).
-    Use <code>stripe-icon-256.png</code> ou <code>stripe-icon-512.png</code> (Stripe redimensiona automaticamente).<br><br>
-    <strong>Cores de marca pra Stripe:</strong> Primary <code>#7C5CFF</code> · Secondary <code>#0B0B16</code>.
-  </div>
-
   <h2>Arquivos no pack</h2>
   <ul style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #B5B2C8; line-height: 1.8; list-style: none; padding: 0;">
     <li>📐 <strong style="color: #ECEAF5;">favicon.svg</strong> — vetor, recomendado (suporta retina ilimitado)</li>
     <li>🖼 favicon-{16,32,48,64}.png — fallback PNG</li>
     <li>🍎 apple-touch-icon.png — 180×180 com fundo escuro</li>
     <li>📱 icon-{192,512}.png — PWA / Android</li>
-    <li>💳 <strong style="color: #ECEAF5;">stripe-icon-{256,512}.png</strong> — pra upload no Stripe Dashboard</li>
     <li>🎨 logo-mark.svg, logo-mark-white.svg, logo-mark-black.svg — símbolo só</li>
     <li>🎨 logo-mark-{128,256,512}.png — símbolo em raster</li>
     <li>🏷 <strong style="color: #ECEAF5;">logo-full.svg</strong>, logo-full-dark-text.svg — logo + texto</li>

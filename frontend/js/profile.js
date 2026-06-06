@@ -151,17 +151,12 @@ function openSettingsModal() {
 
 async function manageSubscription() {
   const btn = document.getElementById('btn-manage-subscription');
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite"></i><span>Abrindo portal…</span>'; }
+  const confirmed = window.confirm('Deseja cancelar a renovação da assinatura pelo Mercado Pago?');
+  if (!confirmed) return;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-arrow-repeat" style="animation:spin .7s linear infinite"></i><span>Cancelando…</span>'; }
   try {
-    const data = await API.req('POST', '/api/billing/portal');
-    if (data?.url) window.location.href = data.url;
-    else if (data?.provider === 'mercadopago') {
-      const confirmed = window.confirm('Deseja cancelar a renovação da assinatura pelo Mercado Pago?');
-      if (!confirmed) return;
-      await API.req('POST', '/api/billing/mercadopago/cancel');
-      toast('Assinatura cancelada. Seu plano não será renovado.', 'ok');
-    }
-    else toast('Erro ao abrir portal de assinatura.', 'err');
+    await API.req('POST', '/api/billing/mercadopago/cancel');
+    toast('Assinatura cancelada. Seu plano não será renovado.', 'ok');
   } catch (err) {
     const msg = err.message || '';
     if (msg.includes('Nenhuma assinatura')) {
