@@ -914,6 +914,55 @@ app.patch('/api/transactions/:id', requireAuth, validate(schemas.transactionPatc
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
+async function ensureAvatarBucket() {
+  const headers = {
+    'Content-Type':  'application/json',
+    'apikey':        SUPA_SERVICE,
+    'Authorization': `Bearer ${SUPA_SERVICE}`,
+  };
+  const existing = await proxyFetch(`${SUPA_URL}/storage/v1/bucket/avatars`, { headers });
+  if (existing.ok) {
+    if (existing.data?.public) return;
+    const updated = await proxyFetch(`${SUPA_URL}/storage/v1/bucket/avatars`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        public:             true,
+        file_size_limit:    MAX_PHOTO_BYTES,
+        allowed_mime_types: [...ALLOWED_IMAGE_TYPES],
+      }),
+    });
+    if (!updated.ok) {
+      const err = new Error(supaErrorMsg(updated.data) || 'Erro ao configurar armazenamento de fotos.');
+      err.status = updated.status;
+      throw err;
+    }
+    return;
+  }
+  if (existing.status !== 404) {
+    const err = new Error(supaErrorMsg(existing.data) || 'Erro ao verificar armazenamento de fotos.');
+    err.status = existing.status;
+    throw err;
+  }
+
+  const created = await proxyFetch(`${SUPA_URL}/storage/v1/bucket`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      id:                 'avatars',
+      name:               'avatars',
+      public:             true,
+      file_size_limit:    MAX_PHOTO_BYTES,
+      allowed_mime_types: [...ALLOWED_IMAGE_TYPES],
+    }),
+  });
+  if (!created.ok && created.status !== 409) {
+    const err = new Error(supaErrorMsg(created.data) || 'Erro ao criar armazenamento de fotos.');
+    err.status = created.status;
+    throw err;
+  }
+}
+
 app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
   try {
     const { base64 } = req.body || {};
@@ -939,8 +988,18 @@ app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
       return res.status(400).json({ message: 'Arquivo não reconhecido. Tente uma foto diferente.' });
     }
 
-    const ext      = normalizedType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
-    const filePath = `${req.userId}.${ext}`;
+    await ensureAvatarBucket();
+
+    const currentUser = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+      headers: supaHeaders(req.authToken),
+    });
+    if (!currentUser.ok) {
+      return res.status(currentUser.status).json({ message: supaErrorMsg(currentUser.data) });
+    }
+
+    const oldPhotoUrl = currentUser.data?.user_metadata?.photo || '';
+    const ext          = normalizedType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+    const filePath     = `${req.userId}/${Date.now()}-${randomBytes(4).toString('hex')}.${ext}`;
 
     let uploadRes;
     try {
@@ -972,12 +1031,28 @@ app.post('/api/profile/photo', requireAuth, async (req, res, next) => {
 
     const photoUrl = `${SUPA_URL}/storage/v1/object/public/avatars/${filePath}`;
 
-    // Salva a URL (pequena) no user_metadata — não o base64
-    await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
+    // Salva a URL no perfil e confirma a persistência antes de responder sucesso.
+    const saved = await proxyFetch(`${SUPA_URL}/auth/v1/user`, {
       method:  'PUT',
       headers: supaHeaders(req.authToken),
       body:    JSON.stringify({ data: { photo: photoUrl } }),
     });
+    if (!saved.ok) {
+      await proxyFetch(`${SUPA_URL}/storage/v1/object/avatars/${filePath}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}` },
+      }).catch(() => {});
+      return res.status(saved.status).json({ message: supaErrorMsg(saved.data) });
+    }
+
+    // Remove o arquivo anterior depois que a nova foto já está persistida.
+    const oldMatch = oldPhotoUrl.match(/\/object\/public\/avatars\/([^?]+)(?:\?.*)?$/);
+    if (oldMatch && oldMatch[1] !== filePath) {
+      await proxyFetch(`${SUPA_URL}/storage/v1/object/avatars/${oldMatch[1]}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPA_SERVICE, 'Authorization': `Bearer ${SUPA_SERVICE}` },
+      }).catch(() => {});
+    }
 
     res.status(200).json({ url: photoUrl });
   } catch (err) { next(err); }

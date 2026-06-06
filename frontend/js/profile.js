@@ -3,16 +3,31 @@
 // =============================================
 //  PROFILE
 // =============================================
+let _profilePhoto = null;
+
 function loadProfile() {
-  return Storage.getJSON(Storage.profileKey(), {});
+  const stored = Storage.getJSON(Storage.profileKey(), {});
+
+  // Remove fotos deixadas por versões antigas. A origem da foto é sempre o servidor.
+  if (Object.prototype.hasOwnProperty.call(stored, 'photo')) {
+    const { photo: _legacyPhoto, ...clean } = stored;
+    Storage.setJSON(Storage.profileKey(), clean);
+    return _profilePhoto ? { ...clean, photo: _profilePhoto } : clean;
+  }
+
+  return _profilePhoto ? { ...stored, photo: _profilePhoto } : stored;
 }
 
 function saveProfile(data) {
-  Storage.setJSON(Storage.profileKey(), { ...loadProfile(), ...data });
+  const hasPhoto = Object.prototype.hasOwnProperty.call(data, 'photo');
+  const { photo, ...serverData } = data;
+  if (hasPhoto) _profilePhoto = photo || null;
+
+  const current = loadProfile();
+  const { photo: _currentPhoto, ...storedProfile } = current;
+  Storage.setJSON(Storage.profileKey(), { ...storedProfile, ...serverData });
+
   if (!Demo.active) {
-    const { photo, ...serverData } = data;
-    // Sincroniza URL da foto (curta) mas nunca base64 (enorme → quebra o JWT)
-    if (photo && photo.startsWith('http')) serverData.photo = photo;
     if (Object.keys(serverData).length > 0) {
       API.req('PATCH', '/api/profile', serverData).catch(() => {});
     }
@@ -24,7 +39,11 @@ async function syncProfileFromServer() {
   try {
     const remote = await API.req('GET', '/api/profile');
     if (remote && typeof remote === 'object' && Object.keys(remote).length) {
-      Storage.setJSON(Storage.profileKey(), { ...loadProfile(), ...remote });
+      const { photo, ...serverProfile } = remote;
+      _profilePhoto = photo || null;
+      const current = loadProfile();
+      const { photo: _currentPhoto, ...storedProfile } = current;
+      Storage.setJSON(Storage.profileKey(), { ...storedProfile, ...serverProfile });
       window.dispatchEvent(new Event('atlas:profile-synced'));
     }
   } catch { /* offline ou sem sessão — mantém cache local */ }

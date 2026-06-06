@@ -792,23 +792,36 @@ function bindEvents() {
   photoInput.addEventListener('change', e => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast('Selecione um arquivo de imagem.', 'err');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast('A foto deve ter no máximo 5 MB.', 'err');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = async ev => {
       const base64 = ev.target.result;
-      const localProfile = { ...loadProfile(), photo: base64 };
-      Storage.setJSON(Storage.profileKey(), localProfile);
-      updateProfileUI();
 
-      if (Demo.active) { toast('Foto atualizada!'); return; }
+      if (Demo.active) {
+        saveProfile({ photo: base64 });
+        updateProfileUI();
+        toast('Foto atualizada!');
+        return;
+      }
 
       try {
         toast('Enviando foto...');
-        const result = await API.req('POST', '/api/profile/photo', { base64 });
+        const result = await API.req('POST', '/api/profile/photo', { base64 }, 45_000);
         saveProfile({ photo: result.url });
         updateProfileUI();
         toast('Foto atualizada!');
       } catch (err) {
-        toast('Foto salva sÃ³ neste dispositivo. ' + err.message, 'err');
+        toast('Não foi possível salvar a foto. ' + err.message, 'err');
       }
     };
     reader.readAsDataURL(file);

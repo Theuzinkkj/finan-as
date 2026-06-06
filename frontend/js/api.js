@@ -106,9 +106,9 @@ const PendingQueue = {
 //  BACKEND HTTP CLIENT
 // =============================================
 const API = {
-  async req(method, path, body) {
+  async req(method, path, body, timeout = 20_000) {
     const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 20_000);
+    const tid = setTimeout(() => controller.abort(), timeout);
 
     const opts = {
       method,
