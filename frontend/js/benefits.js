@@ -44,6 +44,12 @@ function saveBenefitsConfig() {
   toast('Benefícios configurados!');
 }
 
+function openBenefitsConfig() {
+  document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
+  document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';
+  openModal('modal-benefits-config');
+}
+
 // =============================================
 //  RENDER — BENEFITS
 // =============================================
@@ -61,7 +67,11 @@ function renderBenefits(txs) {
 
   const benefitTxs = txs.filter(t => t.type === 'beneficio');
 
-  if (summaryEl) summaryEl.textContent = '';
+  if (summaryEl) {
+    const allocatedTotal = Object.values(benefitAllocations).reduce((sum, value) => sum + (Number(value) || 0), 0);
+    const usedTotal = benefitTxs.reduce((sum, tx) => sum + tx.amount, 0);
+    summaryEl.textContent = allocatedTotal ? `${Math.min(100, usedTotal / allocatedTotal * 100).toFixed(0)}% utilizado` : '';
+  }
 
   const cards = Object.entries(BENEFIT_TYPES).map(([key, bt]) => {
     const allocated = benefitAllocations[key] || 0;
@@ -76,18 +86,21 @@ function renderBenefits(txs) {
     return `
       <div class="benefit-card" onclick="openBenefitDetail('${key}')" title="Ver detalhes de ${bt.label}">
         <div class="benefit-card-header">
-          <span class="benefit-icon">${getBenefitSVG(key)}</span>
+          <span class="benefit-icon" style="--benefit-color:${bt.color}">${getBenefitSVG(key, 20)}</span>
           <span class="benefit-name">${bt.label}</span>
-          <button class="card-dots-btn" onclick="event.stopPropagation();openBenefitMenu(this,'${key}')" title="Opções">⋯</button>
+          <span class="benefit-usage-pill">${pct.toFixed(0)}% usado</span>
+          <button class="card-dots-btn" onclick="event.stopPropagation();openBenefitMenu(this,'${key}')" title="Opções"><i class="bi bi-three-dots"></i></button>
         </div>
-        <span class="benefit-allocated">${fmt(allocated)}<span class="benefit-period"> / mês</span></span>
+        <span class="benefit-balance-label">Saldo disponível</span>
+        <span class="benefit-allocated">${fmt(Math.max(0, remaining))}</span>
         <div class="benefit-progress-track">
-          <div class="benefit-progress-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+          <div class="benefit-progress-fill" style="--progress:${pct.toFixed(1)}%;background:${barColor}"></div>
         </div>
         <div class="benefit-footer">
-          <span class="benefit-used">Usado: ${fmt(used)}</span>
-          <span class="benefit-remaining ${remClass}">${remLabel}</span>
+          <span class="benefit-used">Utilizado <strong>${fmt(used)}</strong></span>
+          <span class="benefit-limit">de ${fmt(allocated)}</span>
         </div>
+        <div class="benefit-status ${remClass}">${remLabel}</div>
       </div>`;
   }).filter(Boolean).join('');
 
@@ -99,6 +112,7 @@ function renderBenefits(txs) {
 
   grid.innerHTML = cards ? cards + quickAdd : '';
   if (emptyEl) emptyEl.classList.toggle('hidden', !!cards);
+  if (typeof renderGoalsBenefitsOverview === 'function') renderGoalsBenefitsOverview(txs);
 }
 
 function editBenefit(key) {

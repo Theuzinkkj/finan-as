@@ -312,51 +312,89 @@
         </div>
       </div>
 
-      <!-- Metas & Benefícios (card do dashboard) -->
-      <div class="card dash-metas-card">
-        <div class="card-header">
-          <h3>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Metas &amp; Benefícios
-          </h3>
+      <!-- Metas & Benefícios -->
+      <section class="card dash-metas-card" aria-labelledby="goals-benefits-title">
+        <div class="goals-hero">
+          <div class="goals-hero-copy">
+            <span class="goals-eyebrow">PLANEJAMENTO FINANCEIRO</span>
+            <h2 id="goals-benefits-title"><i class="bi bi-bullseye"></i> Metas &amp; Benefícios</h2>
+            <p id="goals-hero-message">Acompanhe seu progresso e use melhor os recursos disponíveis.</p>
+          </div>
+          <div class="goals-hero-actions">
+            <button class="goals-action goals-action-primary" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Nova Meta</button>
+            <button class="goals-action" type="button" id="btn-benefits-setup-top"><i class="bi bi-plus-lg"></i> Novo Benefício</button>
+          </div>
         </div>
-        <div class="dash-metas-grid">
-          <!-- Meta de Gastos -->
-          <div class="benefits-section" id="budget-section">
-            <div class="benefits-header">
-              <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="true">
-                <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                <span class="section-label">Meta de Gastos</span>
-                <span class="budget-summary" id="budget-summary"></span>
-              </button>
+
+        <div class="goals-summary-grid" aria-label="Resumo de metas e benefícios">
+          <div class="goals-summary-item goals-summary-highlight"><span class="goals-summary-icon"><i class="bi bi-piggy-bank-fill"></i></span><div><span class="goals-summary-label">Economizado no mês</span><strong id="goals-saved-month">R$ 0,00</strong></div></div>
+          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-flag-fill"></i></span><div><span class="goals-summary-label">Metas ativas</span><strong id="goals-active-count">0</strong></div></div>
+          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-wallet2"></i></span><div><span class="goals-summary-label">Benefícios disponíveis</span><strong id="benefits-available-total">R$ 0,00</strong></div></div>
+          <div class="goals-summary-item"><span class="goals-summary-icon"><i class="bi bi-graph-up-arrow"></i></span><div><span class="goals-summary-label">Progresso médio</span><strong id="goals-average-progress">0%</strong></div></div>
+        </div>
+
+        <div class="goals-content-grid">
+          <div class="goals-column">
+            <div class="goals-section-heading">
+              <div><span class="goals-section-kicker">OBJETIVOS</span><h3>Suas metas</h3></div>
+              <button class="goals-text-action" type="button" onclick="openBudgetConfig()">Gerenciar limites</button>
             </div>
-            <div class="benefits-body open" id="budget-body">
-              <div class="budget-grid" id="budget-grid"></div>
-              <div class="benefits-empty hidden" id="budget-empty">
-                Defina limites de gasto por categoria
-                <button class="btn-link" id="btn-budget-setup" style="margin-left:6px">Configurar →</button>
+            <div id="financial-goal-grid"></div>
+            <div class="benefits-section" id="budget-section">
+              <div class="benefits-header">
+                <button class="benefits-toggle" id="btn-budget-toggle" aria-expanded="true">
+                  <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  <span class="section-label">Metas de controle mensal</span>
+                  <span class="budget-summary" id="budget-summary"></span>
+                </button>
+              </div>
+              <div class="benefits-body open" id="budget-body">
+                <div class="budget-grid" id="budget-grid"></div>
+                <div class="benefits-empty hidden" id="budget-empty">
+                  <span class="empty-state-icon"><i class="bi bi-sliders2"></i></span><strong>Crie seu primeiro limite</strong>
+                  <span>Defina quanto deseja gastar por categoria e acompanhe o ritmo ao longo do mês.</span>
+                  <button class="goals-action goals-action-primary" id="btn-budget-setup">Criar limite</button>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Benefícios -->
-          <div class="benefits-section" id="benefits-section">
-            <div class="benefits-header">
-              <button class="benefits-toggle" id="btn-benefits-toggle" aria-expanded="true">
-                <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                <span class="section-label">Benefícios</span>
-                <span class="benefits-summary" id="benefits-summary"></span>
-              </button>
+
+          <div class="goals-column">
+            <div class="goals-section-heading">
+              <div><span class="goals-section-kicker">SALDOS CORPORATIVOS</span><h3>Seus benefícios</h3></div>
+              <button class="goals-text-action" type="button" onclick="openBenefitQuickAdd()">Registrar uso</button>
             </div>
-            <div class="benefits-body open" id="benefits-body">
-              <div class="benefits-grid" id="benefits-grid"></div>
-              <div class="benefits-empty hidden" id="benefits-empty">
-                Você recebe VR ou VT?
-                <button class="btn-link" id="btn-benefits-setup" style="margin-left:6px">Configure aqui →</button>
+            <div class="benefits-section" id="benefits-section">
+              <div class="benefits-header">
+                <button class="benefits-toggle" id="btn-benefits-toggle" aria-expanded="true">
+                  <svg class="benefits-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  <span class="section-label">Consumo no mês</span>
+                  <span class="benefits-summary" id="benefits-summary"></span>
+                </button>
+              </div>
+              <div class="benefits-body open" id="benefits-body">
+                <div class="benefits-grid" id="benefits-grid"></div>
+                <div class="benefits-empty hidden" id="benefits-empty">
+                  <span class="empty-state-icon"><i class="bi bi-credit-card-2-front"></i></span><strong>Centralize seus benefícios</strong>
+                  <span>Cadastre VR e VT para visualizar saldo, consumo e disponibilidade em um só lugar.</span>
+                  <button class="goals-action goals-action-primary" id="btn-benefits-setup">Adicionar benefício</button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <div class="goals-bottom-grid">
+          <aside class="atlas-insights-panel">
+            <div class="panel-title"><span><i class="bi bi-stars"></i></span><div><small>INTELIGÊNCIA ATLAS</small><h3>Insights para você</h3></div></div>
+            <div class="atlas-insights-list" id="goals-insights-list"></div>
+          </aside>
+          <aside class="goals-achievements-panel">
+            <div class="panel-title"><span><i class="bi bi-trophy-fill"></i></span><div><small>SUAS CONQUISTAS</small><h3>Progresso que merece destaque</h3></div></div>
+            <div class="goals-achievements-grid" id="goals-achievements-grid"></div>
+          </aside>
+        </div>
+      </section>
 
       <!-- Rodapé de página -->
       <div class="page-footer">

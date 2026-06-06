@@ -289,31 +289,33 @@ function renderBudgets(txs) {
         <div class="budget-card-header">
           <span class="budget-cat-icon">${cat.icon}</span>
           <span class="budget-cat-name">${cat.label}</span>
-          ${overBudget ? '<span class="budget-alert-icon">⚠</span>' : ''}
-          <button class="card-dots-btn" onclick="event.stopPropagation();openBudgetMenu(this,'${key}')" title="Opções">⋯</button>
+          ${overBudget ? '<span class="budget-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>' : ''}
+          <button class="card-dots-btn" onclick="event.stopPropagation();openBudgetMenu(this,'${key}')" title="Opções"><i class="bi bi-three-dots"></i></button>
         </div>
         <div class="budget-amounts">
           <span class="budget-spent">${fmt(spent)}</span>
           <span class="budget-limit-label"> / ${fmt(limit)}</span>
         </div>
         <div class="budget-progress-track">
-          <div class="budget-progress-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+          <div class="budget-progress-fill" style="--progress:${pct.toFixed(1)}%;background:${barColor}"></div>
         </div>
         <div class="budget-footer">
-          <span class="budget-pct" style="color:${overBudget?'var(--red)':warning?'var(--yellow)':'var(--text-2)'}">${pct.toFixed(0)}% usado</span>
-          <span class="budget-remaining ${remClass}">${remLabel}</span>
+          <span class="budget-pct" style="color:${overBudget?'var(--red)':warning?'var(--yellow)':'var(--text-2)'}"><strong>${pct.toFixed(0)}%</strong> utilizado</span>
+          <span class="budget-remaining ${remClass}">${overBudget ? remLabel : `${fmt(remaining)} livres`}</span>
         </div>
+        <div class="budget-forecast"><i class="bi bi-calendar3"></i> Ciclo encerra em ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</div>
       </div>`;
   }).filter(Boolean).join('');
 
   const quickAdd = `
     <button class="budget-card budget-card-add" onclick="openBudgetConfig()" title="Definir limite por categoria">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span>Definir limite</span>
+      <span>Novo limite</span>
     </button>`;
 
   grid.innerHTML = cards ? cards + quickAdd : '';
   if (emptyEl) emptyEl.classList.toggle('hidden', !!cards);
+  renderGoalsBenefitsOverview(txs);
 
   // Disparar alerta de email quando >= 80% (máximo 1x por categoria por mês)
   if (!Demo.active) {
@@ -344,4 +346,137 @@ function openBudgetMenu(btn, key) {
     { label: 'Alterar limite', action: () => openBudgetConfig() },
     { label: 'Remover meta', action: () => removeBudget(key), danger: true }
   ]);
+}
+
+function renderGoalsBenefitsOverview(txs = txOfMonth()) {
+  const income = txs.filter(t => t.type === 'receita').reduce((sum, tx) => sum + tx.amount, 0);
+  const expenses = txs.filter(t => t.type === 'despesa').reduce((sum, tx) => sum + tx.amount, 0);
+  const saved = Math.max(0, income - expenses);
+  const benefitTxs = txs.filter(t => t.type === 'beneficio');
+  const benefitLimit = Object.values(benefitAllocations || {}).reduce((sum, value) => sum + (Number(value) || 0), 0);
+  const benefitUsed = benefitTxs.reduce((sum, tx) => sum + tx.amount, 0);
+  const benefitAvailable = Math.max(0, benefitLimit - benefitUsed);
+  const budgetEntries = Object.entries(budgets || {}).filter(([, limit]) => limit > 0);
+  const portfolioData = typeof getPortfolioGoalData === 'function'
+    ? getPortfolioGoalData()
+    : { goal: null, totalSaved: 0 };
+  const goal = portfolioData.goal;
+  const goalPct = goal?.amount > 0 ? Math.min(100, portfolioData.totalSaved / goal.amount * 100) : 0;
+  const budgetPcts = budgetEntries.map(([key, limit]) => {
+    const spent = txs
+      .filter(t => t.type === 'despesa' && t.category === key)
+      .reduce((sum, tx) => sum + tx.amount, 0);
+    return Math.max(0, 100 - Math.min(100, spent / limit * 100));
+  });
+  const progressValues = [...(goal ? [goalPct] : []), ...budgetPcts];
+  const averageProgress = progressValues.length
+    ? progressValues.reduce((sum, value) => sum + value, 0) / progressValues.length
+    : 0;
+  const activeGoals = budgetEntries.length + (goal ? 1 : 0);
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value;
+    el.classList.remove('value-updated');
+    void el.offsetWidth;
+    el.classList.add('value-updated');
+  };
+  setText('goals-saved-month', fmt(saved));
+  setText('goals-active-count', activeGoals);
+  setText('benefits-available-total', fmt(benefitAvailable));
+  setText('goals-average-progress', `${averageProgress.toFixed(0)}%`);
+  setText('goals-hero-message', saved > 0
+    ? `Você economizou ${fmt(saved)} neste mês. Continue assim.`
+    : 'Organize seus objetivos e acompanhe cada avanço em um só lugar.');
+
+  const goalGrid = document.getElementById('financial-goal-grid');
+  if (goalGrid) {
+    if (goal) {
+      const remaining = Math.max(0, goal.amount - portfolioData.totalSaved);
+      const dateLabel = goal.date
+        ? new Date(`${goal.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+        : 'Sem prazo definido';
+      goalGrid.innerHTML = `
+        <article class="financial-goal-card ${goalPct >= 100 ? 'is-complete' : ''}" onclick="openGoalModal()">
+          <div class="financial-goal-top">
+            <span class="financial-goal-icon"><i class="bi bi-rocket-takeoff-fill"></i></span>
+            <div class="financial-goal-name"><small>META PRINCIPAL</small><strong>${escHtml(goal.name)}</strong></div>
+            <span class="financial-goal-percent">${goalPct.toFixed(0)}%</span>
+          </div>
+          <div class="financial-goal-values"><strong>${fmt(portfolioData.totalSaved)}</strong><span>de ${fmt(goal.amount)}</span></div>
+          <div class="financial-goal-track"><div class="financial-goal-fill" style="--progress:${goalPct.toFixed(1)}%"></div></div>
+          <div class="financial-goal-meta"><span><i class="bi bi-wallet2"></i> ${goalPct >= 100 ? 'Meta concluída' : `Faltam ${fmt(remaining)}`}</span><span><i class="bi bi-calendar-check"></i> ${dateLabel}</span></div>
+        </article>`;
+    } else {
+      goalGrid.innerHTML = `
+        <button class="financial-goal-empty" type="button" onclick="openGoalModal()">
+          <span><i class="bi bi-bullseye"></i></span>
+          <div><strong>Defina uma meta financeira</strong><small>Escolha um valor, prazo e acompanhe sua evolução.</small></div>
+          <i class="bi bi-arrow-right"></i>
+        </button>`;
+    }
+  }
+
+  const insights = [];
+  if (benefitLimit > 0) {
+    const usagePct = benefitUsed / benefitLimit * 100;
+    insights.push({
+      icon: 'bi-credit-card-2-front',
+      text: usagePct < 35
+        ? `Você utilizou apenas <strong>${usagePct.toFixed(0)}%</strong> dos benefícios neste mês.`
+        : `Você ainda tem <strong>${fmt(benefitAvailable)}</strong> em benefícios disponíveis.`
+    });
+  }
+  if (goal) {
+    insights.push({
+      icon: 'bi-graph-up-arrow',
+      text: goalPct >= 100
+        ? `Sua meta <strong>${escHtml(goal.name)}</strong> foi concluída. Hora de celebrar e criar a próxima.`
+        : `Sua meta <strong>${escHtml(goal.name)}</strong> já chegou a ${goalPct.toFixed(0)}%.`
+    });
+  }
+  if (income > 0) {
+    const rate = saved / income * 100;
+    insights.push({
+      icon: rate >= 20 ? 'bi-stars' : 'bi-lightbulb-fill',
+      text: rate >= 20
+        ? `Sua taxa de economia está em <strong>${rate.toFixed(0)}%</strong>, acima da referência de 20%.`
+        : `Separar mais <strong>${fmt(Math.max(0, income * .2 - saved))}</strong> levaria sua economia mensal à referência de 20%.`
+    });
+  }
+  if (!insights.length) {
+    insights.push({ icon: 'bi-lightbulb-fill', text: 'Cadastre uma meta ou benefício para receber insights personalizados.' });
+  }
+  const insightsEl = document.getElementById('goals-insights-list');
+  if (insightsEl) {
+    insightsEl.innerHTML = insights.slice(0, 3)
+      .map(item => `<div class="atlas-insight-item"><i class="bi ${item.icon}"></i><p>${item.text}</p></div>`)
+      .join('');
+  }
+
+  const unlocked = new Set(Storage.getJSON(Storage.achievKey(), []));
+  const monthlyBalances = {};
+  (typeof transactions !== 'undefined' ? transactions : []).forEach(tx => {
+    if (tx.type !== 'receita' && tx.type !== 'despesa') return;
+    const month = String(tx.date || '').slice(0, 7);
+    if (!month) return;
+    monthlyBalances[month] = (monthlyBalances[month] || 0) + (tx.type === 'receita' ? tx.amount : -tx.amount);
+  });
+  let savingStreak = 0;
+  const cursor = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+  while (savingStreak < 120) {
+    const key = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+    if ((monthlyBalances[key] || 0) <= 0) break;
+    savingStreak++;
+    cursor.setMonth(cursor.getMonth() - 1);
+  }
+  const achievementsEl = document.getElementById('goals-achievements-grid');
+  if (achievementsEl) {
+    achievementsEl.innerHTML = `
+      <div class="goal-achievement"><i class="bi bi-fire"></i><strong>${savingStreak}</strong><span>${savingStreak === 1 ? 'mês economizando' : 'meses economizando'}</span></div>
+      <div class="goal-achievement"><i class="bi bi-trophy-fill"></i><strong>${goalPct >= 100 ? 1 : 0}</strong><span>meta concluída</span></div>
+      <div class="goal-achievement"><i class="bi bi-award-fill"></i><strong>${unlocked.size}</strong><span>conquistas Atlas</span></div>
+      <div class="goal-achievement"><i class="bi bi-cash-stack"></i><strong>${fmt(saved)}</strong><span>economizado</span></div>`;
+  }
 }

@@ -537,11 +537,8 @@ function bindEvents() {
   document.getElementById('btn-budget-setup')?.addEventListener('click', openBudgetConfig);
 
   // Configurar benefÃ­cios
-  document.getElementById('btn-benefits-setup')?.addEventListener('click', () => {
-    document.getElementById('input-vr-amount').value = benefitAllocations.vr || '';
-    document.getElementById('input-vt-amount').value = benefitAllocations.vt || '';
-    openModal('modal-benefits-config');
-  });
+  document.getElementById('btn-benefits-setup')?.addEventListener('click', openBenefitsConfig);
+  document.getElementById('btn-benefits-setup-top')?.addEventListener('click', openBenefitsConfig);
 
   // Toggle Fixo
   document.getElementById('btn-fixed').addEventListener('click', () => {
@@ -1187,6 +1184,7 @@ async function startApp() {
   loadCustomCategories();
   loadBenefitAllocations();
   loadBudgets();
+  loadPortfolioGoal();
   initBenefitsToggle();
   initBudgetToggle();
   buildCategoryGrid();

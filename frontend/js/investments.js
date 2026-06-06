@@ -219,6 +219,7 @@ function saveGoalModal() {
   closeModal('modal-goal');
   renderPortfolioGoal();
   _renderDashGoalCard?.();
+  renderGoalsBenefitsOverview?.();
   toast?.('Meta salva!');
 }
 
@@ -229,6 +230,7 @@ function clearGoalModal() {
   closeModal('modal-goal');
   renderPortfolioGoal();
   _renderDashGoalCard?.();
+  renderGoalsBenefitsOverview?.();
   toast?.('Meta removida.');
 }
 
