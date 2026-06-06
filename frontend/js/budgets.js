@@ -479,4 +479,144 @@ function renderGoalsBenefitsOverview(txs = txOfMonth()) {
       <div class="goal-achievement"><i class="bi bi-award-fill"></i><strong>${unlocked.size}</strong><span>conquistas Atlas</span></div>
       <div class="goal-achievement"><i class="bi bi-cash-stack"></i><strong>${fmt(saved)}</strong><span>economizado</span></div>`;
   }
+
+  const commandGoalsEl = document.getElementById('command-goals-list');
+  if (commandGoalsEl) {
+    const commandGoals = [];
+    if (goal) {
+      commandGoals.push({
+        name: goal.name,
+        current: portfolioData.totalSaved,
+        target: goal.amount,
+        pct: goalPct,
+        action: 'openGoalModal()'
+      });
+    }
+    budgetEntries.slice(0, goal ? 2 : 3).forEach(([key, limit]) => {
+      const spent = txs
+        .filter(t => t.type === 'despesa' && t.category === key)
+        .reduce((sum, tx) => sum + tx.amount, 0);
+      const availablePct = Math.max(0, 100 - Math.min(100, spent / limit * 100));
+      commandGoals.push({
+        name: CATEGORIES[key]?.label || key,
+        current: Math.max(0, limit - spent),
+        target: limit,
+        pct: availablePct,
+        action: `openBudgetDetail('${key}')`
+      });
+    });
+    commandGoalsEl.innerHTML = commandGoals.length
+      ? commandGoals.map(item => `
+          <article class="command-goal-item" onclick="${item.action}">
+            <div class="command-item-top"><span class="command-item-name">${escHtml(item.name)}</span><span class="command-item-pct">${item.pct.toFixed(0)}%</span></div>
+            <div class="command-progress"><span style="--progress:${item.pct.toFixed(1)}%"></span></div>
+            <div class="command-item-values"><strong>${fmt(item.current)}</strong><span>de ${fmt(item.target)}</span></div>
+          </article>`).join('')
+      : '<div class="command-empty">Crie uma meta para acompanhar seu progresso financeiro.</div>';
+  }
+
+  const commandAchievementsEl = document.getElementById('command-achievements');
+  if (commandAchievementsEl) {
+    commandAchievementsEl.innerHTML = `
+      <div class="command-achievement-row"><i class="bi bi-trophy-fill"></i><span>Metas concluídas</span><strong>${goalPct >= 100 ? 1 : 0}</strong></div>
+      <div class="command-achievement-row"><i class="bi bi-piggy-bank-fill"></i><span>Total economizado</span><strong>${fmt(saved)}</strong></div>
+      <div class="command-achievement-row"><i class="bi bi-fire"></i><span>Sequência positiva</span><strong>${savingStreak}m</strong></div>`;
+  }
+
+  const reserveEl = document.getElementById('command-reserve-content');
+  if (reserveEl) {
+    if (goal) {
+      const reserveRemaining = Math.max(0, goal.amount - portfolioData.totalSaved);
+      const reserveDate = goal.date
+        ? new Date(`${goal.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })
+        : 'Sem previsão';
+      reserveEl.innerHTML = `
+        <div class="command-reserve-value">${fmt(portfolioData.totalSaved)} <span>/ ${fmt(goal.amount)}</span></div>
+        <div class="command-progress"><span style="--progress:${goalPct.toFixed(1)}%"></span></div>
+        <div class="command-reserve-meta"><span><i class="bi bi-wallet2"></i>${goalPct >= 100 ? 'Concluída' : `Faltam ${fmt(reserveRemaining)}`}</span><span><i class="bi bi-calendar3"></i>${reserveDate}</span></div>`;
+    } else {
+      reserveEl.innerHTML = '<div class="command-empty">Configure sua reserva e acompanhe a previsão de conclusão.</div>';
+    }
+  }
+
+  const commandBenefitsEl = document.getElementById('command-benefits-list');
+  if (commandBenefitsEl) {
+    const benefitItems = Object.entries(BENEFIT_TYPES).map(([key, bt]) => {
+      const limit = benefitAllocations[key] || 0;
+      const used = benefitTxs.filter(tx => tx.benefitType === key).reduce((sum, tx) => sum + tx.amount, 0);
+      if (!limit && !used) return '';
+      const pct = limit > 0 ? Math.min(100, used / limit * 100) : 0;
+      return `
+        <article class="command-benefit-item" style="--item-color:${bt.color}" onclick="openBenefitDetail('${key}')">
+          <div class="command-item-top">
+            <div class="command-benefit-heading">
+              <span class="command-benefit-icon">${getBenefitSVG(key, 15)}</span>
+              <div class="command-benefit-copy"><span class="command-item-name">${bt.label}</span><small>${fmt(Math.max(0, limit - used))} disponíveis</small></div>
+            </div>
+            <span class="command-item-pct">${pct.toFixed(0)}%</span>
+          </div>
+          <div class="command-progress"><span style="--progress:${pct.toFixed(1)}%"></span></div>
+          <div class="command-item-values"><strong>${fmt(used)} utilizados</strong><span>de ${fmt(limit)}</span></div>
+        </article>`;
+    }).filter(Boolean);
+    commandBenefitsEl.innerHTML = benefitItems.length
+      ? benefitItems.join('')
+      : '<div class="command-empty">Cadastre VR ou VT para acompanhar saldo e consumo.</div>';
+  }
+
+  const commandAiEl = document.getElementById('command-ai-list');
+  if (commandAiEl) {
+    const categoryTotals = {};
+    txs.filter(tx => tx.type === 'despesa').forEach(tx => {
+      categoryTotals[tx.category] = (categoryTotals[tx.category] || 0) + tx.amount;
+    });
+    const totalExpenses = Object.values(categoryTotals).reduce((sum, value) => sum + value, 0);
+    const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+    const quickInsights = [];
+    if (topCategory && totalExpenses > 0) {
+      quickInsights.push(`<strong>${CATEGORIES[topCategory[0]]?.label || topCategory[0]}</strong> representa ${(topCategory[1] / totalExpenses * 100).toFixed(0)}% dos gastos.`);
+    }
+    if (goal) {
+      quickInsights.push(`Sua reserva está <strong>${goalPct.toFixed(0)}% concluída</strong>${goal.date ? `, com previsão para ${new Date(`${goal.date}T12:00:00`).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' })}` : ''}.`);
+    }
+    if (benefitLimit > 0) {
+      quickInsights.push(`Você possui <strong>${fmt(benefitAvailable)}</strong> disponíveis em benefícios.`);
+    }
+    if (!quickInsights.length) quickInsights.push('Adicione dados financeiros para receber análises rápidas.');
+    commandAiEl.innerHTML = quickInsights.slice(0, 3)
+      .map((text, index) => `<div class="command-insight"><i class="bi ${index === 0 ? 'bi-graph-up-arrow' : index === 1 ? 'bi-bullseye' : 'bi-wallet2'}"></i><p>${text}</p></div>`)
+      .join('');
+  }
+
+  const commandAlertsEl = document.getElementById('command-alerts-list');
+  if (commandAlertsEl) {
+    const alerts = [];
+    const overBudget = budgetEntries.find(([key, limit]) => {
+      const spent = txs.filter(tx => tx.type === 'despesa' && tx.category === key).reduce((sum, tx) => sum + tx.amount, 0);
+      return spent > limit;
+    });
+    if (overBudget) {
+      alerts.push({ type: 'danger', icon: 'bi-exclamation-octagon-fill', text: `<strong>${CATEGORIES[overBudget[0]]?.label || overBudget[0]}</strong> ultrapassou o limite mensal.` });
+    }
+    const nowDay = new Date().getDate();
+    const upcomingFixed = txs.find(tx => tx.type === 'despesa' && tx.fixed && Number(String(tx.date).slice(8, 10)) >= nowDay && Number(String(tx.date).slice(8, 10)) <= nowDay + 7);
+    if (upcomingFixed) {
+      alerts.push({ type: 'warning', icon: 'bi-calendar-event', text: `<strong>${escHtml(upcomingFixed.description)}</strong> vence nos próximos dias (${fmt(upcomingFixed.amount)}).` });
+    }
+    if (goal?.date && goalPct < 100 && new Date(`${goal.date}T23:59:59`) < new Date()) {
+      alerts.push({ type: 'danger', icon: 'bi-clock-history', text: `A meta <strong>${escHtml(goal.name)}</strong> está fora do prazo definido.` });
+    }
+    const expenseTxs = txs.filter(tx => tx.type === 'despesa');
+    const avgExpense = expenseTxs.length ? expenseTxs.reduce((sum, tx) => sum + tx.amount, 0) / expenseTxs.length : 0;
+    const unusualExpense = expenseTxs.find(tx => avgExpense > 0 && tx.amount >= avgExpense * 2.5 && tx.amount >= 100);
+    if (unusualExpense) {
+      alerts.push({ type: 'warning', icon: 'bi-activity', text: `Gasto acima do padrão: <strong>${escHtml(unusualExpense.description)}</strong> (${fmt(unusualExpense.amount)}).` });
+    }
+    if (!alerts.length) {
+      alerts.push({ type: 'success', icon: 'bi-check-circle-fill', text: 'Nenhum alerta crítico detectado neste mês.' });
+    }
+    commandAlertsEl.innerHTML = alerts.slice(0, 3)
+      .map(alert => `<div class="command-alert ${alert.type}"><i class="bi ${alert.icon}"></i><p>${alert.text}</p></div>`)
+      .join('');
+  }
 }

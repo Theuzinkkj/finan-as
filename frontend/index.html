@@ -173,6 +173,33 @@
 
     <!-- ======= DASHBOARD ======= -->
     <section class="tab-content active" id="tab-dashboard" role="tabpanel" aria-labelledby="nav-tab-dashboard">
+      <div class="dashboard-command-center">
+        <aside class="command-sidebar command-sidebar-left" aria-label="Metas e conquistas">
+          <section class="command-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">PLANEJAMENTO</span><h2><i class="bi bi-bullseye"></i> Metas financeiras</h2></div>
+              <button class="command-icon-btn" type="button" onclick="openGoalModal()" title="Nova meta"><i class="bi bi-plus-lg"></i></button>
+            </div>
+            <div class="command-goals-list" id="command-goals-list"></div>
+            <button class="command-add-btn" type="button" onclick="openGoalModal()"><i class="bi bi-plus-lg"></i> Nova Meta</button>
+          </section>
+
+          <section class="command-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">PROGRESSO</span><h2><i class="bi bi-trophy-fill"></i> Conquistas</h2></div>
+            </div>
+            <div class="command-achievements" id="command-achievements"></div>
+          </section>
+
+          <section class="command-panel command-reserve-panel" onclick="openGoalModal()" title="Editar reserva financeira">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">SEGURANÇA</span><h2><i class="bi bi-shield-check"></i> Reserva financeira</h2></div>
+            </div>
+            <div id="command-reserve-content"></div>
+          </section>
+        </aside>
+
+        <div class="command-main">
 
       <!-- Dashboard hero (oculto no mobile) -->
       <div class="dash-hero" id="dash-hero">
@@ -310,6 +337,33 @@
           </div>
           <div class="transactions-list" id="recent-transactions"></div>
         </div>
+      </div>
+        </div>
+
+        <aside class="command-sidebar command-sidebar-right" aria-label="Benefícios, inteligência e alertas">
+          <section class="command-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">SALDOS CORPORATIVOS</span><h2><i class="bi bi-credit-card-2-front"></i> Benefícios</h2></div>
+              <button class="command-icon-btn" type="button" id="command-benefits-add" title="Novo benefício"><i class="bi bi-plus-lg"></i></button>
+            </div>
+            <div class="command-benefits-list" id="command-benefits-list"></div>
+          </section>
+
+          <section class="command-panel command-ai-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">INTELIGÊNCIA</span><h2><i class="bi bi-stars"></i> IA Atlas</h2></div>
+              <span class="command-live-dot" title="Análise atualizada"></span>
+            </div>
+            <div class="command-ai-list" id="command-ai-list"></div>
+          </section>
+
+          <section class="command-panel">
+            <div class="command-panel-header">
+              <div><span class="command-kicker">ATENÇÃO</span><h2><i class="bi bi-exclamation-triangle"></i> Alertas financeiros</h2></div>
+            </div>
+            <div class="command-alerts-list" id="command-alerts-list"></div>
+          </section>
+        </aside>
       </div>
 
       <!-- Metas & Benefícios -->

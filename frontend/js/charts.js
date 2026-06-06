@@ -300,8 +300,8 @@ function drawLine(allTxs, range = 30) {
 
   const W = canvas.parentElement.clientWidth || 500;
   canvas.width  = W;
-  canvas.height = 200;
-  const H = 200;
+  const H = window.innerWidth >= 1200 ? 160 : 200;
+  canvas.height = H;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, W, H);
 

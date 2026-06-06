@@ -539,6 +539,7 @@ function bindEvents() {
   // Configurar benefÃ­cios
   document.getElementById('btn-benefits-setup')?.addEventListener('click', openBenefitsConfig);
   document.getElementById('btn-benefits-setup-top')?.addEventListener('click', openBenefitsConfig);
+  document.getElementById('command-benefits-add')?.addEventListener('click', openBenefitsConfig);
 
   // Toggle Fixo
   document.getElementById('btn-fixed').addEventListener('click', () => {

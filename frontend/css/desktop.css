@@ -486,3 +486,401 @@
   .dash-right-col { display: none; }
   .dash-bottom-row{ grid-template-columns: 1fr; }
 }
+
+/* =============================================
+   DASHBOARD COMMAND CENTER
+   ============================================= */
+.dashboard-command-center { display: block; }
+.command-sidebar { display: none; }
+
+@media (min-width: 1200px) {
+  body.tab-dashboard .main {
+    width: 100%;
+    max-width: 1720px;
+    padding: 16px 20px 26px;
+  }
+
+  .dashboard-command-center {
+    display: grid;
+    grid-template-columns: minmax(220px, 20fr) minmax(610px, 55fr) minmax(260px, 25fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .command-main,
+  .command-sidebar { min-width: 0; }
+
+  .command-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .command-panel {
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    transition: border-color .25s, background .25s, transform .25s;
+  }
+
+  .command-panel:hover { border-color: var(--border-h); }
+
+  .command-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 13px;
+  }
+
+  .command-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--text-3);
+    font: 600 9px/1 ui-monospace, monospace;
+    letter-spacing: 1.1px;
+  }
+
+  .command-panel h2 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .command-panel h2 i { color: var(--purple-l); }
+
+  .command-icon-btn {
+    width: 29px;
+    height: 29px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255,255,255,.04);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all .18s;
+  }
+
+  .command-icon-btn:hover {
+    border-color: rgba(129,140,248,.45);
+    background: rgba(99,102,241,.12);
+    color: var(--purple-l);
+  }
+
+  .command-goals-list,
+  .command-benefits-list,
+  .command-ai-list,
+  .command-alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .command-goal-item,
+  .command-benefit-item {
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,.055);
+    border-radius: 11px;
+    background: rgba(255,255,255,.025);
+    cursor: pointer;
+    transition: border-color .18s, background .18s, transform .18s;
+  }
+
+  .command-goal-item:hover,
+  .command-benefit-item:hover {
+    transform: translateY(-1px);
+    border-color: rgba(129,140,248,.3);
+    background: rgba(99,102,241,.06);
+  }
+
+  .command-item-top,
+  .command-item-values,
+  .command-reserve-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .command-item-name {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .command-item-pct {
+    color: var(--purple-l);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .command-progress {
+    height: 5px;
+    margin: 8px 0 7px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: rgba(255,255,255,.07);
+  }
+
+  .command-progress > span {
+    display: block;
+    width: var(--progress, 0%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--purple), var(--purple-l));
+    animation: commandProgressIn .7s ease;
+  }
+
+  .command-benefit-item .command-progress > span { background: var(--item-color, var(--purple)); }
+
+  @keyframes commandProgressIn { from { width: 0; } }
+
+  .command-item-values {
+    color: var(--text-3);
+    font-size: 9px;
+  }
+
+  .command-item-values strong {
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .command-add-btn {
+    width: 100%;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    border: 1px dashed rgba(129,140,248,.3);
+    border-radius: 10px;
+    background: rgba(99,102,241,.045);
+    color: var(--purple-l);
+    font: 600 10px var(--font);
+    cursor: pointer;
+    transition: all .18s;
+  }
+
+  .command-add-btn:hover { border-color: var(--purple-l); background: rgba(99,102,241,.11); }
+
+  .command-empty {
+    padding: 14px 8px;
+    color: var(--text-3);
+    font-size: 10px;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .command-achievements {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .command-achievement-row {
+    display: grid;
+    grid-template-columns: 27px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 9px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.025);
+  }
+
+  .command-achievement-row i {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    background: rgba(245,158,11,.1);
+    color: var(--yellow);
+  }
+
+  .command-achievement-row span { color: var(--text-3); font-size: 9px; }
+  .command-achievement-row strong { color: var(--text); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+  .command-reserve-panel { cursor: pointer; }
+  .command-reserve-value { margin-bottom: 4px; color: var(--text); font-size: 18px; font-weight: 700; }
+  .command-reserve-value span { color: var(--text-3); font-size: 10px; font-weight: 400; }
+  .command-reserve-meta { margin-top: 8px; color: var(--text-3); font-size: 9px; }
+  .command-reserve-meta i { margin-right: 3px; color: var(--purple-l); }
+
+  .command-benefit-icon {
+    width: 26px;
+    height: 26px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 8px;
+    color: var(--item-color, var(--purple-l));
+    background: color-mix(in srgb, var(--item-color, var(--purple)) 13%, transparent);
+  }
+
+  .command-benefit-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .command-benefit-copy { min-width: 0; flex: 1; }
+  .command-benefit-copy small { display: block; margin-top: 2px; color: var(--text-3); font-size: 8px; }
+
+  .command-insight,
+  .command-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 9px 10px;
+    border: 1px solid rgba(255,255,255,.05);
+    border-radius: 10px;
+    background: rgba(255,255,255,.022);
+  }
+
+  .command-insight > i,
+  .command-alert > i {
+    margin-top: 1px;
+    color: var(--purple-l);
+    font-size: 11px;
+  }
+
+  .command-insight p,
+  .command-alert p {
+    margin: 0;
+    color: var(--text-2);
+    font-size: 10px;
+    line-height: 1.45;
+  }
+
+  .command-insight strong,
+  .command-alert strong { color: var(--text); font-weight: 600; }
+  .command-alert.warning > i { color: var(--yellow); }
+  .command-alert.danger > i { color: var(--red); }
+  .command-alert.success > i { color: var(--green-l); }
+
+  .command-ai-panel {
+    background: linear-gradient(145deg, rgba(99,102,241,.105), var(--bg-card));
+    border-color: rgba(129,140,248,.18);
+  }
+
+  .command-live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--purple-l);
+    box-shadow: 0 0 0 4px rgba(129,140,248,.1);
+    animation: aiPulse 2s ease-in-out infinite;
+  }
+
+  .command-main .dash-hero {
+    min-height: 50px;
+    padding: 0 2px 10px;
+  }
+
+  .command-main .dash-hero-title { margin-top: 2px; font-size: 21px; }
+  .command-main .dash-hero-sub { margin-top: 2px; font-size: 11px; }
+  .command-main .month-selector { font-size: 11px; }
+  .command-main .month-nav { width: 28px; height: 28px; }
+
+  .command-main .summary-grid {
+    grid-template-columns: 1.25fr repeat(3, 1fr);
+    gap: 9px;
+    margin-bottom: 10px;
+  }
+
+  .command-main .summary-grid > .card {
+    min-height: 78px;
+    padding: 13px 14px;
+    border-radius: 13px;
+  }
+
+  .command-main .card-balance .card-value { font-size: 25px !important; }
+  .command-main .card-value { font-size: 15px; }
+  .command-main .card-icon-box { width: 34px; height: 34px; border-radius: 10px; font-size: 1rem; }
+  .command-main .card-label { margin-bottom: 3px; font-size: 9px; }
+  .command-main .card-sub { margin-top: 2px; font-size: 9px; }
+
+  .command-main .dash-main-row {
+    display: block;
+    margin-bottom: 10px;
+  }
+
+  .command-main .dash-right-col { display: none; }
+  .command-main .dash-line-card { padding: 14px 16px 10px; }
+  .command-main .dash-line-header { margin-bottom: 5px; }
+  .command-main .dash-line-legend { display: none; }
+  .command-main .dash-filter-btn { padding: 3px 7px; font-size: 9px; }
+
+  .command-main .dash-bottom-row {
+    grid-template-columns: minmax(205px, .72fr) minmax(0, 1.28fr);
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .command-main .dash-bottom-row > .card {
+    min-height: 250px;
+    padding: 14px;
+  }
+
+  .command-main .dash-bottom-row .card-header { margin-bottom: 9px; }
+  .command-main .dash-bottom-row .card-header h3,
+  .command-main .dash-bottom-row .chart-title { font-size: 11px; }
+  .command-main .dash-recent-period { font-size: 9px; }
+  .command-main #donut-chart { width: 132px; height: 132px; }
+  .command-main .donut-wrapper { gap: 8px; }
+  .command-main .donut-legend { min-width: 90px; font-size: 9px; gap: 2px; }
+  .command-main .legend-item { gap: 4px; padding: 3px 4px; }
+  .command-main .legend-bar-track { display: none; }
+
+  .command-main #recent-transactions {
+    max-height: 205px;
+  }
+
+  .command-main .tx-item {
+    gap: 8px;
+    padding: 7px 9px;
+    border-radius: 9px;
+  }
+
+  .command-main .tx-icon { width: 29px; height: 29px; border-radius: 8px; font-size: .95rem; }
+  .command-main .tx-desc { font-size: 10px; }
+  .command-main .tx-meta { font-size: 8px; }
+  .command-main .tx-amount { font-size: 10px; }
+
+  body.tab-dashboard > .floating-dock,
+  body.tab-dashboard .page-footer { display: none !important; }
+
+  body.tab-dashboard .dash-metas-card { display: none; }
+}
+
+@media (min-width: 1200px) and (max-height: 820px) {
+  body.tab-dashboard .main { padding-top: 10px; }
+  .command-panel { padding: 12px; }
+  .command-panel-header { margin-bottom: 9px; }
+  .command-goals-list,
+  .command-benefits-list,
+  .command-ai-list,
+  .command-alerts-list { gap: 6px; }
+  .command-goal-item,
+  .command-benefit-item { padding: 8px; }
+  .command-main .dash-hero { min-height: 42px; padding-bottom: 7px; }
+  .command-main .summary-grid > .card { min-height: 69px; padding: 10px 12px; }
+  .command-main .dash-bottom-row > .card { min-height: 218px; }
+  .command-main #recent-transactions { max-height: 172px; }
+}
