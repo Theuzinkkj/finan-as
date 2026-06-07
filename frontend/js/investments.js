@@ -435,19 +435,27 @@ function renderInvestmentIntelligence() {
   const assets = _investmentAssetMetrics();
   if (!assets.length) return;
   const fmt = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const best = [...assets].sort((a, b) => b.returnPct - a.returnPct)[0];
-  const worst = [...assets].sort((a, b) => a.returnPct - b.returnPct)[0];
   const largest = assets[0];
   const types = new Set(assets.map(a => a.type));
   const concentration = largest?.weight || 0;
   const riskScore = Math.max(20, Math.min(95, Math.round(88 - concentration * .6 + types.size * 4)));
+  const contributions = _portfolio
+    .filter(entry => (entry.transaction_type || 'compra') === 'compra')
+    .sort((a, b) => new Date(b.date + 'T12:00:00') - new Date(a.date + 'T12:00:00'));
+  const latestContribution = contributions[0];
+  const averageContribution = contributions.length
+    ? contributions.reduce((sum, entry) => sum + (+entry.amount || 0), 0) / contributions.length
+    : 0;
+  const latestDate = latestContribution
+    ? new Date(latestContribution.date + 'T12:00:00').toLocaleDateString('pt-BR')
+    : 'Sem aportes';
 
   const performance = document.getElementById('inv-performance-grid');
   if (performance) performance.innerHTML = [
-    ['Melhor ativo', best.asset, `+${best.returnPct.toFixed(2).replace('.', ',')}%`, 'positive'],
-    ['Pior ativo', worst.asset, `${worst.returnPct.toFixed(2).replace('.', ',')}%`, worst.returnPct >= 0 ? 'positive' : 'negative'],
     ['Maior posição', largest.asset, `${largest.weight.toFixed(1).replace('.', ',')}% da carteira`, 'neutral'],
-    ['Ativo mais rentável', best.asset, `+${fmt(best.gain)}`, 'positive'],
+    ['Último aporte', latestContribution?.asset || 'Sem aporte', latestContribution ? `${fmt(+latestContribution.amount)} em ${latestDate}` : latestDate, 'positive'],
+    ['Ticket médio', fmt(averageContribution), `${contributions.length} aporte${contributions.length === 1 ? '' : 's'} registrado${contributions.length === 1 ? '' : 's'}`, 'neutral'],
+    ['Diversificação', `${assets.length} ativo${assets.length === 1 ? '' : 's'}`, `${types.size} classe${types.size === 1 ? '' : 's'} de investimento`, 'neutral'],
   ].map(([label, asset, value, tone]) => `
     <article class="inv-performance-card ${tone}">
       <span>${label}</span><strong>${escHtml(asset)}</strong><small>${value}</small>
