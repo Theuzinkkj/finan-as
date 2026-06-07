@@ -828,7 +828,11 @@
         <div id="portfolio-section">
 
           <div class="inv-topbar">
-            <span class="inv-topbar-title">Minha Carteira</span>
+            <div>
+              <span class="inv-topbar-kicker">Atlas Wealth</span>
+              <h2 class="inv-topbar-heading">Visão patrimonial</h2>
+              <p class="inv-topbar-subtitle">Acompanhe performance, alocação e risco em um só lugar.</p>
+            </div>
             <div class="inv-topbar-actions">
               <button class="btn-pf-action" id="btn-portfolio-export" title="Exportar CSV">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -851,9 +855,11 @@
                   <div class="inv-filter-sel-wrap">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <select class="inv-select" id="inv-period-filter">
-                      <option value="12">12 Meses</option>
-                      <option value="24">24 Meses</option>
-                      <option value="all">Todo período</option>
+                      <option value="7d">7 dias</option>
+                      <option value="30d">30 dias</option>
+                      <option value="6">6 meses</option>
+                      <option value="12" selected>1 ano</option>
+                      <option value="all">Máximo</option>
                     </select>
                   </div>
                   <div class="inv-filter-sel-wrap">
@@ -873,7 +879,7 @@
 
             <div class="inv-chart-card inv-chart-allocation">
               <div class="inv-chart-card-header">
-                <h3>Ativos na Carteira</h3>
+                <h3>Alocação da Carteira</h3>
                 <div class="inv-filter-sel-wrap">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
                   <select class="inv-select" id="inv-alloc-filter">
@@ -887,6 +893,55 @@
               </div>
             </div>
           </div>
+
+          <div class="inv-performance-grid hidden" id="inv-performance-grid"></div>
+
+          <div class="inv-insights-layout hidden" id="inv-insights-layout">
+            <section class="inv-premium-panel inv-ai-panel">
+              <div class="inv-panel-heading">
+                <div>
+                  <span class="inv-panel-kicker">IA Atlas</span>
+                  <h3>Inteligência da carteira</h3>
+                </div>
+                <span class="inv-live-pill"><span></span>Análise automática</span>
+              </div>
+              <div class="inv-ai-score" id="inv-ai-score"></div>
+              <div class="inv-ai-insights" id="inv-ai-insights"></div>
+            </section>
+
+            <section class="inv-premium-panel inv-income-panel">
+              <div class="inv-panel-heading">
+                <div>
+                  <span class="inv-panel-kicker">Renda passiva</span>
+                  <h3>Dividendos</h3>
+                </div>
+                <button class="inv-panel-link" data-open-inv-tab="proventos">Ver detalhes</button>
+              </div>
+              <div id="inv-dividend-overview"></div>
+            </section>
+
+            <section class="inv-premium-panel inv-goals-panel">
+              <div class="inv-panel-heading">
+                <div>
+                  <span class="inv-panel-kicker">Planejamento</span>
+                  <h3>Metas de investimento</h3>
+                </div>
+                <button class="inv-panel-link" data-open-inv-tab="metas">Editar metas</button>
+              </div>
+              <div id="inv-goals-overview"></div>
+            </section>
+          </div>
+
+          <section class="inv-premium-panel inv-heatmap-panel hidden" id="inv-heatmap-panel">
+            <div class="inv-panel-heading">
+              <div>
+                <span class="inv-panel-kicker">Exposição</span>
+                <h3>Heatmap da carteira</h3>
+              </div>
+              <div class="inv-heatmap-legend"><span class="loss"></span>Menor retorno <span class="gain"></span>Maior retorno</div>
+            </div>
+            <div class="inv-heatmap" id="inv-heatmap"></div>
+          </section>
 
           <div class="inv-assets-section hidden" id="inv-assets-section">
             <div class="inv-assets-hdr">
@@ -945,16 +1000,24 @@
 
       <!-- ═══ PROVENTOS ═══ -->
       <div class="inv-tab-pane" id="inv-tab-proventos">
-        <div class="inv-coming-soon">
-          <span class="inv-coming-icon"><i class="bi bi-cash-stack"></i></span>
-          <h3>Proventos</h3>
-          <p>Registre dividendos, JCP e rendimentos recebidos dos seus ativos.</p>
-          <span class="inv-coming-badge">Em breve</span>
+        <div class="inv-section-hero">
+          <div><span class="inv-panel-kicker">Renda passiva</span><h2>Central de dividendos</h2><p>Acompanhe pagamentos e evolução da sua renda recorrente.</p></div>
+          <span class="inv-live-pill"><span></span>Monitoramento ativo</span>
+        </div>
+        <div class="inv-dividend-dashboard">
+          <article class="inv-premium-panel inv-dividend-hero">
+            <span>Recebido no ano</span><strong>R$ 0,00</strong><small>Os proventos aparecerão aqui quando forem registrados.</small>
+          </article>
+          <article class="inv-premium-panel"><div class="inv-panel-heading"><div><span class="inv-panel-kicker">Agenda</span><h3>Próximos pagamentos</h3></div></div><div class="inv-data-empty"><i class="bi bi-calendar3"></i><p>Nenhum pagamento previsto.</p></div></article>
+          <article class="inv-premium-panel"><div class="inv-panel-heading"><div><span class="inv-panel-kicker">Histórico</span><h3>Últimos proventos</h3></div></div><div class="inv-data-empty"><i class="bi bi-receipt"></i><p>Seu histórico será exibido nesta área.</p></div></article>
         </div>
       </div>
 
       <!-- ═══ METAS ═══ -->
       <div class="inv-tab-pane" id="inv-tab-metas">
+        <div class="inv-section-hero">
+          <div><span class="inv-panel-kicker">Planejamento</span><h2>Metas de investimento</h2><p>Transforme objetivos financeiros em progresso mensurável.</p></div>
+        </div>
         <div id="portfolio-goal-section" style="display:none"></div>
         <div class="inv-empty-state" id="inv-metas-empty">
           <span class="inv-empty-icon"><i class="bi bi-bullseye"></i></span>

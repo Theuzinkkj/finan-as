@@ -277,18 +277,28 @@ function renderPortfolio() {
   const chartsRow     = document.getElementById('inv-charts-row');
   const assetsSection = document.getElementById('inv-assets-section');
   const emptyState    = document.getElementById('inv-empty-state');
+  const performance   = document.getElementById('inv-performance-grid');
+  const insights      = document.getElementById('inv-insights-layout');
+  const heatmap       = document.getElementById('inv-heatmap-panel');
 
   if (hasData) {
     chartsRow?.classList.remove('hidden');
     assetsSection?.classList.remove('hidden');
+    performance?.classList.remove('hidden');
+    insights?.classList.remove('hidden');
+    heatmap?.classList.remove('hidden');
     emptyState?.classList.add('hidden');
     populateTypeFilters();
     drawEvolutionChart();
     drawAllocationDonut();
+    renderInvestmentIntelligence();
     renderAssetsTable();
   } else {
     chartsRow?.classList.add('hidden');
     assetsSection?.classList.add('hidden');
+    performance?.classList.add('hidden');
+    insights?.classList.add('hidden');
+    heatmap?.classList.add('hidden');
     emptyState?.classList.remove('hidden');
   }
 }
@@ -323,7 +333,7 @@ function renderInvSummaryGrid() {
   const el = document.getElementById('inv-summary-grid');
   if (!el) return;
   const fmt    = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  const { buy_total, net_invested, cdi_gain, patrimonio, variation_pct } = _portfolioStats();
+  const { net_invested, cdi_gain, patrimonio, variation_pct } = _portfolioStats();
   const varDir   = variation_pct >= 0 ? 'up' : 'down';
   const varArrow = variation_pct >= 0 ? '▲' : '▼';
   const gainSign = cdi_gain >= 0 ? '+' : '';
@@ -345,7 +355,7 @@ function renderInvSummaryGrid() {
         <span class="inv-scard-badge ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}% no ano</span>
         <span class="inv-scard-badge-secondary ${varDir}">${gainSign}${fmt(cdi_gain)}</span>
       </div>
-      <div class="inv-scard-footer">Valor Investido <span>${fmt(net_invested)}</span></div>
+      <div class="inv-scard-footer">Capital investido <span>${fmt(net_invested)}</span></div>
     </div>
 
     <div class="inv-scard">
@@ -353,19 +363,10 @@ function renderInvSummaryGrid() {
         <div class="inv-scard-icon-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
         </div>
-        <span class="inv-scard-label">Lucro Total</span>
+        <span class="inv-scard-label">Rentabilidade Total</span>
       </div>
-      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${gainSign}${fmt(cdi_gain)}</div>
-      <div class="inv-scard-split">
-        <div class="inv-scard-split-item">
-          <span class="inv-scard-split-label">Ganho de Capital</span>
-          <span class="inv-scard-split-val">${gainSign}${fmt(cdi_gain)}</span>
-        </div>
-        <div class="inv-scard-split-item">
-          <span class="inv-scard-split-label">Dividendos Recebidos</span>
-          <span class="inv-scard-split-val">${fmt(0)}</span>
-        </div>
-      </div>
+      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${gainSign}${variation_pct.toFixed(2).replace('.', ',')}%</div>
+      <div class="inv-scard-footer">Retorno estimado <span>${gainSign}${fmt(cdi_gain)}</span></div>
     </div>
 
     <div class="inv-scard">
@@ -373,37 +374,150 @@ function renderInvSummaryGrid() {
         <div class="inv-scard-icon-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
         </div>
-        <span class="inv-scard-label">Proventos Recebidos (12M)</span>
+        <span class="inv-scard-label">Lucro Acumulado</span>
       </div>
-      <div class="inv-scard-value">${fmt(0)}</div>
-      <div class="inv-scard-footer">Total <span>${fmt(0)}</span></div>
+      <div class="inv-scard-value ${cdi_gain >= 0 ? 'green' : 'red'}">${gainSign}${fmt(cdi_gain)}</div>
+      <div class="inv-scard-footer">Desde o primeiro aporte <span>estimado</span></div>
     </div>
 
-    <div class="inv-scard inv-scard-double">
-      <div class="inv-scard-half">
-        <div class="inv-scard-top">
-          <div class="inv-scard-icon-wrap small">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/></svg>
-          </div>
-          <span class="inv-scard-label">Variação no Mês</span>
+    <div class="inv-scard">
+      <div class="inv-scard-top">
+        <div class="inv-scard-icon-wrap small">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/></svg>
         </div>
-        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(variation_pct).toFixed(2).replace('.', ',')}%</div>
-        <div class="inv-scard-footer">${gainSign}${fmt(cdi_gain)}</div>
+        <span class="inv-scard-label">Comparação com CDI</span>
       </div>
-      <div class="inv-scard-divider"></div>
-      <div class="inv-scard-half">
-        <div class="inv-scard-top">
-          <span class="inv-scard-label">Rentabilidade vs CDI</span>
-        </div>
-        <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(rentVsCdi)}% do CDI</div>
-        <div class="inv-scard-footer inv-scard-footer-sub">CDI estimado ${cdiAnnual}% a.a.</div>
-      </div>
+      <div class="inv-scard-value small ${varDir}">${varArrow} ${Math.abs(rentVsCdi)}% do CDI</div>
+      <div class="inv-scard-footer">Referência anual <span>${cdiAnnual}% a.a.</span></div>
     </div>
   `;
 
   requestAnimationFrame(() => {
     el.querySelectorAll('.inv-scard-value').forEach(v => _countUpCurrency(v));
   });
+}
+
+function _investmentAssetMetrics() {
+  const now = new Date();
+  const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
+  const grouped = new Map();
+
+  _portfolio.forEach(entry => {
+    const key = entry.asset || 'Sem código';
+    if (!grouped.has(key)) grouped.set(key, { asset: key, type: entry.asset_type || 'Outros', entries: [] });
+    grouped.get(key).entries.push(entry);
+  });
+
+  const assets = [...grouped.values()].map(item => {
+    const buys = item.entries.filter(e => (e.transaction_type || 'compra') === 'compra');
+    const sells = item.entries.filter(e => e.transaction_type === 'venda');
+    const invested = buys.reduce((s, e) => s + +e.amount, 0) - sells.reduce((s, e) => s + +e.amount, 0);
+    const quantity = buys.reduce((s, e) => s + (+e.quantity || 0), 0) - sells.reduce((s, e) => s + (+e.quantity || 0), 0);
+    const estimated = buys.reduce((sum, e) => {
+      const date = new Date(e.date + 'T12:00:00');
+      const months = Math.max((now.getFullYear() - date.getFullYear()) * 12 + now.getMonth() - date.getMonth(), 0);
+      return sum + (+e.amount * Math.pow(1 + cdiMonthly, months));
+    }, 0) - sells.reduce((s, e) => s + +e.amount, 0);
+    const gain = estimated - invested;
+    const returnPct = invested > 0 ? gain / invested * 100 : 0;
+    return {
+      ...item, invested, estimated, gain, returnPct, quantity,
+      avgPrice: quantity > 0 ? invested / quantity : 0,
+    };
+  }).filter(a => a.invested > 0);
+
+  const total = assets.reduce((s, a) => s + a.estimated, 0);
+  assets.forEach(a => { a.weight = total > 0 ? a.estimated / total * 100 : 0; });
+  return assets.sort((a, b) => b.estimated - a.estimated);
+}
+
+function renderInvestmentIntelligence() {
+  const assets = _investmentAssetMetrics();
+  if (!assets.length) return;
+  const fmt = value => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const best = [...assets].sort((a, b) => b.returnPct - a.returnPct)[0];
+  const worst = [...assets].sort((a, b) => a.returnPct - b.returnPct)[0];
+  const largest = assets[0];
+  const types = new Set(assets.map(a => a.type));
+  const concentration = largest?.weight || 0;
+  const riskScore = Math.max(20, Math.min(95, Math.round(88 - concentration * .6 + types.size * 4)));
+
+  const performance = document.getElementById('inv-performance-grid');
+  if (performance) performance.innerHTML = [
+    ['Melhor ativo', best.asset, `+${best.returnPct.toFixed(2).replace('.', ',')}%`, 'positive'],
+    ['Pior ativo', worst.asset, `${worst.returnPct.toFixed(2).replace('.', ',')}%`, worst.returnPct >= 0 ? 'positive' : 'negative'],
+    ['Maior posição', largest.asset, `${largest.weight.toFixed(1).replace('.', ',')}% da carteira`, 'neutral'],
+    ['Ativo mais rentável', best.asset, `+${fmt(best.gain)}`, 'positive'],
+  ].map(([label, asset, value, tone]) => `
+    <article class="inv-performance-card ${tone}">
+      <span>${label}</span><strong>${escHtml(asset)}</strong><small>${value}</small>
+    </article>`).join('');
+
+  const score = document.getElementById('inv-ai-score');
+  if (score) score.innerHTML = `
+    <div class="inv-risk-ring" style="--score:${riskScore * 3.6}deg"><strong>${riskScore}</strong><span>score</span></div>
+    <div><strong>${riskScore >= 75 ? 'Carteira equilibrada' : riskScore >= 55 ? 'Atenção à concentração' : 'Risco elevado'}</strong>
+    <p>${types.size} classes de ativos monitoradas · maior posição em ${escHtml(largest.asset)}</p></div>`;
+
+  const insights = document.getElementById('inv-ai-insights');
+  if (insights) {
+    const messages = [
+      {
+        icon: 'bi-grid-1x2-fill',
+        title: concentration > 35 ? 'Concentração acima do ideal' : 'Concentração controlada',
+        text: `${largest.asset} representa ${largest.weight.toFixed(1).replace('.', ',')}% do patrimônio estimado.`,
+        tone: concentration > 35 ? 'warning' : 'success',
+      },
+      {
+        icon: 'bi-pie-chart-fill',
+        title: 'Diversificação',
+        text: types.size < 3 ? 'Considere distribuir o patrimônio em pelo menos três classes de ativos.' : `Sua carteira está distribuída em ${types.size} classes.`,
+        tone: types.size < 3 ? 'warning' : 'success',
+      },
+      {
+        icon: 'bi-activity',
+        title: 'Risco e referência',
+        text: `Retornos são estimados pela referência CDI até que cotações atuais sejam conectadas.`,
+        tone: 'info',
+      },
+    ];
+    insights.innerHTML = messages.map(item => `
+      <div class="inv-ai-item ${item.tone}"><i class="bi ${item.icon}"></i><div><strong>${item.title}</strong><p>${item.text}</p></div></div>
+    `).join('');
+  }
+
+  const dividend = document.getElementById('inv-dividend-overview');
+  if (dividend) dividend.innerHTML = `
+    <div class="inv-income-total"><span>Total recebido no ano</span><strong>R$ 0,00</strong><small>Registre seus proventos para acompanhar a renda passiva.</small></div>
+    <div class="inv-income-row"><span>Próximos pagamentos</span><strong>Nenhum agendado</strong></div>
+    <div class="inv-income-row"><span>Yield projetado</span><strong>--</strong></div>`;
+
+  const goals = document.getElementById('inv-goals-overview');
+  if (goals) {
+    const stats = _portfolioStats();
+    const target = _portfolioGoal?.amount || Math.max(Math.ceil(stats.patrimonio / 10000) * 10000 + 10000, 50000);
+    const pct = Math.min(stats.patrimonio / target * 100, 100);
+    const goalItems = [
+      ['Meta patrimonial', pct, `${fmt(stats.patrimonio)} de ${fmt(target)}`],
+      ['Meta de dividendos', 0, 'Defina sua renda passiva desejada'],
+      ['Reserva financeira', Math.min(pct * .45, 100), 'Progresso estimado da carteira'],
+    ];
+    goals.innerHTML = goalItems.map(([label, progress, detail]) => `
+      <div class="inv-goal-mini"><div><strong>${label}</strong><span>${detail}</span></div>
+      <b>${progress.toFixed(0)}%</b><div class="inv-goal-track"><i style="width:${progress}%"></i></div></div>`).join('');
+  }
+
+  const heatmap = document.getElementById('inv-heatmap');
+  if (heatmap) heatmap.innerHTML = assets.slice(0, 12).map(asset => {
+    const size = Math.max(1, Math.round(asset.weight));
+    const strength = Math.min(Math.abs(asset.returnPct) / 10, 1);
+    const color = asset.returnPct >= 0
+      ? `rgba(16,185,129,${.22 + strength * .5})`
+      : `rgba(239,68,68,${.22 + strength * .5})`;
+    return `<div class="inv-heat-tile" style="--weight:${size};--heat:${color}">
+      <strong>${escHtml(asset.asset)}</strong><span>${asset.weight.toFixed(1).replace('.', ',')}%</span>
+      <small>${asset.returnPct >= 0 ? '+' : ''}${asset.returnPct.toFixed(2).replace('.', ',')}%</small></div>`;
+  }).join('');
 }
 
 // ── Count-up animation ────────────────────────
@@ -448,14 +562,22 @@ function drawEvolutionChart() {
   const canvas = document.getElementById('inv-evolution-chart');
   if (!canvas) return;
 
-  const periodMonths = _invPeriod === 'all' ? 9999 : parseInt(_invPeriod);
+  const dailyPeriod = _invPeriod.endsWith('d') ? parseInt(_invPeriod) : 0;
+  const periodMonths = _invPeriod === 'all' ? 9999 : (dailyPeriod ? 0 : parseInt(_invPeriod));
   const now = new Date();
 
   let slots = [];
-  const numSlots = Math.min(periodMonths, 24);
-  for (let i = numSlots - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    slots.push({ year: d.getFullYear(), month: d.getMonth() });
+  if (dailyPeriod) {
+    for (let i = dailyPeriod - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      slots.push({ year: d.getFullYear(), month: d.getMonth(), day: d.getDate() });
+    }
+  } else {
+    const numSlots = Math.min(periodMonths, 24);
+    for (let i = numSlots - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      slots.push({ year: d.getFullYear(), month: d.getMonth() });
+    }
   }
 
   if (_invPeriod === 'all') {
@@ -475,9 +597,12 @@ function drawEvolutionChart() {
   }
 
   const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
+  const cdiDaily = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 365) - 1 : 0;
 
   _evoData = slots.map(sl => {
-    const slotEnd = new Date(sl.year, sl.month + 1, 0);
+    const slotEnd = sl.day
+      ? new Date(sl.year, sl.month, sl.day, 23, 59, 59)
+      : new Date(sl.year, sl.month + 1, 0);
     const entries = _portfolio.filter(e => {
       if ((e.transaction_type || 'compra') !== 'compra') return false;
       if (_invTypeFilter !== 'all' && e.asset_type !== _invTypeFilter) return false;
@@ -487,10 +612,14 @@ function drawEvolutionChart() {
     const applied = entries.reduce((s, e) => s + +e.amount, 0);
     const gain = _cachedRates ? entries.reduce((s, e) => {
       const d = new Date(e.date + 'T12:00:00');
-      const m = Math.max(
+      if (sl.day) {
+        const days = Math.max(Math.floor((slotEnd - d) / 86400000), 0);
+        return s + +e.amount * (Math.pow(1 + cdiDaily, days) - 1);
+      }
+      const months = Math.max(
         (slotEnd.getFullYear() - d.getFullYear()) * 12 + (slotEnd.getMonth() - d.getMonth()), 0
       );
-      return s + +e.amount * (Math.pow(1 + cdiMonthly, m) - 1);
+      return s + +e.amount * (Math.pow(1 + cdiMonthly, months) - 1);
     }, 0) : 0;
     return { ...sl, applied, gain };
   }).filter(s => s.applied > 0);
@@ -615,13 +744,15 @@ function _renderEvoLine(hovIdx) {
   const step = Math.max(1, Math.ceil(n / 8));
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   _evoData.forEach((sl, i) => {
-    const isNow = sl.year === now.getFullYear() && sl.month === now.getMonth();
+    const isNow = sl.year === now.getFullYear()
+      && sl.month === now.getMonth()
+      && (!sl.day || sl.day === now.getDate());
     if (i !== 0 && i !== n - 1 && i % step !== 0 && !isNow) return;
     const mo = String(sl.month + 1).padStart(2, '0');
     const yr = String(sl.year).slice(2);
     ctx.fillStyle = isNow ? chartFg(0.85) : chartFg(0.4);
     ctx.font      = isNow ? 'bold 9px Inter' : '9px Inter';
-    ctx.fillText(`${mo}/${yr}`, xOf(i), H - pB + 4);
+    ctx.fillText(sl.day ? `${String(sl.day).padStart(2, '0')}/${mo}` : `${mo}/${yr}`, xOf(i), H - pB + 4);
   });
 }
 
@@ -669,7 +800,7 @@ function _showEvoTooltip(e, idx) {
   const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   const mo  = String(sl.month + 1).padStart(2, '0');
   tip.innerHTML = `
-    <div class="evo-tip-month">${mo}/${sl.year}</div>
+    <div class="evo-tip-month">${sl.day ? `${String(sl.day).padStart(2, '0')}/${mo}/${sl.year}` : `${mo}/${sl.year}`}</div>
     <div class="evo-tip-row"><span>Investido</span><span>${fmt(sl.applied)}</span></div>
     ${sl.gain > 0.01 ? `<div class="evo-tip-row gain"><span>Ganho est.</span><span>+${fmt(sl.gain)}</span></div>` : ''}
     <div class="evo-tip-row total"><span>Total</span><span>${fmt(sl.applied + sl.gain)}</span></div>
@@ -846,17 +977,19 @@ function renderAssetsTable() {
 
   const now        = new Date();
   const cdiMonthly = _cachedRates ? Math.pow(1 + _cachedRates.cdi.value / 100, 1 / 12) - 1 : 0;
+  const totalPortfolio = _investmentAssetMetrics().reduce((sum, asset) => sum + asset.estimated, 0);
 
   const MONTHS = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 
   tableEl.innerHTML = `
     <div class="inv-assets-head">
       <span></span>
-      <span>Ativo</span>
-      <span>Tipo</span>
-      <span>Qtd / Lançamentos</span>
-      <span>Total Investido</span>
-      <span>Estimativa</span>
+      <span>Código</span>
+      <span>Quantidade</span>
+      <span>Preço médio</span>
+      <span>Valor atual</span>
+      <span>Rentabilidade</span>
+      <span>Peso</span>
       <span></span>
     </div>
     ${visible.map(it => {
@@ -868,6 +1001,7 @@ function renderAssetsTable() {
       const totalQty  = buys.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0)
                       - sells.reduce((s, e) => s + (e.quantity != null ? +e.quantity : 0), 0);
       const hasQty    = buys.some(e => e.quantity != null && +e.quantity > 0);
+      const avgPrice  = totalQty > 0 ? netTotal / totalQty : 0;
       const estVal    = _cachedRates ? buys.reduce((sum, e) => {
         const d = new Date(e.date + 'T12:00:00');
         const m = Math.max((now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()), 0);
@@ -876,6 +1010,7 @@ function renderAssetsTable() {
       const gain      = estVal - netTotal;
       const gainPct   = netTotal > 0 ? ((gain / netTotal) * 100).toFixed(2).replace('.', ',') : '0,00';
       const gainDir   = gain >= 0 ? 'up' : 'down';
+      const weightPct = totalPortfolio > 0 ? estVal / totalPortfolio * 100 : 0;
       const color     = TYPE_COLORS[it.asset_type] || '#94a3b8';
       const shortType = TYPE_SHORT[it.asset_type] || it.asset_type;
       const expanded  = _expandedAssets.has(it.asset);
@@ -911,20 +1046,17 @@ function renderAssetsTable() {
           </button>
           <div class="inv-asset-info">
             <span class="inv-asset-ticker">${escHtml(it.asset)}</span>
-          </div>
-          <div>
-            <span class="inv-asset-type-badge" style="background:${color}20;color:${color};border:1px solid ${color}40">${escHtml(shortType)}</span>
+            <span class="inv-asset-type-inline">${escHtml(shortType)}</span>
           </div>
           <div class="inv-asset-qty">
             ${hasQty && totalQty > 0
               ? `<span>${totalQty.toLocaleString('pt-BR', { maximumFractionDigits: 4 })} un</span>`
               : `<span>${it.entries.length} lançamento${it.entries.length !== 1 ? 's' : ''}</span>`}
           </div>
-          <div class="inv-asset-invested">${fmt(netTotal)}</div>
-          <div class="inv-asset-est">
-            <span class="inv-asset-est-val">${fmt(estVal)}</span>
-            <span class="inv-asset-gain ${gainDir}">${gain >= 0 ? '+' : ''}${fmt(gain)} (${gain >= 0 ? '+' : ''}${gainPct}%)</span>
-          </div>
+          <div class="inv-asset-invested">${avgPrice > 0 ? fmt(avgPrice) : '—'}</div>
+          <div class="inv-asset-est-val">${fmt(estVal)}</div>
+          <div class="inv-asset-gain ${gainDir}">${gain >= 0 ? '+' : ''}${gainPct}%</div>
+          <div class="inv-asset-weight"><span>${weightPct.toFixed(1).replace('.', ',')}%</span><i><b style="width:${Math.min(weightPct, 100)}%;background:${color}"></b></i></div>
           <div class="inv-asset-actions">
             <button class="btn-asset-edit" data-id="${escHtml(it.entries[0]?.id || '')}" data-asset="${escHtml(it.asset)}" title="Editar último lançamento">✏</button>
             <button class="btn-entry-delete" data-asset="${escHtml(it.asset)}" title="Remover todos">✕</button>
@@ -1311,6 +1443,11 @@ async function initInvestments() {
 
   // Donut alloc filter
   document.getElementById('inv-alloc-filter')?.addEventListener('change', () => drawAllocationDonut());
+  document.querySelectorAll('[data-open-inv-tab]').forEach(button => {
+    button.addEventListener('click', () => {
+      document.querySelector(`.inv-subnav-btn[data-inv-tab="${button.dataset.openInvTab}"]`)?.click();
+    });
+  });
 
   // Load everything in parallel
   await Promise.all([loadMarketRates(), loadMarketData(), loadPortfolio()]);
@@ -1379,7 +1516,13 @@ async function loadMarketRates() {
 
   _cachedRates = rates;
   renderRateCards(rates);
-  if (_portfolio.length) renderInvSummaryGrid();
+  if (_portfolio.length) {
+    renderInvSummaryGrid();
+    renderInvestmentIntelligence();
+    drawEvolutionChart();
+    drawAllocationDonut();
+    renderAssetsTable();
+  }
 }
 
 function renderRateCards(rates) {
