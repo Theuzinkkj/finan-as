@@ -546,6 +546,7 @@ let _evoData       = [];
 let _evoDraw       = {};
 let _evoHovIdx     = -1;
 let _evoCanvas     = null;
+let _evoResizeTimer = null;
 
 function populateTypeFilters() {
   const types = [...new Set(_portfolio.map(e => e.asset_type).filter(Boolean))];
@@ -581,18 +582,35 @@ function drawEvolutionChart() {
   }
 
   if (_invPeriod === 'all') {
-    const keySet = new Set();
-    _portfolio.forEach(e => {
+    const validEntries = _portfolio.filter(e => {
       if (_invTypeFilter !== 'all' && e.asset_type !== _invTypeFilter) return;
-      if ((e.transaction_type || 'compra') !== 'compra') return;
-      const d = new Date(e.date + 'T12:00:00');
-      keySet.add(`${d.getFullYear()}-${d.getMonth()}`);
+      return (e.transaction_type || 'compra') === 'compra';
     });
-    if (keySet.size > 0) {
-      slots = [...keySet].sort().slice(-24).map(k => {
-        const [yr, mo] = k.split('-');
-        return { year: +yr, month: +mo };
-      });
+
+    if (validEntries.length) {
+      const firstDate = validEntries.reduce((earliest, entry) => {
+        const date = new Date(entry.date + 'T12:00:00');
+        return date < earliest ? date : earliest;
+      }, new Date(validEntries[0].date + 'T12:00:00'));
+      const monthsSinceFirst = Math.max(
+        (now.getFullYear() - firstDate.getFullYear()) * 12 + now.getMonth() - firstDate.getMonth(),
+        0
+      );
+      slots = [];
+      if (monthsSinceFirst === 0) {
+        const daysSinceFirst = Math.max(Math.floor((now - firstDate) / 86400000), 0);
+        const numSlots = Math.min(daysSinceFirst + 1, 31);
+        for (let i = numSlots - 1; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+          slots.push({ year: date.getFullYear(), month: date.getMonth(), day: date.getDate() });
+        }
+      } else {
+        const numSlots = Math.min(monthsSinceFirst + 1, 24);
+        for (let i = numSlots - 1; i >= 0; i--) {
+          const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          slots.push({ year: date.getFullYear(), month: date.getMonth() });
+        }
+      }
     }
   }
 
@@ -629,7 +647,7 @@ function drawEvolutionChart() {
   const W = canvas.parentElement?.clientWidth || 500;
   const H = 220;
   const pL = 10, pR = 10, pT = 16, pB = 28;
-  const maxVal = Math.max(..._evoData.map(s => s.applied + s.gain), 1);
+  const maxVal = Math.max(..._evoData.map(s => s.applied + s.gain), 1) * 1.12;
   const n      = _evoData.length;
   const slotW  = (W - pL - pR) / n;
   const bW     = Math.max(slotW * 0.62, 4);
@@ -643,8 +661,9 @@ function drawEvolutionChart() {
 
   if (!canvas._evoWired) {
     canvas._evoWired = true;
-    canvas.addEventListener('mousemove', _onEvoMove);
-    canvas.addEventListener('mouseleave', _onEvoLeave);
+    canvas.addEventListener('pointermove', _onEvoMove);
+    canvas.addEventListener('pointerleave', _onEvoLeave);
+    canvas.addEventListener('pointerdown', _onEvoMove);
   }
 }
 
@@ -720,6 +739,22 @@ function _renderEvoLine(hovIdx) {
     });
     ctx.strokeStyle = '#15803d'; ctx.lineWidth = 2.5;
     ctx.setLineDash([]); ctx.stroke();
+  } else {
+    const sl = _evoData[0];
+    const x = xOf(0);
+    const y = yOf(sl.applied);
+    const grad = ctx.createLinearGradient(0, y, 0, pT + cH);
+    grad.addColorStop(0, 'rgba(21,128,61,0.38)');
+    grad.addColorStop(1, 'rgba(21,128,61,0.03)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(Math.max(pL, x - 42), y, 84, pT + cH - y);
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#22c55e';
+    ctx.fill();
+    ctx.strokeStyle = chartBg();
+    ctx.lineWidth = 2;
+    ctx.stroke();
   }
 
   // Hover indicator
@@ -771,7 +806,8 @@ function _onEvoMove(e) {
       const d = Math.abs(mx - x);
       if (d < minDist) { minDist = d; newHov = i; }
     });
-    if (minDist > 30) newHov = -1;
+    const activationRange = n === 1 ? W : Math.max(38, (W - pL - pR) / (n - 1) / 2);
+    if (minDist > activationRange) newHov = -1;
   }
 
   if (newHov !== _evoHovIdx) {
@@ -806,9 +842,11 @@ function _showEvoTooltip(e, idx) {
     <div class="evo-tip-row total"><span>Total</span><span>${fmt(sl.applied + sl.gain)}</span></div>
   `;
   const vw = window.innerWidth, vh = window.innerHeight;
-  let tx = e.clientX + 14, ty = e.clientY - 10;
-  if (tx + 160 > vw) tx = e.clientX - 160;
-  if (ty + 100 > vh) ty = e.clientY - 100;
+  const clientX = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+  const clientY = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+  let tx = clientX + 14, ty = clientY - 10;
+  if (tx + 160 > vw) tx = clientX - 160;
+  if (ty + 100 > vh) ty = clientY - 100;
   tip.style.left    = tx + 'px';
   tip.style.top     = ty + 'px';
   tip.style.display = 'block';
@@ -1440,6 +1478,18 @@ async function initInvestments() {
     _invTypeFilter = e.target.value;
     drawEvolutionChart();
   });
+  if (!window._invEvolutionResizeWired) {
+    window._invEvolutionResizeWired = true;
+    window.addEventListener('resize', () => {
+      clearTimeout(_evoResizeTimer);
+      _evoResizeTimer = setTimeout(() => {
+        if (document.getElementById('inv-tab-carteira')?.classList.contains('active') && _portfolio.length) {
+          drawEvolutionChart();
+          drawAllocationDonut();
+        }
+      }, 120);
+    });
+  }
 
   // Donut alloc filter
   document.getElementById('inv-alloc-filter')?.addEventListener('change', () => drawAllocationDonut());

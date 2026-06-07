@@ -2053,6 +2053,8 @@
 #inv-evolution-chart {
   width: 100%;
   display: block;
+  cursor: crosshair;
+  touch-action: pan-y;
 }
 
 /* Donut */
