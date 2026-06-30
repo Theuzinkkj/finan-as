@@ -130,7 +130,35 @@ async function updatePortfolioEntry(id, updates) {
   renderPortfolio();
 }
 
+// ── Delete confirmation ───────────────────────
+let _portfolioDeleteResolve = null;
+
+function openPortfolioDeleteConfirm({ title, message, summary, confirmText = 'Remover' }) {
+  return new Promise(resolve => {
+    _portfolioDeleteResolve = resolve;
+    const titleEl   = document.getElementById('pf-delete-title');
+    const msgEl     = document.getElementById('pf-delete-message');
+    const summaryEl = document.getElementById('pf-delete-summary');
+    const btnEl     = document.getElementById('pf-delete-confirm-btn');
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (summaryEl) summaryEl.innerHTML = summary;
+    if (btnEl) btnEl.innerHTML = `<i class="bi bi-trash3-fill"></i> ${escHtml(confirmText)}`;
+
+    openModal('modal-pf-delete');
+  });
+}
+
+function closePortfolioDeleteConfirm(confirmed) {
+  closeModal('modal-pf-delete');
+  const resolve = _portfolioDeleteResolve;
+  _portfolioDeleteResolve = null;
+  if (resolve) resolve(Boolean(confirmed));
+}
+
 // ── Goal ──────────────────────────────────────
+
 function loadPortfolioGoal() {
   _portfolioGoal = Storage.getJSON(Storage.GOAL_DEMO, null);
 }
@@ -1150,14 +1178,27 @@ function renderAssetsTable() {
       const singleId = btn.dataset.id;
       const asset    = btn.dataset.asset;
       if (singleId && btn.classList.contains('btn-sub-del')) {
-        if (!confirm(`Remover este lançamento de "${asset}"?`)) return;
+        const entry = _portfolio.find(e => e.id === singleId);
+        const ok = await openPortfolioDeleteConfirm({
+          title: 'Remover lançamento?',
+          message: 'Esse lançamento será removido da sua carteira. O histórico do ativo será recalculado automaticamente.',
+          summary: `<strong>${escHtml(asset)}</strong><span>${entry ? `${fmt(+entry.amount)} · ${entry.date ? fmtDate(entry.date) : 'sem data'}` : '1 lançamento selecionado'}</span>`,
+          confirmText: 'Remover lançamento',
+        });
+        if (!ok) return;
         try { await deletePortfolioEntry(singleId); } catch { toast?.('Erro ao remover.', 'err'); }
       } else {
         const toDelete = _portfolio.filter(e => e.asset === asset);
-        const msg = toDelete.length === 1
-          ? `Remover o lançamento de "${asset}"?`
-          : `Remover todos os ${toDelete.length} lançamentos de "${asset}"?`;
-        if (!confirm(msg)) return;
+        const total = toDelete.reduce((s, e) => s + (+e.amount || 0), 0);
+        const ok = await openPortfolioDeleteConfirm({
+          title: toDelete.length === 1 ? 'Remover ativo?' : 'Remover todos os lançamentos?',
+          message: toDelete.length === 1
+            ? 'Esse ativo sairá da sua carteira de investimentos.'
+            : 'Todos os lançamentos desse ativo serão removidos da sua carteira.',
+          summary: `<strong>${escHtml(asset)}</strong><span>${toDelete.length} lançamento${toDelete.length === 1 ? '' : 's'} · ${fmt(total)}</span>`,
+          confirmText: toDelete.length === 1 ? 'Remover ativo' : 'Remover todos',
+        });
+        if (!ok) return;
         try { for (const e of toDelete) await deletePortfolioEntry(e.id); }
         catch { toast?.('Erro ao remover.', 'err'); }
       }

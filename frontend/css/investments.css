@@ -2354,6 +2354,84 @@
 .btn-asset-edit:hover   { color: var(--text); border-color: var(--border-h); background: var(--bg); }
 .btn-entry-delete:hover { color: #ef4444; border-color: rgba(239,68,68,.6); }
 
+.modal-pf-delete {
+  max-width: 430px;
+  border-color: rgba(239,68,68,.22);
+  background:
+    radial-gradient(circle at 85% 0%, rgba(239,68,68,.18), transparent 34%),
+    linear-gradient(180deg, rgba(18,18,31,.98), rgba(8,8,18,.98));
+  position: relative;
+  overflow: hidden;
+}
+
+.pf-delete-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.24);
+  color: #fb7185;
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  box-shadow: 0 16px 36px rgba(239,68,68,.12);
+}
+
+.pf-delete-header {
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.pf-delete-kicker {
+  display: block;
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .11em;
+  color: #fb7185;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.pf-delete-message {
+  margin: 0 0 16px;
+  color: var(--text-2);
+  font-size: .9rem;
+  line-height: 1.6;
+}
+
+.pf-delete-summary {
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.035);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: .86rem;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.pf-delete-summary strong { color: #fff; }
+
+.pf-delete-summary span {
+  color: var(--text-3);
+  display: block;
+  font-size: .74rem;
+  margin-top: 2px;
+}
+
+.pf-delete-actions { margin-top: 4px; }
+
+.pf-delete-confirm {
+  background: linear-gradient(135deg, #ef4444, #be123c) !important;
+  box-shadow: 0 14px 32px rgba(239,68,68,.28);
+}
+
+.pf-delete-confirm:hover {
+  box-shadow: 0 18px 42px rgba(239,68,68,.36);
+}
+
 /* ── Empty state ─────────────────────────── */
 .inv-empty-state {
   display: flex;

@@ -1848,6 +1848,29 @@
     </div>
   </div>
 
+  <!-- Modal: Confirmar remoção de ativo -->
+  <div class="modal-overlay hidden" id="modal-pf-delete">
+    <div class="modal modal-pf-delete" role="dialog" aria-modal="true" aria-labelledby="pf-delete-title">
+      <div class="pf-delete-icon"><i class="bi bi-trash3-fill"></i></div>
+      <div class="modal-header pf-delete-header">
+        <div>
+          <span class="pf-delete-kicker">Confirmar remoção</span>
+          <h2 id="pf-delete-title">Remover ativo?</h2>
+        </div>
+        <button class="modal-close" type="button" onclick="closePortfolioDeleteConfirm(false)">✕</button>
+      </div>
+      <p class="pf-delete-message" id="pf-delete-message"></p>
+      <div class="pf-delete-summary" id="pf-delete-summary"></div>
+      <div class="form-actions pf-delete-actions">
+        <button class="btn-secondary" type="button" onclick="closePortfolioDeleteConfirm(false)">Cancelar</button>
+        <button class="btn-primary pf-delete-confirm" type="button" id="pf-delete-confirm-btn" onclick="closePortfolioDeleteConfirm(true)">
+          <i class="bi bi-trash3-fill"></i>
+          Remover
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal: Meta financeira -->
   <div class="modal-overlay hidden" id="modal-goal">
     <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-goal-title">
