@@ -20,7 +20,7 @@ function renderCards(txs) {
   const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingExpense = totalExpense - paidExpense;
-  const balance      = income - pendingExpense;
+  const balance      = income - paidExpense;
 
   document.getElementById('income-value').textContent  = fmt(income);
   document.getElementById('expense-value').textContent = fmt(pendingExpense);
@@ -37,8 +37,8 @@ function renderCards(txs) {
     const mes = currentDate.toLocaleString('pt-BR', { month: 'long' });
     if (income > 0) {
       heroSub.innerHTML = balance >= 0
-        ? `Você está economizando <span class="hero-amount">${fmt(balance)}</span> em ${mes}.`
-        : `Suas despesas superaram as receitas em ${mes}.`;
+        ? `Você tem <span class="hero-amount">${fmt(balance)}</span> disponível em ${mes}.`
+        : `Você pagou ${fmt(Math.abs(balance))} acima das receitas em ${mes}.`;
     } else {
       heroSub.textContent = `Sem receitas registradas em ${mes}.`;
     }
@@ -71,7 +71,7 @@ function renderCards(txs) {
     txMonthTitle.textContent = monthLabel(currentDate);
   }
   document.getElementById('balance-sub').textContent = income > 0
-    ? `${((pendingExpense / income) * 100).toFixed(0)}% da receita comprometido`
+    ? `${((paidExpense / income) * 100).toFixed(0)}% da receita usada`
     : 'Sem receitas no mês';
 
   const invValueEl = document.getElementById('invested-value');

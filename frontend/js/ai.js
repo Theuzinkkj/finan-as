@@ -223,7 +223,10 @@ function buildChatContext() {
   const txs      = txOfMonth();
   const exp      = txs.filter(t => t.type === 'despesa');
   const totalExp = exp.reduce((s, t) => s + t.amount, 0);
+  const paidExp  = exp.filter(t => t.paid).reduce((s, t) => s + t.amount, 0);
+  const pendingExp = totalExp - paidExp;
   const totalInc = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const availableBalance = totalInc - paidExp;
 
   const catTotals = {};
   exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
@@ -245,7 +248,7 @@ function buildChatContext() {
   return `Você é um assistente financeiro pessoal simpático, direto e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.
 
 CONTEXTO — ${monthLabel(currentDate)}:
-- Receitas: R$${totalInc.toFixed(2)} | Despesas: R$${totalExp.toFixed(2)} | Saldo: R$${(totalInc - totalExp).toFixed(2)}
+- Receitas: R$${totalInc.toFixed(2)} | Despesas pagas: R$${paidExp.toFixed(2)} | Despesas pendentes: R$${pendingExp.toFixed(2)} | Saldo disponivel: R$${availableBalance.toFixed(2)} | Despesas totais: R$${totalExp.toFixed(2)}
 - Por categoria: ${catSummary}
 
 TRANSAÇÕES DO MÊS (ordenadas por valor):
@@ -260,8 +263,10 @@ function demoChatReply(msg) {
   const exp  = txs.filter(t => t.type === 'despesa');
   const inc  = txs.filter(t => t.type === 'receita');
   const totE = exp.reduce((s, t) => s + t.amount, 0);
+  const paidE = exp.filter(t => t.paid).reduce((s, t) => s + t.amount, 0);
+  const pendingE = totE - paidE;
   const totI = inc.reduce((s, t) => s + t.amount, 0);
-  const bal  = totI - totE;
+  const bal  = totI - paidE;
 
   const catTotals = {};
   exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
@@ -269,7 +274,7 @@ function demoChatReply(msg) {
   const topLabel = top ? (CATEGORIES[top[0]]?.label || 'Outros') : '—';
 
   if (/saldo|sobr|restou|disponível/.test(m))
-    return `Seu saldo em ${monthLabel(currentDate)} é **${fmt(bal)}**. Você recebeu **${fmt(totI)}** e gastou **${fmt(totE)}**.`;
+    return `Seu saldo disponível em ${monthLabel(currentDate)} é **${fmt(bal)}**. Você recebeu **${fmt(totI)}**, já pagou **${fmt(paidE)}** e ainda tem **${fmt(pendingE)}** pendente.`;
 
   if (/maior gasto|mais car|mais gastou|top gasto/.test(m)) {
     const biggest = exp.sort((a, b) => b.amount - a.amount)[0];
