@@ -41,7 +41,7 @@ function txOfMonth(d = currentDate) {
 
   const generatedTemplateIds = new Set(regular.map(recurringTemplateId).filter(Boolean));
   const fixed = transactions
-    .filter(t => t.fixed && t.date.slice(0, 7) <= key && !generatedTemplateIds.has(t.id))
+    .filter(t => t.fixed && t.date.slice(0, 7) <= key && (!t.repeatUntil || t.repeatUntil >= key) && !generatedTemplateIds.has(t.id))
     .map(t => {
       const day = Math.min(parseInt(t.date.slice(8, 10), 10), daysInMonth);
       return {

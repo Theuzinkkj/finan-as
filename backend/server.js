@@ -95,6 +95,7 @@ const schemas = {
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
     paid:             z.boolean().nullish(),
     recurringId:      str().max(100).nullish(),
+    repeatUntil:      str().regex(/^\d{4}-\d{2}$/, 'Mês final inválido. Use o formato AAAA-MM.').nullish(),
   }),
 
   transactionPatch: z.object({
@@ -110,6 +111,7 @@ const schemas = {
     invoiceItems:     z.array(z.any()).max(100, 'Muitos itens na fatura.').nullish(),
     paid:             z.boolean().nullish(),
     recurringId:      str().max(100).nullish(),
+    repeatUntil:      str().regex(/^\d{4}-\d{2}$/, 'Mês final inválido. Use o formato AAAA-MM.').nullish(),
   }),
 
   portfolio: z.object({

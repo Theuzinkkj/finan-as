@@ -357,6 +357,7 @@ function drawLine(allTxs, range = 30) {
   arr.filter(t => t.fixed && !generatedIds.has(t.id)).forEach(tpl => {
     monthsInRange.forEach(mk => {
       if (tpl.date.slice(0, 7) > mk) return;
+      if (tpl.repeatUntil && tpl.repeatUntil < mk) return;
       const [ty, tm] = mk.split('-').map(Number);
       const dim = new Date(ty, tm, 0).getDate();
       const day = String(Math.min(parseInt(tpl.date.slice(8, 10), 10), dim)).padStart(2, '0');

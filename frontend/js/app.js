@@ -9,6 +9,7 @@ var selectedCat        = '';
 var selectedPayment    = '';
 var selectedBenefitType = '';
 var selectedFixed      = false;
+var selectedRepeatUntil = '';
 var invoiceItems       = [];
 var transactions      = [];
 var _lineRange        = 30;
@@ -545,6 +546,17 @@ function bindEvents() {
   document.getElementById('btn-fixed').addEventListener('click', () => {
     selectedFixed = !selectedFixed;
     document.getElementById('btn-fixed').setAttribute('aria-pressed', selectedFixed);
+    document.getElementById('repeat-until-row')?.classList.toggle('hidden', !selectedFixed);
+    const repeatInput = document.getElementById('input-repeat-until');
+    if (repeatInput) repeatInput.min = document.getElementById('input-date')?.value?.slice(0, 7) || '';
+    if (!selectedFixed) {
+      selectedRepeatUntil = '';
+      if (repeatInput) repeatInput.value = '';
+    }
+  });
+
+  document.getElementById('input-repeat-until')?.addEventListener('change', e => {
+    selectedRepeatUntil = e.target.value || '';
   });
 
   // Forma de pagamento
@@ -997,6 +1009,8 @@ function bindEvents() {
     }
     const fw = document.getElementById('date-future-warn');
     if (fw) fw.classList.toggle('hidden', !val || val <= todayLocal());
+    const repeatInput = document.getElementById('input-repeat-until');
+    if (repeatInput) repeatInput.min = val ? val.slice(0, 7) : '';
   });
 
   // Swipe para deletar no mobile

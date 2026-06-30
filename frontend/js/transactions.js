@@ -9,10 +9,17 @@ function resetTransactionModal() {
   selectedPayment      = '';
   selectedBenefitType  = '';
   selectedFixed        = false;
+  selectedRepeatUntil  = '';
   invoiceItems         = [];
 
   document.getElementById('transaction-form').reset();
   document.getElementById('btn-fixed').setAttribute('aria-pressed', 'false');
+  document.getElementById('repeat-until-row')?.classList.add('hidden');
+  const repeatUntilInput = document.getElementById('input-repeat-until');
+  if (repeatUntilInput) {
+    repeatUntilInput.value = '';
+    repeatUntilInput.min = '';
+  }
   document.querySelectorAll('.type-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.type === 'despesa'));
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('selected'));
@@ -44,6 +51,7 @@ async function handleFormSubmit(e) {
   let   desc   = document.getElementById('input-description').value.trim();
   const notes  = document.getElementById('input-notes').value.trim();
   const date   = document.getElementById('input-date').value;
+  const repeatUntil = selectedFixed ? (document.getElementById('input-repeat-until')?.value || '') : '';
 
   const hasInvoiceItems = selectedPayment === 'credito' && invoiceItems.length > 0;
 
@@ -68,6 +76,11 @@ async function handleFormSubmit(e) {
     !hasInvoiceItems && !desc);
   _fieldErr('input-date', 'date-error',
     !date);
+
+  if (repeatUntil && date && repeatUntil < date.slice(0, 7)) {
+    toast('O mês final da repetição não pode ser antes da data inicial.', 'err');
+    return;
+  }
 
   const catErr  = document.getElementById('cat-error');
   const needsCat = (selectedType === 'despesa' || selectedType === 'beneficio') && !selectedCat && !hasInvoiceItems;
@@ -109,6 +122,7 @@ async function handleFormSubmit(e) {
     notes,
     date,
     fixed:         selectedFixed,
+    repeatUntil:   repeatUntil || null,
     paymentMethod: selectedType === 'despesa' ? (selectedPayment || null) : null,
     invoiceItems:  selectedPayment === 'credito' && invoiceItems.length > 0 ? [...invoiceItems] : null,
     benefitType:   selectedType === 'beneficio' ? selectedBenefitType : null,
@@ -280,6 +294,7 @@ function openMobTxSheet(id) {
   const amtBg     = isIncome ? 'rgba(20,195,142,.15)' : 'rgba(255,90,106,.15)';
   const amtBorder = isIncome ? 'rgba(20,195,142,.25)' : 'rgba(255,90,106,.25)';
   const typeLabel = isIncome ? 'Receita' : isBenefit ? 'Benefício' : 'Despesa';
+  const repeatUntilLabel = tx.repeatUntil ? tx.repeatUntil.split('-').reverse().join('/') : '';
 
   document.getElementById('mob-tx-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
@@ -296,7 +311,7 @@ function openMobTxSheet(id) {
     <div class="mob-tx-field"><span>Tipo</span><span>${typeLabel}</span></div>
     <div class="mob-tx-field"><span>Categoria</span><span>${isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon} ${isIncome ? 'Receita' : cat.label}</span></div>
     ${tx.notes ? `<div class="mob-tx-field"><span>Nota</span><span>${escHtml(tx.notes)}</span></div>` : ''}
-    ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span><i class="bi bi-arrow-repeat"></i> Fixo mensal</span></div>` : ''}
+    ${tx.fixed ? `<div class="mob-tx-field"><span>Recorrência</span><span><i class="bi bi-arrow-repeat"></i> Fixo mensal${repeatUntilLabel ? ` até ${repeatUntilLabel}` : ''}</span></div>` : ''}
     <div style="display:flex;gap:8px;margin-top:18px;">
       <button onclick="closeMobTxSheet();activeTxId='${tx.id}';openRenameModal()" style="flex:1;padding:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-pencil"></i> Editar</button>
       <button onclick="closeMobTxSheet();deleteTx('${tx.id}')" style="flex:1;padding:12px;background:var(--surface);color:var(--coral);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit;"><i class="bi bi-trash"></i> Excluir</button>
@@ -516,6 +531,10 @@ async function toggleFixedTx() {
   const realTx = transactions.find(t => t.id === realId) || tx;
   tx.fixed = !tx.fixed;
   realTx.fixed = tx.fixed;
+  if (!tx.fixed) {
+    tx.repeatUntil = null;
+    realTx.repeatUntil = null;
+  }
   closeTxMenu();
 
   if (Demo.active) { renderAll(); toast(tx.fixed ? 'Marcado como fixo. (modo demo)' : 'Removido recorrência. (modo demo)'); return; }

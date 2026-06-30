@@ -210,7 +210,8 @@ function txHTML(t) {
   const cat         = getCategoryMeta(t.category, t);
   const bt          = isBenefit && t.benefitType ? BENEFIT_TYPES[t.benefitType] : null;
   const note        = t.notes ? `<div class="tx-note"><i class="bi bi-pencil-square"></i> ${escHtml(t.notes)}</div>` : '';
-  const fixedBadge  = t.fixed ? '<span class="badge-fixed"><i class="bi bi-arrow-repeat"></i> Fixo</span>' : '';
+  const repeatUntilLabel = t.repeatUntil ? t.repeatUntil.split('-').reverse().join('/') : '';
+  const fixedBadge  = t.fixed ? `<span class="badge-fixed"><i class="bi bi-arrow-repeat"></i> Fixo${repeatUntilLabel ? ` até ${repeatUntilLabel}` : ''}</span>` : '';
   const benefitBadge = bt ? `<span class="badge-benefit">${bt.label}</span>` : '';
   const paidBadge   = t.paid ? '<span class="badge-paid"><i class="bi bi-check-circle-fill"></i> Pago</span>' : '';
   const isSel       = selectedTxIds.has(t.id);
@@ -282,7 +283,8 @@ function openTxDetailPanel(id) {
   const typeLabel = isIncome ? 'Receita' : isBenefit ? 'Benefício' : 'Despesa';
   const icon      = isIncome ? '<i class="bi bi-cash-stack"></i>' : cat.icon;
   const payLabel  = PAYMENT_LABELS[tx.paymentMethod] || '—';
-  const recLabel  = tx.fixed ? '<i class="bi bi-arrow-repeat"></i> Fixo mensal' : 'Não recorrente';
+  const repeatUntilLabel = tx.repeatUntil ? tx.repeatUntil.split('-').reverse().join('/') : '';
+  const recLabel  = tx.fixed ? `<i class="bi bi-arrow-repeat"></i> Fixo mensal${repeatUntilLabel ? ` até ${repeatUntilLabel}` : ''}` : 'Não recorrente';
 
   const bt = isBenefit && tx.benefitType ? BENEFIT_TYPES[tx.benefitType] : null;
   const catLabel = isIncome ? 'Receita' : bt ? bt.label : cat.label;

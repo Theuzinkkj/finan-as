@@ -1503,6 +1503,39 @@
 .fixed-row-label  { display: block; font-size: .84rem; font-weight: 600; color: var(--text); }
 .fixed-row-sub    { display: block; font-size: .72rem; color: var(--text-3); margin-top: 2px; }
 
+.repeat-until-row {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255,255,255,.035);
+  display: grid;
+  grid-template-columns: auto minmax(132px, 1fr);
+  gap: 8px 10px;
+  align-items: center;
+}
+.repeat-until-row.hidden { display: none; }
+.repeat-until-row label {
+  font-size: .76rem;
+  font-weight: 700;
+  color: var(--text-2);
+  margin: 0;
+}
+.repeat-until-row input {
+  min-height: 36px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  color: var(--text);
+  font-family: var(--font);
+}
+.repeat-until-row span {
+  grid-column: 1 / -1;
+  color: var(--text-3);
+  font-size: .72rem;
+}
+
 .toggle-switch {
   position:      relative;
   width:         44px;

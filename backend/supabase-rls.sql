@@ -40,7 +40,8 @@ ALTER TABLE transactions
   ADD COLUMN IF NOT EXISTS "invoiceItems"  JSONB,
   ADD COLUMN IF NOT EXISTS "benefitType"   TEXT,
   ADD COLUMN IF NOT EXISTS paid            BOOLEAN DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS "recurringId"   TEXT;
+  ADD COLUMN IF NOT EXISTS "recurringId"   TEXT,
+  ADD COLUMN IF NOT EXISTS "repeatUntil"   TEXT;
 
 
 -- ================================================================
