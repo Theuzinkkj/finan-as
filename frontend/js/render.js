@@ -16,29 +16,33 @@ function renderMonthLabel() {
 //  RENDER — SUMMARY CARDS
 // =============================================
 function renderCards(txs) {
-  const income       = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
+  const today        = todayLocal();
+  const incomeTxs    = txs.filter(t => t.type === 'receita');
+  const income       = incomeTxs.reduce((s, t) => s + t.amount, 0);
+  const receivedIncome = incomeTxs.filter(t => t.date <= today).reduce((s, t) => s + t.amount, 0);
+  const pendingIncome = income - receivedIncome;
   const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingExpense = totalExpense - paidExpense;
-  const balance      = income - paidExpense;
+  const balance      = receivedIncome - paidExpense;
 
-  document.getElementById('income-value').textContent  = fmt(income);
+  document.getElementById('income-value').textContent  = fmt(receivedIncome);
   document.getElementById('expense-value').textContent = fmt(pendingExpense);
   document.getElementById('balance-value').textContent = fmt(balance);
   document.getElementById('balance-value').style.color = balance >= 0 ? 'var(--green-l)' : '#f87171';
 
   const mobInc = document.getElementById('mob-income-val');
   const mobExp = document.getElementById('mob-expense-val');
-  if (mobInc) mobInc.textContent = fmt(income);
+  if (mobInc) mobInc.textContent = fmt(receivedIncome);
   if (mobExp) mobExp.textContent = fmt(pendingExpense);
 
   const heroSub = document.getElementById('dash-hero-sub');
   if (heroSub) {
     const mes = currentDate.toLocaleString('pt-BR', { month: 'long' });
-    if (income > 0) {
+    if (receivedIncome > 0 || pendingIncome > 0) {
       heroSub.innerHTML = balance >= 0
-        ? `Você tem <span class="hero-amount">${fmt(balance)}</span> disponível em ${mes}.`
-        : `Você pagou ${fmt(Math.abs(balance))} acima das receitas em ${mes}.`;
+        ? `Você tem <span class="hero-amount">${fmt(balance)}</span> disponível em ${mes}.${pendingIncome > 0 ? ` ${fmt(pendingIncome)} ainda a receber.` : ''}`
+        : `Você pagou ${fmt(Math.abs(balance))} acima das receitas já recebidas em ${mes}.${pendingIncome > 0 ? ` ${fmt(pendingIncome)} ainda a receber.` : ''}`;
     } else {
       heroSub.textContent = `Sem receitas registradas em ${mes}.`;
     }
@@ -52,10 +56,10 @@ function renderCards(txs) {
   if (projMonth) projMonth.textContent = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance));
   if (proj6m)    proj6m.textContent    = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance * 6));
   if (proj12m)   proj12m.textContent   = (balance >= 0 ? '+' : '−') + fmt(Math.abs(balance * 12));
-  if (projRate && income > 0) projRate.textContent = ((balance / income) * 100).toFixed(1) + '%';
+  if (projRate && receivedIncome > 0) projRate.textContent = ((balance / receivedIncome) * 100).toFixed(1) + '%';
   if (projNote)  projNote.textContent  = balance >= 0
-    ? '✓ Atualmente suas receitas superam suas despesas — você está no verde.'
-    : '⚠ Suas despesas superaram as receitas neste mês.';
+    ? '✓ Seu saldo disponível está positivo.'
+    : '⚠ Suas despesas pagas superaram as receitas já recebidas.';
 
   const txSub = document.getElementById('tx-page-sub');
   if (txSub) {
@@ -70,9 +74,9 @@ function renderCards(txs) {
   if (txMonthTitle) {
     txMonthTitle.textContent = monthLabel(currentDate);
   }
-  document.getElementById('balance-sub').textContent = income > 0
-    ? `${((paidExpense / income) * 100).toFixed(0)}% da receita usada`
-    : 'Sem receitas no mês';
+  document.getElementById('balance-sub').textContent = receivedIncome > 0
+    ? `${((paidExpense / receivedIncome) * 100).toFixed(0)}% da receita recebida usada${pendingIncome > 0 ? ` · ${fmt(pendingIncome)} a receber` : ''}`
+    : pendingIncome > 0 ? `${fmt(pendingIncome)} a receber` : 'Sem receitas no mês';
 
   const invValueEl = document.getElementById('invested-value');
   const invSubEl   = document.getElementById('invested-sub');

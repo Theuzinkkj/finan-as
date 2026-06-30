@@ -221,12 +221,16 @@ Responda APENAS com JSON válido, sem markdown:
 // =============================================
 function buildChatContext() {
   const txs      = txOfMonth();
+  const today    = todayLocal();
   const exp      = txs.filter(t => t.type === 'despesa');
+  const inc      = txs.filter(t => t.type === 'receita');
   const totalExp = exp.reduce((s, t) => s + t.amount, 0);
   const paidExp  = exp.filter(t => t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingExp = totalExp - paidExp;
-  const totalInc = txs.filter(t => t.type === 'receita').reduce((s, t) => s + t.amount, 0);
-  const availableBalance = totalInc - paidExp;
+  const totalInc = inc.reduce((s, t) => s + t.amount, 0);
+  const receivedInc = inc.filter(t => t.date <= today).reduce((s, t) => s + t.amount, 0);
+  const pendingInc = totalInc - receivedInc;
+  const availableBalance = receivedInc - paidExp;
 
   const catTotals = {};
   exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
@@ -248,7 +252,7 @@ function buildChatContext() {
   return `Você é um assistente financeiro pessoal simpático, direto e prestativo. Responda sempre em português brasileiro de forma clara e objetiva.
 
 CONTEXTO — ${monthLabel(currentDate)}:
-- Receitas: R$${totalInc.toFixed(2)} | Despesas pagas: R$${paidExp.toFixed(2)} | Despesas pendentes: R$${pendingExp.toFixed(2)} | Saldo disponivel: R$${availableBalance.toFixed(2)} | Despesas totais: R$${totalExp.toFixed(2)}
+- Receitas recebidas: R$${receivedInc.toFixed(2)} | Receitas a receber: R$${pendingInc.toFixed(2)} | Despesas pagas: R$${paidExp.toFixed(2)} | Despesas pendentes: R$${pendingExp.toFixed(2)} | Saldo disponivel: R$${availableBalance.toFixed(2)} | Receitas totais: R$${totalInc.toFixed(2)} | Despesas totais: R$${totalExp.toFixed(2)}
 - Por categoria: ${catSummary}
 
 TRANSAÇÕES DO MÊS (ordenadas por valor):
@@ -260,13 +264,16 @@ REGRA IMPORTANTE: Quando o usuário mencionar um nome (ex: "cartão", "mercado",
 function demoChatReply(msg) {
   const m    = msg.toLowerCase();
   const txs  = txOfMonth();
+  const today = todayLocal();
   const exp  = txs.filter(t => t.type === 'despesa');
   const inc  = txs.filter(t => t.type === 'receita');
   const totE = exp.reduce((s, t) => s + t.amount, 0);
   const paidE = exp.filter(t => t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingE = totE - paidE;
   const totI = inc.reduce((s, t) => s + t.amount, 0);
-  const bal  = totI - paidE;
+  const receivedI = inc.filter(t => t.date <= today).reduce((s, t) => s + t.amount, 0);
+  const pendingI = totI - receivedI;
+  const bal  = receivedI - paidE;
 
   const catTotals = {};
   exp.forEach(t => { catTotals[t.category] = (catTotals[t.category] || 0) + t.amount; });
@@ -274,7 +281,7 @@ function demoChatReply(msg) {
   const topLabel = top ? (CATEGORIES[top[0]]?.label || 'Outros') : '—';
 
   if (/saldo|sobr|restou|disponível/.test(m))
-    return `Seu saldo disponível em ${monthLabel(currentDate)} é **${fmt(bal)}**. Você recebeu **${fmt(totI)}**, já pagou **${fmt(paidE)}** e ainda tem **${fmt(pendingE)}** pendente.`;
+    return `Seu saldo disponível em ${monthLabel(currentDate)} é **${fmt(bal)}**. Você recebeu **${fmt(receivedI)}**, ainda tem **${fmt(pendingI)}** a receber, já pagou **${fmt(paidE)}** e tem **${fmt(pendingE)}** pendente.`;
 
   if (/maior gasto|mais car|mais gastou|top gasto/.test(m)) {
     const biggest = exp.sort((a, b) => b.amount - a.amount)[0];
