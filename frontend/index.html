@@ -224,7 +224,8 @@
 
       <div class="summary-grid">
         <div class="card card-balance">
-          <div class="card-label">Saldo do Mês</div>
+          <button type="button" class="balance-edit-btn" onclick="openOpeningBalanceModal(event)" title="Editar saldo livre inicial" aria-label="Editar saldo livre inicial"><i class="bi bi-pencil"></i></button>
+          <div class="card-label">Saldo disponível</div>
           <div class="card-value" id="balance-value">R$ 0,00</div>
           <div class="card-sub" id="balance-sub"></div>
           <!-- Mobile: receita/despesa inline no card (oculto no desktop) -->
@@ -1472,6 +1473,18 @@
         </div>
       </div>
 
+      <!-- Finanças -->
+      <div class="sgroup">
+        <div class="sgroup-label">Finanças</div>
+        <div class="slist">
+          <button class="slist-btn" type="button" onclick="openOpeningBalanceModal(event)">
+            <div class="slist-icon" style="background:rgba(20,195,142,.12);color:rgb(20,195,142)"><i class="bi bi-wallet2"></i></div>
+            <span class="slist-text">Saldo livre do mês</span>
+            <span class="settings-row-text" id="settings-opening-balance-value">R$ 0,00</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Exportar -->
       <div class="sgroup">
         <div class="sgroup-label">Exportar Dados</div>
@@ -1516,6 +1529,27 @@
       <div  style="display:none" id="auth-divider"></div>
       <button style="display:none" id="btn-logout"></button>
 
+    </div>
+  </div>
+
+  <!-- Modal: Saldo livre inicial -->
+  <div class="modal-overlay hidden" id="modal-opening-balance">
+    <div class="modal modal-sm" role="dialog" aria-modal="true" aria-labelledby="modal-opening-balance-title">
+      <div class="modal-header">
+        <h2 id="modal-opening-balance-title">Saldo livre do mês</h2>
+        <button class="modal-close" data-close="modal-opening-balance">✕</button>
+      </div>
+      <p class="modal-help-text" id="opening-balance-help">Informe quanto dinheiro livre você já tinha na conta no início do mês.</p>
+      <form id="opening-balance-form" onsubmit="saveOpeningBalance(event)">
+        <div class="form-group">
+          <label for="opening-balance-input">Valor disponível inicial (R$)</label>
+          <input type="number" id="opening-balance-input" step="0.01" min="0" placeholder="0,00" autocomplete="off">
+        </div>
+        <div class="form-actions">
+          <button class="btn-secondary" type="button" data-close="modal-opening-balance">Cancelar</button>
+          <button class="btn-primary" type="submit">Salvar</button>
+        </div>
+      </form>
     </div>
   </div>
 

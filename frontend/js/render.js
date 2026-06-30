@@ -12,11 +12,45 @@ function renderMonthLabel() {
   if (txLabel) txLabel.textContent = label;
 }
 
+function getOpeningBalance(d = currentDate) {
+  const val = parseFloat(Storage.get(Storage.openingBalanceKey(mkKey(d)), '0'));
+  return Number.isFinite(val) && val > 0 ? val : 0;
+}
+
+function openOpeningBalanceModal(event) {
+  event?.stopPropagation?.();
+  const settingsModal = document.getElementById('modal-settings');
+  if (settingsModal && !settingsModal.classList.contains('hidden')) {
+    closeModal('modal-settings');
+  }
+  const input = document.getElementById('opening-balance-input');
+  const help  = document.getElementById('opening-balance-help');
+  if (input) input.value = getOpeningBalance().toFixed(2);
+  if (help) help.textContent = `Informe quanto dinheiro livre você já tinha na conta no início de ${monthLabel(currentDate)}.`;
+  openModal('modal-opening-balance');
+  setTimeout(() => input?.select(), 80);
+}
+
+function saveOpeningBalance(event) {
+  event?.preventDefault?.();
+  const input = document.getElementById('opening-balance-input');
+  const amount = parseFloat(input?.value || '0');
+  if (!Number.isFinite(amount) || amount < 0) {
+    toast('Informe um valor válido.', 'err');
+    return;
+  }
+  Storage.set(Storage.openingBalanceKey(mkKey(currentDate)), amount.toFixed(2));
+  closeModal('modal-opening-balance');
+  renderAll();
+  toast('Saldo livre do mês atualizado.');
+}
+
 // =============================================
 //  RENDER — SUMMARY CARDS
 // =============================================
 function renderCards(txs) {
   const today        = todayLocal();
+  const openingBalance = getOpeningBalance();
   const incomeTxs    = txs.filter(t => t.type === 'receita');
   const income       = incomeTxs.reduce((s, t) => s + t.amount, 0);
   const receivedIncome = incomeTxs.filter(t => t.date <= today).reduce((s, t) => s + t.amount, 0);
@@ -24,7 +58,7 @@ function renderCards(txs) {
   const totalExpense = txs.filter(t => t.type === 'despesa').reduce((s, t) => s + t.amount, 0);
   const paidExpense  = txs.filter(t => t.type === 'despesa' && t.paid).reduce((s, t) => s + t.amount, 0);
   const pendingExpense = totalExpense - paidExpense;
-  const balance      = receivedIncome - paidExpense;
+  const balance      = openingBalance + receivedIncome - paidExpense;
 
   document.getElementById('income-value').textContent  = fmt(receivedIncome);
   document.getElementById('expense-value').textContent = fmt(pendingExpense);
@@ -39,10 +73,10 @@ function renderCards(txs) {
   const heroSub = document.getElementById('dash-hero-sub');
   if (heroSub) {
     const mes = currentDate.toLocaleString('pt-BR', { month: 'long' });
-    if (receivedIncome > 0 || pendingIncome > 0) {
+    if (openingBalance > 0 || receivedIncome > 0 || pendingIncome > 0) {
       heroSub.innerHTML = balance >= 0
         ? `Você tem <span class="hero-amount">${fmt(balance)}</span> disponível em ${mes}.${pendingIncome > 0 ? ` ${fmt(pendingIncome)} ainda a receber.` : ''}`
-        : `Você pagou ${fmt(Math.abs(balance))} acima das receitas já recebidas em ${mes}.${pendingIncome > 0 ? ` ${fmt(pendingIncome)} ainda a receber.` : ''}`;
+        : `Você pagou ${fmt(Math.abs(balance))} acima do saldo livre e receitas já recebidas em ${mes}.${pendingIncome > 0 ? ` ${fmt(pendingIncome)} ainda a receber.` : ''}`;
     } else {
       heroSub.textContent = `Sem receitas registradas em ${mes}.`;
     }
@@ -59,7 +93,7 @@ function renderCards(txs) {
   if (projRate && receivedIncome > 0) projRate.textContent = ((balance / receivedIncome) * 100).toFixed(1) + '%';
   if (projNote)  projNote.textContent  = balance >= 0
     ? '✓ Seu saldo disponível está positivo.'
-    : '⚠ Suas despesas pagas superaram as receitas já recebidas.';
+    : '⚠ Suas despesas pagas superaram o saldo livre e receitas já recebidas.';
 
   const txSub = document.getElementById('tx-page-sub');
   if (txSub) {
@@ -74,9 +108,14 @@ function renderCards(txs) {
   if (txMonthTitle) {
     txMonthTitle.textContent = monthLabel(currentDate);
   }
-  document.getElementById('balance-sub').textContent = receivedIncome > 0
-    ? `${((paidExpense / receivedIncome) * 100).toFixed(0)}% da receita recebida usada${pendingIncome > 0 ? ` · ${fmt(pendingIncome)} a receber` : ''}`
-    : pendingIncome > 0 ? `${fmt(pendingIncome)} a receber` : 'Sem receitas no mês';
+  const balanceParts = [];
+  if (openingBalance > 0) balanceParts.push(`${fmt(openingBalance)} de saldo livre inicial`);
+  if (receivedIncome > 0) balanceParts.push(`${((paidExpense / receivedIncome) * 100).toFixed(0)}% da receita recebida usada`);
+  if (pendingIncome > 0) balanceParts.push(`${fmt(pendingIncome)} a receber`);
+  document.getElementById('balance-sub').textContent = balanceParts.join(' · ') || 'Configure seu saldo livre';
+
+  const settingsOpeningEl = document.getElementById('settings-opening-balance-value');
+  if (settingsOpeningEl) settingsOpeningEl.textContent = fmt(openingBalance);
 
   const invValueEl = document.getElementById('invested-value');
   const invSubEl   = document.getElementById('invested-sub');

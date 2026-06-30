@@ -24,6 +24,7 @@
   background:   linear-gradient(135deg, rgba(124,58,237,.22), rgba(37,99,235,.10));
   border-color: rgba(124,58,237,.28);
   cursor:       default;
+  position:     relative;
 }
 .card-balance:hover {
   border-color: rgba(124,58,237,.55);
@@ -38,6 +39,27 @@
 .card-clickable:active { transform: translateY(1px); }
 .card-clickable.card-income:active  { border-left-width: 4px; background: radial-gradient(circle 360px at var(--mx,50%) var(--my,50%), rgba(52,185,110,.70) 0%, rgba(16,100,70,.40) 55%, transparent 80%); box-shadow: 0 0 0 2px rgba(16,185,129,.55), -6px 0 26px rgba(16,185,129,.35); transform: translateY(1px); }
 .card-clickable.card-expense:active { border-left-width: 4px; background: radial-gradient(circle 360px at var(--mx,50%) var(--my,50%), rgba(220,80,80,.68) 0%, rgba(140,20,20,.38) 55%, transparent 80%); box-shadow: 0 0 0 2px rgba(239,68,68,.60),  -6px 0 26px rgba(239,68,68,.38); transform: translateY(1px); }
+
+.balance-edit-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  background: rgba(255,255,255,.07);
+  color: var(--text-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.balance-edit-btn:hover {
+  background: rgba(255,255,255,.13);
+  color: var(--text);
+  border-color: rgba(255,255,255,.24);
+}
 
 .card-label {
   font-size:      .75rem;
@@ -1040,6 +1062,13 @@
 }
 .modal-sm       { max-width: 380px; }
 .modal-settings { max-width: 460px; }
+
+.modal-help-text {
+  font-size: .88rem;
+  color: var(--text-2);
+  line-height: 1.6;
+  margin: -6px 0 18px;
+}
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(22px) scale(.97); }
